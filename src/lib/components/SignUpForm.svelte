@@ -1,8 +1,10 @@
 <script>
 	import { enhance } from '$app/forms';
+
+	const { onsubmit = () => {} } = $props();
 </script>
 
-<form action="/auth/sign-up/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
+<form {onsubmit} action="/auth/sign-up/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
 			use:enhance>
 	<label class="block">
 		<span class="block text-sm font-medium mb-1">Email</span>

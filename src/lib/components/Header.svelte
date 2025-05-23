@@ -26,8 +26,16 @@
 		signOutDialog.showModal();
 	};
 
-	const handleSignInSuccessAfter = () => {
+	const onSubmitSignUp = () => {
+		signUpDialog.close();
+	}
+
+	const onSubmitSignIn = () => {
 		signInDialog.close();
+	};
+
+	const onSubmitSignOut = () => {
+		signOutDialog.close();
 	};
 </script>
 
@@ -67,7 +75,7 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignUpForm />
+	<SignUpForm onsubmit={onSubmitSignUp}/>
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
@@ -75,7 +83,7 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignInForm successAfter={handleSignInSuccessAfter}/>
+	<SignInForm onsubmit={onSubmitSignIn}/>
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
@@ -83,5 +91,5 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SIgnOutForm />
+	<SIgnOutForm onsubmit={onSubmitSignOut} />
 </dialog>

@@ -1,21 +1,8 @@
 <script>
-	import { applyAction, enhance } from '$app/forms';
-	import { goto, invalidate } from '$app/navigation';
+	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 
-	const { successAfter = () => {} } = $props();
-
-	const handleSignInSubmit = ({ formElement, formData, action, cancel }) => {
-		return async ({ result }) => {
-			if (result.type === 'redirect') {
-				await invalidate('supabase:auth');
-				await goto(result.location);
-				successAfter();
-			} else {
-				await applyAction(result);
-			}
-		};
-	};
+	const { onsubmit = () => {} } = $props();
 </script>
 
 <p class="text-red-600 text-sm px-3 py-2">
@@ -23,9 +10,9 @@
 </p>
 
 <form
+	onsubmit={onsubmit}
 	action="/auth/sign-in/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
-	use:enhance={handleSignInSubmit}>
-
+	use:enhance>
 
 	<label class="block">
 		<span class="block text-sm font-medium mb-1">Email</span>
