@@ -1,6 +1,4 @@
 <script>
-	import { goto } from '$app/navigation';
-
 	let { data } = $props();
 	let summary = $derived(data.summary);
 
@@ -12,10 +10,6 @@
 	function extractThumbnail(url) {
 		const id = extractYoutubeId(url);
 		return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
-	}
-
-	function goBack() {
-		goto('/dashboard');
 	}
 
 	function formatDate(dateString) {
@@ -33,8 +27,8 @@
 	<div class="mx-auto max-w-4xl">
 		<!-- Header with back button -->
 		<div class="mb-6">
-			<button
-				on:click={goBack}
+			<a
+				href="/dashboard/"
 				class="inline-flex items-center gap-2 text-gray-600 transition hover:text-gray-900"
 			>
 				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +36,7 @@
 					></path>
 				</svg>
 				대시보드로 돌아가기
-			</button>
+			</a>
 		</div>
 
 		<!-- Main content -->
