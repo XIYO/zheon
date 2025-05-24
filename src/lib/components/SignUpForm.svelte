@@ -1,11 +1,25 @@
 <script>
-	import { enhance } from '$app/forms';
+	import { applyAction, enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 
-	const { onsubmit = () => {} } = $props();
+	/** @type {{ onsuccess?: () => void }} */
+	const { onsuccess } = $props();
+
+	/** @type {import('@sveltejs/kit').SubmitFunction} */
+	const handleEnhance = ({}) => {
+		return ({ result }) => {
+			if (result.type === 'redirect') {
+				onsuccess?.();
+				goto(result.location, { invalidateAll: true });
+			} else {
+				applyAction(result);
+			}
+		};
+	};
 </script>
 
-<form {onsubmit} action="/auth/sign-up/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
-			use:enhance>
+<form action="/auth/sign-up/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
+			use:enhance={handleEnhance}>
 	<label class="block">
 		<span class="block text-sm font-medium mb-1">Email</span>
 		<input

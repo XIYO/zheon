@@ -1,4 +1,4 @@
-<script>
+<script module>
 	import SignUpForm from '$lib/components/SignUpForm.svelte';
 	import SignInForm from '$lib/components/SignInForm.svelte';
 	import SIgnOutForm from '$lib/components/SignOutForm.svelte';
@@ -11,18 +11,18 @@
 	/** @type {HTMLDialogElement} */
 	let signOutDialog;
 
-	const handleSignUp = (/** @type MouseEvent */ e) => {
-		e.preventDefault();
+	export const handleSignUp = (/** @type MouseEvent || undefined */ e) => {
+		e?.preventDefault();
 		signUpDialog.showModal();
 	};
 
-	const handleSignIn = (/** @type MouseEvent */ e) => {
-		e.preventDefault();
+	export const handleSignIn = (/** @type MouseEvent || undefined */ e) => {
+		e?.preventDefault();
 		signInDialog.showModal();
 	};
 
-	const handleSignOut = (/** @type MouseEvent */ e) => {
-		e.preventDefault();
+	export const handleSignOut = (/** @type MouseEvent || undefined */ e) => {
+		e?.preventDefault();
 		signOutDialog.showModal();
 	};
 
@@ -30,9 +30,7 @@
 		signUpDialog.close();
 	}
 
-	const onSubmitSignIn = () => {
-		signInDialog.close();
-	};
+	const onsuccessSignIn = () => signInDialog.close();
 
 	const onSubmitSignOut = () => {
 		signOutDialog.close();
@@ -75,7 +73,7 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignUpForm onsubmit={onSubmitSignUp}/>
+	<SignUpForm onsuccess={onSubmitSignUp}/>
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
@@ -83,7 +81,7 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignInForm onsubmit={onSubmitSignIn}/>
+	<SignInForm onsuccess={onsuccessSignIn}/>
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
@@ -91,5 +89,5 @@
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SIgnOutForm onsubmit={onSubmitSignOut} />
+	<SIgnOutForm onsuccess={onSubmitSignOut} />
 </dialog>

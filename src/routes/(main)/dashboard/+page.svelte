@@ -1,1 +1,104 @@
-dashboard
+<script>
+	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
+	import { slide } from 'svelte/transition';
+	import { handleSignIn } from '$lib/components/Header.svelte';
+	import { goto } from '$app/navigation';
+
+	let { data } = $props();
+	let summaries = $derived(data.summaries);
+
+	let loading = $state(false);
+
+	/** @type {import('@sveltejs/kit').SubmitFunction} */
+	function handleEnhance({ formElement, formData, action, cancel, submitter }) {
+		loading = true;
+		return async ({ result, update }) => {
+			if (result.type === 'redirect') {
+				handleSignIn();
+			} else if (result.type === 'failure') {
+				update();
+			} else {
+				update({ invalidateAll: true });
+			}
+			loading = false;
+		};
+	}
+
+	function extractYoutubeId(url) {
+		const match = new URL(url).searchParams.get('v');
+		return match || '';
+	}
+
+	function extractThumbnail(url) {
+		const id = extractYoutubeId(url);
+		return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+	}
+
+
+</script>
+
+<div class="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 to-gray-100 py-12 px-4">
+	<div class="w-full max-w-md bg-white p-6 rounded shadow-md border border-black mb-8">
+		<h1 class="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight text-center">유튜브 요약</h1>
+		<p class="text-gray-500 text-center mb-6">유튜브 영상을 입력하면 AI가 요약해줍니다.</p>
+
+		{#if page.form?.message}
+			<div in:slide class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+				<div class="flex">
+					<div class="flex-shrink-0">
+						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div class="ml-3">
+						<p class="text-sm text-red-800">{page.form.message}</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<form method="POST" use:enhance={handleEnhance} class="flex flex-col gap-4">
+			<input name="youtubeUrl" placeholder="유튜브 주소를 입력하세요" required type="text"
+				class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700 text-gray-800 placeholder-gray-400"
+				disabled={loading}
+			/>
+			<button
+				class="w-full bg-black hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded transition flex items-center justify-center gap-2"
+				type="submit"
+				disabled={loading}
+			>
+				{#if loading}
+					<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+					</svg>
+					로딩 중...
+				{:else}
+					요약 요청
+				{/if}
+			</button>
+		</form>
+	</div>
+
+	<div class="w-full max-w-6xl">
+		{#if summaries?.length === 0}
+			<p class="text-gray-400 text-center">아직 요약된 영상이 없습니다.</p>
+		{:else}
+			<h2 class="my-6 text-2xl font-bold text-gray-800 text-center">요약 결과</h2>
+
+			<!-- 반응형 그리드: 모바일 1, 태블릿 2, 데스크탑 3~4 -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+				{#each summaries as summary (summary.id)}
+					<a href="/summary/{summary.id}/" class="bg-white border border-black rounded shadow-md p-4 flex flex-col gap-3 hover:shadow-lg transition cursor-pointer">
+						<img src={extractThumbnail(summary.youtube_url)} alt="썸네일" class="w-full rounded-xl aspect-video object-cover border border-gray-200" />
+						<div class="flex flex-col gap-1">
+							<div class="font-bold text-base md:text-lg text-gray-900 truncate">{summary.title}</div>
+							<div class="text-gray-700 text-sm md:text-base line-clamp-4 whitespace-pre-line">{summary.summary}</div>
+						</div>
+					</a>
+				{/each}
+			</div>
+		{/if}
+	</div>
+</div>

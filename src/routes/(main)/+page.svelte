@@ -9,10 +9,10 @@
       자동 생성된 자막 기반 AI 요약, 깔끔하고 구조적인 정보 제공.
     </p>
   </div>
-  <div class="relative h-64 md:h-96 bg-white">
+  <a href="dashboard" class="block relative h-64 md:h-96 bg-white">
     <div class="absolute inset-4 border border-black"></div>
     <div class="absolute top-1/2 left-1/2 w-2/3 h-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-black"></div>
-  </div>
+  </a>
 </section>
 <section class="bg-white px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
   <div class="space-y-4">
