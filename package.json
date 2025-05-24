@@ -16,7 +16,9 @@
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"deploy": "pnpm build && wrangler pages deploy",
+		"wrangler": "wrangler"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.9",
@@ -52,7 +54,8 @@
 		"tailwindcss": "^4.1.7",
 		"typescript": "^5.8.3",
 		"vite": "^6.3.5",
-		"vitest": "^3.1.4"
+		"vitest": "^3.1.4",
+		"wrangler": "^4.16.1"
 	},
 	"dependencies": {
 		"@inlang/paraglide-js": "^2.0.13",
