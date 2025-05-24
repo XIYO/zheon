@@ -9,7 +9,9 @@ export interface Database {
 					created_at: string;
 					youtube_url: string;
 					lang: string;
+					title: string;
 					summary: string;
+					content: string;
 					user_id: string;
 				};
 				Insert: {
@@ -17,7 +19,9 @@ export interface Database {
 					created_at?: string;
 					youtube_url: string;
 					lang: string;
+					title: string;
 					summary: string;
+					content: string;
 					user_id: string;
 				};
 				Update: {
@@ -25,7 +29,9 @@ export interface Database {
 					created_at?: string;
 					youtube_url?: string;
 					lang?: string;
+					title?: string;
 					summary?: string;
+					content?: string;
 					user_id?: string;
 				};
 				Relationships: [];
