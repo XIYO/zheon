@@ -21,8 +21,15 @@ export async function summarizeTranscript(
 
 	// Single structured call to extract title, summary, and content
 	const messages = [
-		{ role: 'system', content: 'You are a professional video summarizer. Extract a title, a concise summary, and cleaned content from the transcript.' },
-		{ role: 'user', content: `Below is the full transcript of a YouTube video. Clean filler words and redundant phrasing, preserve flow, then provide JSON output with keys title, summary, and content.\n\nTranscript:\n${transcript}\n\n${speakDirective}` }
+		{
+			role: 'system',
+			content:
+				'You are a professional video summarizer. Extract a title, a concise summary, and cleaned content from the transcript.'
+		},
+		{
+			role: 'user',
+			content: `Below is the full transcript of a YouTube video. Clean filler words and redundant phrasing, preserve flow, then provide JSON output with keys title, summary, and content.\n\nTranscript:\n${transcript}\n\n${speakDirective}`
+		}
 	];
 	const schema = {
 		type: 'object',

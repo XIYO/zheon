@@ -1,9 +1,9 @@
 import { paraglideMiddleware } from '$lib/paraglide/server';
-import { createServerClient } from '@supabase/ssr'
-import { redirect } from '@sveltejs/kit'
-import { sequence } from '@sveltejs/kit/hooks'
+import { createServerClient } from '@supabase/ssr';
+import { redirect } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 const handleParaglide = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {
@@ -13,7 +13,6 @@ const handleParaglide = ({ event, resolve }) =>
 			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
 		});
 	});
-
 
 const supabase = async ({ event, resolve }) => {
 	/**
@@ -31,11 +30,11 @@ const supabase = async ({ event, resolve }) => {
 			 */
 			setAll: (cookiesToSet) => {
 				cookiesToSet.forEach(({ name, value, options }) => {
-					event.cookies.set(name, value, { ...options, path: '/' })
-				})
-			},
-		},
-	})
+					event.cookies.set(name, value, { ...options, path: '/' });
+				});
+			}
+		}
+	});
 
 	/**
 	 * Unlike `supabase.auth.getSession()`, which returns the session _without_
@@ -44,23 +43,23 @@ const supabase = async ({ event, resolve }) => {
 	 */
 	event.locals.safeGetSession = async () => {
 		const {
-			data: { session },
-		} = await event.locals.supabase.auth.getSession()
+			data: { session }
+		} = await event.locals.supabase.auth.getSession();
 		if (!session) {
-			return { session: null, user: null }
+			return { session: null, user: null };
 		}
 
 		const {
 			data: { user },
-			error,
-		} = await event.locals.supabase.auth.getUser()
+			error
+		} = await event.locals.supabase.auth.getUser();
 		if (error) {
 			// JWT validation has failed
-			return { session: null, user: null }
+			return { session: null, user: null };
 		}
 
-		return { session, user }
-	}
+		return { session, user };
+	};
 
 	return resolve(event, {
 		filterSerializedResponseHeaders(name) {
@@ -68,25 +67,25 @@ const supabase = async ({ event, resolve }) => {
 			 * Supabase libraries use the `content-range` and `x-supabase-api-version`
 			 * headers, so we need to tell SvelteKit to pass it through.
 			 */
-			return name === 'content-range' || name === 'x-supabase-api-version'
-		},
-	})
-}
+			return name === 'content-range' || name === 'x-supabase-api-version';
+		}
+	});
+};
 
 const authGuard = async ({ event, resolve }) => {
-	const { session, user } = await event.locals.safeGetSession()
-	event.locals.session = session
-	event.locals.user = user
+	const { session, user } = await event.locals.safeGetSession();
+	event.locals.session = session;
+	event.locals.user = user;
 
 	if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-		redirect(303, '/auth')
+		redirect(303, '/auth');
 	}
 
 	if (event.locals.session && event.url.pathname === '/auth') {
-		redirect(303, '/private')
+		redirect(303, '/private');
 	}
 
-	return resolve(event)
-}
+	return resolve(event);
+};
 
-export const handle = sequence(handleParaglide, supabase, authGuard)
+export const handle = sequence(handleParaglide, supabase, authGuard);

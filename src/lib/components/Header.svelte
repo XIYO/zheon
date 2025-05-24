@@ -28,7 +28,7 @@
 
 	const onSubmitSignUp = () => {
 		signUpDialog.close();
-	}
+	};
 
 	const onsuccessSignIn = () => signInDialog.close();
 
@@ -38,7 +38,9 @@
 </script>
 
 <!-- ─────────────────────────── HEADER ─────────────────────────── -->
-<header class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-black text-white shadow-md">
+<header
+	class="sticky top-0 z-50 flex items-center justify-between bg-black px-6 py-4 text-white shadow-md"
+>
 	<!-- Logo / Title -->
 	<a class="text-xl font-extrabold tracking-widest" href="/">展</a>
 
@@ -48,20 +50,22 @@
 			<a
 				href="/auth/sign-up"
 				class="text-sm underline-offset-4 hover:underline"
-				onclick={handleSignUp}
-			>Sign up</a
+				onclick={handleSignUp}>Sign up</a
 			>
 			<a
 				href="/auth/sign-in"
 				class="text-sm underline-offset-4 hover:underline"
-				onclick={handleSignIn}
-			>Sign in</a
+				onclick={handleSignIn}>Sign in</a
 			>
 		</nav>
 	{:else}
 		<span class="text-sm text-gray-300">
 			환영합니다, {page.data.userMetadata.name}님
-			<a href="/auth/sign-out/" onclick={handleSignOut} class="ml-4 underline hover:text-white text-sm">
+			<a
+				href="/auth/sign-out/"
+				onclick={handleSignOut}
+				class="ml-4 text-sm underline hover:text-white"
+			>
 				Sign out
 			</a>
 		</span>
@@ -69,23 +73,23 @@
 </header>
 
 <!-- ─────────────────────────── SIGN‑UP DIALOG ─────────────────────────── -->
-<dialog bind:this={signUpDialog} class="m-auto rounded-lg backdrop:bg-black/30 max-w-md">
+<dialog bind:this={signUpDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignUpForm onsuccess={onSubmitSignUp}/>
+	<SignUpForm onsuccess={onSubmitSignUp} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
-<dialog bind:this={signInDialog} class="m-auto rounded-lg backdrop:bg-black/30 max-w-md">
+<dialog bind:this={signInDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
 	<form method="DIALOG">
 		<button>close</button>
 	</form>
-	<SignInForm onsuccess={onsuccessSignIn}/>
+	<SignInForm onsuccess={onsuccessSignIn} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
-<dialog bind:this={signOutDialog} class="m-auto rounded-lg backdrop:bg-black/30 max-w-md">
+<dialog bind:this={signOutDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
 	<form method="DIALOG">
 		<button>close</button>
 	</form>

@@ -18,51 +18,60 @@
 	};
 </script>
 
-<form action="/auth/sign-up/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST"
-			use:enhance={handleEnhance}>
+<form
+	action="/auth/sign-up/"
+	class="max-w-md space-y-6 rounded bg-white p-6 shadow-md"
+	method="POST"
+	use:enhance={handleEnhance}
+>
 	<label class="block">
-		<span class="block text-sm font-medium mb-1">Email</span>
+		<span class="mb-1 block text-sm font-medium">Email</span>
 		<input
 			autocomplete="email"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700"
+			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
 			name="email"
 			required
-			type="email" />
+			type="email"
+		/>
 	</label>
 
 	<label class="block">
-		<span class="block text-sm font-medium mb-1">Name</span>
+		<span class="mb-1 block text-sm font-medium">Name</span>
 		<input
 			autocomplete="name"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700"
+			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
 			name="name"
 			required
-			type="text" />
+			type="text"
+		/>
 	</label>
 
 	<label class="block">
-		<span class="block text-sm font-medium mb-1">Password</span>
+		<span class="mb-1 block text-sm font-medium">Password</span>
 		<input
 			autocomplete="new-password"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700"
+			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
 			name="password"
 			required
-			type="password" />
+			type="password"
+		/>
 	</label>
 
 	<label class="block">
-		<span class="block text-sm font-medium mb-1">Confirm&nbsp;Password</span>
+		<span class="mb-1 block text-sm font-medium">Confirm&nbsp;Password</span>
 		<input
 			autocomplete="new-password"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700"
+			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
 			name="confirm-password"
 			required
-			type="password" />
+			type="password"
+		/>
 	</label>
 
 	<button
-		class="w-full bg-black hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded"
-		type="submit">
+		class="w-full rounded bg-black px-4 py-2 font-semibold text-white hover:bg-gray-900"
+		type="submit"
+	>
 		Sign&nbsp;Up
 	</button>
 </form>

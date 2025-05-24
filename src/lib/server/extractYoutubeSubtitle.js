@@ -1,5 +1,5 @@
-import { exec } from 'node:child_process'
-import { promisify } from 'node:util'
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
@@ -29,13 +29,13 @@ export async function extractSubtitle(youtubeUrl) {
 	try {
 		const { stdout } = await execAsync(
 			`yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format ttml "${youtubeUrl}" -o "%(id)s.%(ext)s"`
-		)
+		);
 
-		const fs = await import('node:fs/promises')
+		const fs = await import('node:fs/promises');
 		const videoId = new URL(youtubeUrl).searchParams.get('v');
 		const path = `./${videoId}.en.ttml`;
 
-		const xml = await fs.readFile(path, 'utf-8')
+		const xml = await fs.readFile(path, 'utf-8');
 
 		const text = xml
 			.replace(/<\/?[^>]+(>|$)/g, '') // 태그 제거
@@ -43,11 +43,11 @@ export async function extractSubtitle(youtubeUrl) {
 			.replace(/&quot;/g, '"')
 			.replace(/&#39;/g, "'")
 			.replace(/\s+/g, ' ')
-			.trim()
+			.trim();
 
-		await fs.unlink(path)
+		await fs.unlink(path);
 
-		return text
+		return text;
 	} catch (err) {
 		return null;
 	}

@@ -5,11 +5,11 @@ export const prerender = true;
 export function load({ locals }) {
 	if (locals.session) {
 		return {
-			userMetadata: locals.user.user_metadata,
+			userMetadata: locals.user.user_metadata
 		};
 	}
 
 	return {
-		userMetadata: null,
+		userMetadata: null
 	};
 }

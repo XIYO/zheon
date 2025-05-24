@@ -18,12 +18,15 @@
 	};
 </script>
 
-<form action="/auth/sign-out/" class="space-y-6 bg-white p-6 rounded shadow-md max-w-md" method="POST" use:enhance={handleEnhance}>
-	<p class="text-black text-sm mb-4">
-		정말로 사인아웃 하시겠습니까?
-	</p>
+<form
+	action="/auth/sign-out/"
+	class="max-w-md space-y-6 rounded bg-white p-6 shadow-md"
+	method="POST"
+	use:enhance={handleEnhance}
+>
+	<p class="mb-4 text-sm text-black">정말로 사인아웃 하시겠습니까?</p>
 	<button
-		class="w-full bg-black hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded"
+		class="w-full rounded bg-black px-4 py-2 font-semibold text-white hover:bg-gray-900"
 		type="submit"
 	>
 		Sign Out

@@ -3,6 +3,6 @@
 	import { enhance } from '$app/forms';
 </script>
 
-<form class="space-y-6 bg-white p-6 rounded shadow-md max-w-md mx-auto" method="POST" use:enhance>
+<form class="mx-auto max-w-md space-y-6 rounded bg-white p-6 shadow-md" method="POST" use:enhance>
 	<SignUpForm />
 </form>

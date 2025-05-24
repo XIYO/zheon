@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit'
+import { fail, redirect } from '@sveltejs/kit';
 
 /** @type {import('../../../../../.svelte-kit/types/src/routes').Actions} */
 export const actions = {

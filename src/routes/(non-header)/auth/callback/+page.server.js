@@ -15,7 +15,7 @@ export async function load({ url, locals: { supabase } }) {
 
 	if (code) {
 		const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-		
+
 		if (error) {
 			console.error('세션 교환 에러:', error);
 			throw redirect(303, '/auth/sign-in?error=session_failed');

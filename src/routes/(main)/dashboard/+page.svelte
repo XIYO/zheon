@@ -34,21 +34,27 @@
 		const id = extractYoutubeId(url);
 		return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
 	}
-
-
 </script>
 
-<div class="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 to-gray-100 py-12 px-4">
-	<div class="w-full max-w-md bg-white p-6 rounded shadow-md border border-black mb-8">
-		<h1 class="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight text-center">유튜브 요약</h1>
-		<p class="text-gray-500 text-center mb-6">유튜브 영상을 입력하면 AI가 요약해줍니다.</p>
+<div
+	class="flex min-h-screen flex-col items-center justify-start bg-gradient-to-br from-blue-50 to-gray-100 px-4 py-12"
+>
+	<div class="mb-8 w-full max-w-md rounded border border-black bg-white p-6 shadow-md">
+		<h1 class="mb-2 text-center text-3xl font-extrabold tracking-tight text-gray-900">
+			유튜브 요약
+		</h1>
+		<p class="mb-6 text-center text-gray-500">유튜브 영상을 입력하면 AI가 요약해줍니다.</p>
 
 		{#if page.form?.message}
-			<div in:slide class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+			<div in:slide class="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
 				<div class="flex">
 					<div class="flex-shrink-0">
 						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+							<path
+								fill-rule="evenodd"
+								d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+								clip-rule="evenodd"
+							/>
 						</svg>
 					</div>
 					<div class="ml-3">
@@ -59,19 +65,30 @@
 		{/if}
 
 		<form method="POST" use:enhance={handleEnhance} class="flex flex-col gap-4">
-			<input name="youtubeUrl" placeholder="유튜브 주소를 입력하세요" required type="text"
-				class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-gray-700 text-gray-800 placeholder-gray-400"
+			<input
+				name="youtubeUrl"
+				placeholder="유튜브 주소를 입력하세요"
+				required
+				type="text"
+				class="w-full border border-black bg-transparent px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-gray-700 focus:outline-none"
 				disabled={loading}
 			/>
 			<button
-				class="w-full bg-black hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded transition flex items-center justify-center gap-2"
+				class="flex w-full items-center justify-center gap-2 rounded bg-black px-4 py-2 font-semibold text-white transition hover:bg-gray-900"
 				type="submit"
 				disabled={loading}
 			>
 				{#if loading}
-					<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+					<svg
+						class="h-5 w-5 animate-spin text-white"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+						></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+						></path>
 					</svg>
 					로딩 중...
 				{:else}
@@ -83,18 +100,29 @@
 
 	<div class="w-full max-w-6xl">
 		{#if summaries?.length === 0}
-			<p class="text-gray-400 text-center">아직 요약된 영상이 없습니다.</p>
+			<p class="text-center text-gray-400">아직 요약된 영상이 없습니다.</p>
 		{:else}
-			<h2 class="my-6 text-2xl font-bold text-gray-800 text-center">요약 결과</h2>
+			<h2 class="my-6 text-center text-2xl font-bold text-gray-800">요약 결과</h2>
 
 			<!-- 반응형 그리드: 모바일 1, 태블릿 2, 데스크탑 3~4 -->
-			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+			<div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 				{#each summaries as summary (summary.id)}
-					<a href="/summary/{summary.id}/" class="bg-white border border-black rounded shadow-md p-4 flex flex-col gap-3 hover:shadow-lg transition cursor-pointer">
-						<img src={extractThumbnail(summary.youtube_url)} alt="썸네일" class="w-full rounded-xl aspect-video object-cover border border-gray-200" />
+					<a
+						href="/summary/{summary.id}/"
+						class="flex cursor-pointer flex-col gap-3 rounded border border-black bg-white p-4 shadow-md transition hover:shadow-lg"
+					>
+						<img
+							src={extractThumbnail(summary.youtube_url)}
+							alt="썸네일"
+							class="aspect-video w-full rounded-xl border border-gray-200 object-cover"
+						/>
 						<div class="flex flex-col gap-1">
-							<div class="font-bold text-base md:text-lg text-gray-900 truncate">{summary.title}</div>
-							<div class="text-gray-700 text-sm md:text-base line-clamp-4 whitespace-pre-line">{summary.summary}</div>
+							<div class="truncate text-base font-bold text-gray-900 md:text-lg">
+								{summary.title}
+							</div>
+							<div class="line-clamp-4 text-sm whitespace-pre-line text-gray-700 md:text-base">
+								{summary.summary}
+							</div>
 						</div>
 					</a>
 				{/each}

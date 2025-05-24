@@ -19,7 +19,7 @@ export const load = async ({ locals: { supabase, user } }) => {
 	return {
 		summaries
 	};
-}
+};
 
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
@@ -27,12 +27,13 @@ export const actions = {
 			const currentPath = url.pathname + url.search;
 			throw redirect(303, `/auth/sign-in/?redirectTo=${encodeURIComponent(currentPath)}`);
 		}
-		
+
 		const formData = await request.formData();
 		const youtubeUrl = formData.get('youtubeUrl');
 		let lang = formData.get('lang') ?? 'ko';
 		if (lang !== 'ko' && lang !== 'en') lang = 'ko';
-		if (!youtubeUrl || typeof youtubeUrl !== 'string') return fail(400, { error: '유튜브 URL이 필요합니다.' });
+		if (!youtubeUrl || typeof youtubeUrl !== 'string')
+			return fail(400, { error: '유튜브 URL이 필요합니다.' });
 
 		// check if already exists in DB
 		const { data: existing, error: fetchError } = await supabase
