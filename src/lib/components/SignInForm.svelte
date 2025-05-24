@@ -33,12 +33,12 @@
 <form
 	action={`/auth/sign-in/?/google${redirectToQuery}`}
 	method="POST"
-	class="max-w-md space-y-4 rounded bg-white p-6 shadow-md"
+	class="max-w-md space-y-4 rounded-lg bg-white p-6 shadow-sm border border-gray-200"
 	use:enhance
 >
 	<button
 		type="submit"
-		class="flex w-full items-center justify-center gap-3 rounded border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:border-gray-400"
+		class="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
 	>
 		<svg width="18" height="18" viewBox="0 0 24 24">
 			<path
@@ -68,39 +68,39 @@
 		<div class="w-full border-t border-gray-300"></div>
 	</div>
 	<div class="relative flex justify-center text-sm">
-		<span class="bg-white px-2 text-gray-500">또는</span>
+		<span class="bg-gray-50 px-2 text-gray-500">또는</span>
 	</div>
 </div>
 
 <!-- Email/Password Form -->
 <form
 	action={`/auth/sign-in/?/sign-in${redirectToQuery}`}
-	class="max-w-md space-y-6 rounded bg-white p-6 shadow-md"
+	class="max-w-md space-y-6 rounded-lg bg-white p-6 shadow-sm border border-gray-200"
 	method="POST"
 	use:enhance={handleEnhance}
 >
 	<label class="block">
-		<span class="mb-1 block text-sm font-medium">Email</span>
+		<span class="mb-1 block text-sm font-medium text-gray-700">Email</span>
 		<input
 			autocomplete="username"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
+			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
 			name="email"
 			type="email"
 		/>
 	</label>
 
 	<label class="block">
-		<span class="mb-1 block text-sm font-medium">Password</span>
+		<span class="mb-1 block text-sm font-medium text-gray-700">Password</span>
 		<input
 			autocomplete="current-password"
-			class="w-full border border-black bg-transparent px-3 py-2 text-sm focus:border-gray-700 focus:outline-none"
+			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
 			name="password"
 			type="password"
 		/>
 	</label>
 
 	<button
-		class="w-full rounded bg-black px-4 py-2 font-semibold text-white hover:bg-gray-900"
+		class="w-full rounded-md bg-gray-900 px-4 py-2 font-semibold text-white hover:bg-black transition-colors"
 		type="submit"
 	>
 		Sign In

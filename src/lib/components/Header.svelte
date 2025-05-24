@@ -73,25 +73,25 @@
 </header>
 
 <!-- ─────────────────────────── SIGN‑UP DIALOG ─────────────────────────── -->
-<dialog bind:this={signUpDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
-	<form method="DIALOG">
-		<button>close</button>
+<dialog bind:this={signUpDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+	<form method="DIALOG" class="mb-4">
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
 	</form>
 	<SignUpForm onsuccess={onSubmitSignUp} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
-<dialog bind:this={signInDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
-	<form method="DIALOG">
-		<button>close</button>
+<dialog bind:this={signInDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+	<form method="DIALOG" class="mb-4">
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
 	</form>
 	<SignInForm onsuccess={onsuccessSignIn} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
-<dialog bind:this={signOutDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30">
-	<form method="DIALOG">
-		<button>close</button>
+<dialog bind:this={signOutDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+	<form method="DIALOG" class="mb-4">
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
 	</form>
 	<SIgnOutForm onsuccess={onSubmitSignOut} />
 </dialog>

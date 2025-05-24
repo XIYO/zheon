@@ -20,13 +20,13 @@
 
 <form
 	action="/auth/sign-out/"
-	class="max-w-md space-y-6 rounded bg-white p-6 shadow-md"
+	class="max-w-md space-y-6 rounded-lg bg-white p-6 shadow-sm border border-gray-200"
 	method="POST"
 	use:enhance={handleEnhance}
 >
-	<p class="mb-4 text-sm text-black">정말로 사인아웃 하시겠습니까?</p>
+	<p class="mb-4 text-sm text-gray-700">정말로 사인아웃 하시겠습니까?</p>
 	<button
-		class="w-full rounded bg-black px-4 py-2 font-semibold text-white hover:bg-gray-900"
+		class="w-full rounded-md bg-gray-900 px-4 py-2 font-semibold text-white hover:bg-black transition-colors"
 		type="submit"
 	>
 		Sign Out

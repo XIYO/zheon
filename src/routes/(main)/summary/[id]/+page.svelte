@@ -23,13 +23,13 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 px-4 py-8">
+<div class="min-h-screen bg-gray-50 px-4 py-8">
 	<div class="mx-auto max-w-4xl">
 		<!-- Header with back button -->
 		<div class="mb-6">
 			<a
 				href="/dashboard/"
-				class="inline-flex items-center gap-2 text-gray-600 transition hover:text-gray-900"
+				class="inline-flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900"
 			>
 				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"
@@ -40,7 +40,7 @@
 		</div>
 
 		<!-- Main content -->
-		<div class="overflow-hidden rounded-lg bg-white shadow-lg">
+		<div class="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
 			<!-- Video thumbnail and basic info -->
 			<div class="relative">
 				<img
@@ -65,7 +65,7 @@
 				<section>
 					<h2 class="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
 						<svg
-							class="h-5 w-5 text-blue-600"
+							class="h-5 w-5 text-gray-600"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -79,7 +79,7 @@
 						</svg>
 						요약
 					</h2>
-					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 						<p class="leading-relaxed whitespace-pre-line text-gray-800">{summary.summary}</p>
 					</div>
 				</section>
@@ -88,7 +88,7 @@
 				<section>
 					<h2 class="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
 						<svg
-							class="h-5 w-5 text-green-600"
+							class="h-5 w-5 text-gray-600"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -103,7 +103,7 @@
 						전체 내용
 					</h2>
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-						<p class="text-sm leading-relaxed whitespace-pre-line text-gray-800 sm:text-base">
+						<p class="text-sm leading-relaxed whitespace-pre-line text-gray-700 sm:text-base">
 							{summary.content}
 						</p>
 					</div>
@@ -112,7 +112,7 @@
 				<!-- YouTube link -->
 				<section>
 					<h2 class="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900">
-						<svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -126,7 +126,7 @@
 						href={summary.youtube_url}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+						class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-white transition-colors hover:bg-black"
 					>
 						<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
 							<path

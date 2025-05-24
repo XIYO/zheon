@@ -22,13 +22,17 @@
 	});
 </script>
 
-<p class="mt-20 text-center text-lg font-semibold">
-	성공적으로 사인아웃되었습니다.
-	{#if show}
-		<span in:slide={{ delay: 500 }} class="block">잠시 후 홈으로 이동합니다. </span>
-	{/if}
-</p>
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+	<div class="max-w-md w-full text-center">
+		<p class="text-lg font-semibold text-gray-900">
+			성공적으로 사인아웃되었습니다.
+			{#if show}
+				<span in:slide={{ delay: 500 }} class="block text-gray-600 text-base font-normal mt-2">잠시 후 홈으로 이동합니다. </span>
+			{/if}
+		</p>
 
-<p class="mt-4 text-center">
-	<a class="underline hover:text-gray-700" href="/">홈으로 이동하기</a>
-</p>
+		<p class="mt-6">
+			<a class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black transition-colors" href="/">홈으로 이동하기</a>
+		</p>
+	</div>
+</div>
