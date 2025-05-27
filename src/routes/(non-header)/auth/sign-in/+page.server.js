@@ -1,5 +1,4 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { dev } from '$app/environment';
 import { signInSchema } from '$lib/components/signInSchema.js';
 
 export const actions = {
@@ -31,8 +30,7 @@ export const actions = {
 		console.log('Google OAuth 요청 시작');
 		const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
-		// 환경에 따라 동적으로 리디렉트 URL 설정
-		const baseUrl = dev ? 'http://localhost:5173' : url.origin;
+		const baseUrl = url.origin;
 		const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
 
 		const { data, error } = await supabase.auth.signInWithOAuth({
