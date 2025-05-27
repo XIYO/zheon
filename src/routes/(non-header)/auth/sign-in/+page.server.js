@@ -29,7 +29,10 @@ export const actions = {
 	google: async ({ url, locals: { supabase } }) => {
 		console.log('Google OAuth 요청 시작');
 		const baseUrl = url.origin;
-		const callbackUrl = `${baseUrl}/auth/callback/`;
+		const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
+		const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+
+		console.log('OAuth 콜백 URL:', callbackUrl);
 
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
