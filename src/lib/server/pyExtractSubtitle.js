@@ -5,7 +5,7 @@
  */
 export async function extractSubtitle(youtubeUrl) {
 	if (!youtubeUrl) return null;
-	const endpoint = `https://extract-subtitle.xiyo.dev/extract?url=${encodeURIComponent(youtubeUrl)}&only_text=true`;
+	const endpoint = `https://extract-subtitle.xiyo.dev/extract-text?url=${encodeURIComponent(youtubeUrl)}`;
 	try {
 		const res = await fetch(endpoint);
 		if (!res.ok) return null;
