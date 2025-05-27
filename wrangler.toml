@@ -1,14 +1,17 @@
 name = "zheon"
-# Pages 프로젝트 설정
-pages_build_output_dir = ".svelte-kit/cloudflare"
+# SvelteKit이 빌드한 Worker entry-point
+main = ".svelte-kit/cloudflare/_worker.js"
 # Workers 런타임 호환성 날짜
 compatibility_date = "2025-05-05"
 # Node.js 내장 API(예: async_hooks) 사용을 허용하려면 추가
 compatibility_flags = ["nodejs_compat"]
 
-# 환경 변수 설정
-[vars]
-PUBLIC_SUPABASE_URL = "https://iefgdhwmgljjacafqomd.supabase.co"
-PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZmdkaHdtZ2xqamFjYWZxb21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4Mzc5NTcsImV4cCI6MjA2MzQxMzk1N30.VxInMB0yHya_AAGifZXmVWFkGDgxGFZx94F_GBURzsQ"
+routes = [
+    { pattern = "zheon.xiyo.dev", custom_domain = true }
+]
 
+# 정적 파일(assets) 바인딩 설정
+[assets]
+binding   = "ASSETS"                # 코드 내에서 platform.env.ASSETS 로 접근
+directory = ".svelte-kit/cloudflare"  # 빌드된 client 파일 위치
 
