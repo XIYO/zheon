@@ -1,6 +1,13 @@
 import { summarizeTranscript } from '$lib/server/summary.js';
-import { extractSubtitle } from '$lib/server/pyExtractSubtitle.js';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
+
+// 유틸리티 함수들 임포트
+import { validateAndNormalizeUrl } from '$lib/server/youtube-utils.js';
+import { validateUser } from '$lib/server/auth-utils.js';
+import { handleError, handleSubtitleError } from '$lib/server/error-utils.js';
+import { getOrCacheSubtitle, processSubtitle, validateLanguage } from '$lib/server/subtitle-service.js';
+import { upsertSummary } from '$lib/server/summary-service.js';
+import { validateYouTubeUrlFromForm, validateLanguageFromForm } from '$lib/server/validation-utils.js';
 
 export const load = async ({ locals: { supabase, user } }) => {
 	if (!user) return { summaries: [] };
@@ -21,71 +28,72 @@ export const load = async ({ locals: { supabase, user } }) => {
 
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
+		// 1. 사용자 인증 검증
+		try {
+			validateUser(user, url);
+		} catch (error) {
+			return fail(400, handleError(error));
+		}
+
+		// user가 null이 아님을 보장 (validateUser에서 이미 검증됨)
 		if (!user) {
-			const currentPath = url.pathname + url.search;
-			throw redirect(303, `/auth/sign-in/?redirectTo=${encodeURIComponent(currentPath)}`);
+			return fail(400, { error: 'User is not authenticated.' });
 		}
 
+		// 2. 폼 데이터 검증
 		const formData = await request.formData();
-		const youtubeUrl = formData.get('youtubeUrl');
-		let lang = formData.get('lang') ?? 'ko';
-		if (lang !== 'ko' && lang !== 'en') lang = 'ko';
-		if (!youtubeUrl || typeof youtubeUrl !== 'string')
-			return fail(400, { error: '유튜브 URL이 필요합니다.' });
+		let youtubeUrl, lang;
 
-		// check if already exists in DB
-		const { data: existing, error: fetchError } = await supabase
-			.from('summary')
-			.select('id, youtube_url, title, summary, user_id')
-			.eq('youtube_url', youtubeUrl)
-			.eq('lang', lang)
-			.eq('user_id', user.id)
-			.maybeSingle();
-
-		if (fetchError) {
-			console.error('Fetch error:', fetchError);
+		try {
+			youtubeUrl = validateYouTubeUrlFromForm(formData);
+			lang = validateLanguageFromForm(formData);
+		} catch (error) {
+			return fail(400, handleError(error));
 		}
 
-		const subtitle = await extractSubtitle(youtubeUrl);
-		if (!subtitle || typeof subtitle !== 'string') {
-			return fail(400, {
-				message: 'Failed to extract subtitle. Please check the YouTube URL.'
-			});
-		}
-		/** @type {'ko' | 'en'} */
-		let safeLang = lang === 'en' ? 'en' : 'ko';
-		const { title, summary, content } = await summarizeTranscript(subtitle, { lang: safeLang });
-
-		let insertedData;
-		if (existing) {
-			// 이미 있으면 업데이트
-			const { data: updated, error: updateError } = await supabase
-				.from('summary')
-				.update({ title, summary, content })
-				.eq('id', existing.id)
-				.select()
-				.single();
-			if (updateError) {
-				console.error('Update error:', updateError);
-				return fail(500, { error: 'Failed to update summary' });
-			}
-			insertedData = updated;
-		} else {
-			// 없으면 새로 생성
-			const { data: inserted, error: insertError } = await supabase
-				.from('summary')
-				.insert({ youtube_url: youtubeUrl, lang, title, summary, content, user_id: user.id })
-				.select()
-				.single();
-			if (insertError) {
-				console.error('Insert error:', insertError);
-				return fail(500, { error: 'Failed to create summary' });
-			}
-			insertedData = inserted;
+		// 3. YouTube URL 정규화
+		let normalizedUrl;
+		try {
+			normalizedUrl = validateAndNormalizeUrl(youtubeUrl);
+		} catch (error) {
+			return fail(400, handleError(error));
 		}
 
-		return {
-			summary: insertedData
-		};
+		// 4. 자막 추출 및 캐싱
+		let subtitle;
+		try {
+			subtitle = await getOrCacheSubtitle(normalizedUrl, lang, supabase);
+		} catch (error) {
+			return fail(400, handleSubtitleError(error));
+		}
+
+		// 5. 자막 처리 및 검증
+		let transcript;
+		try {
+			transcript = processSubtitle(subtitle);
+		} catch (error) {
+			return fail(400, handleSubtitleError(error));
+		}
+
+		// 6. 요약 생성
+		const safeLang = validateLanguage(lang);
+		const { title, summary, content } = await summarizeTranscript(transcript, { lang: safeLang });
+
+		// 7. 요약 저장 또는 업데이트
+		try {
+			const summaryData = await upsertSummary(
+				youtubeUrl, 
+				lang, 
+				title, 
+				summary, 
+				content, 
+				user.id, 
+				supabase
+			);
+
+			return { summary: summaryData };
+		} catch (error) {
+			return fail(500, handleError(error));
+		}
 	}
 };

@@ -14,7 +14,6 @@ export async function summarizeTranscript(
 	transcript,
 	{ model = 'gpt-4.1-nano', lang = 'ko' } = {}
 ) {
-	if (dev) return { title: '', summary: transcript, content: transcript };
 
 	// build speak directive
 	const speakDirective = lang === 'en' ? 'Speak in English.' : 'Speak in Korean.';

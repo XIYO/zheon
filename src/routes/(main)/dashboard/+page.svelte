@@ -3,7 +3,6 @@
 	import { page } from '$app/state';
 	import { slide } from 'svelte/transition';
 	import { handleSignIn } from '$lib/components/Header.svelte';
-	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 	let summaries = $derived(data.summaries);
@@ -16,8 +15,6 @@
 		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
 				handleSignIn();
-			} else if (result.type === 'failure') {
-				update();
 			} else {
 				update({ invalidateAll: true });
 			}

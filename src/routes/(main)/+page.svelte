@@ -1,5 +1,5 @@
 <section
-	class="grid items-center gap-10 bg-gray-900 px-6 py-24 text-white sm:grid-cols-1 md:grid-cols-2"
+	class="grid items-center gap-10 bg-gray-900 px-6 py-24 text-white md:grid-cols-2"
 >
 	<div class="space-y-6">
 		<h1 class="text-5xl font-extrabold tracking-tight">展 — Zheon</h1>
@@ -47,3 +47,5 @@
 		</div>
 	</div>
 </section>
+
+<!-- 🙈 -->

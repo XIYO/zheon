@@ -1,7 +1,8 @@
+<!-- 🙈 Header component with authentication dialogs and Svelte 5 runes -->
 <script module>
 	import SignUpForm from '$lib/components/SignUpForm.svelte';
 	import SignInForm from '$lib/components/SignInForm.svelte';
-	import SIgnOutForm from '$lib/components/SignOutForm.svelte';
+	import SignOutForm from '$lib/components/SignOutForm.svelte';
 	import { page } from '$app/state';
 
 	/** @type {HTMLDialogElement} */
@@ -11,27 +12,50 @@
 	/** @type {HTMLDialogElement} */
 	let signOutDialog;
 
-	export const handleSignUp = (/** @type MouseEvent || undefined */ e) => {
+	/**
+	 * Handles the sign-up dialog opening.
+	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
+	 */
+	export const handleSignUp = (e) => {
 		e?.preventDefault();
 		signUpDialog.showModal();
 	};
 
-	export const handleSignIn = (/** @type MouseEvent || undefined */ e) => {
+	/**
+	 * Handles the sign-in dialog opening.
+	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
+	 */
+	export const handleSignIn = (e) => {
 		e?.preventDefault();
 		signInDialog.showModal();
 	};
 
-	export const handleSignOut = (/** @type MouseEvent || undefined */ e) => {
+	/**
+	 * Handles the sign-out dialog opening.
+	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
+	 */
+	export const handleSignOut = (e) => {
 		e?.preventDefault();
 		signOutDialog.showModal();
 	};
 
+	/**
+	 * Handles the sign-up form submission success.
+	 */
 	const onSubmitSignUp = () => {
 		signUpDialog.close();
 	};
 
-	const onsuccessSignIn = () => signInDialog.close();
+	/**
+	 * Handles the sign-in form submission success.
+	 */
+	const onsuccessSignIn = () => {
+		signInDialog.close();
+	};
 
+	/**
+	 * Handles the sign-out form submission success.
+	 */
 	const onSubmitSignOut = () => {
 		signOutDialog.close();
 	};
@@ -49,14 +73,14 @@
 		<nav class="space-x-6">
 			<a
 				href="/auth/sign-up"
-				class="text-sm underline-offset-4 hover:underline"
-				onclick={handleSignUp}>Sign up</a
-			>
+				class="text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
+				onclick={handleSignUp}
+			>Sign up</a>
 			<a
 				href="/auth/sign-in"
-				class="text-sm underline-offset-4 hover:underline"
-				onclick={handleSignIn}>Sign in</a
-			>
+				class="text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
+				onclick={handleSignIn}
+			>Sign in</a>
 		</nav>
 	{:else}
 		<span class="text-sm text-gray-300">
@@ -64,7 +88,7 @@
 			<a
 				href="/auth/sign-out/"
 				onclick={handleSignOut}
-				class="ml-4 text-sm underline hover:text-white"
+				class="ml-4 text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
 			>
 				Sign out
 			</a>
@@ -75,7 +99,7 @@
 <!-- ─────────────────────────── SIGN‑UP DIALOG ─────────────────────────── -->
 <dialog bind:this={signUpDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
 	</form>
 	<SignUpForm onsuccess={onSubmitSignUp} />
 </dialog>
@@ -83,7 +107,7 @@
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
 <dialog bind:this={signInDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
 	</form>
 	<SignInForm onsuccess={onsuccessSignIn} />
 </dialog>
@@ -91,7 +115,7 @@
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
 <dialog bind:this={signOutDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300 transition-colors">닫기</button>
+		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
 	</form>
-	<SIgnOutForm onsuccess={onSubmitSignOut} />
+	<SignOutForm onsuccess={onSubmitSignOut} />
 </dialog>

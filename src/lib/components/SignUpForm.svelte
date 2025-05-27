@@ -1,3 +1,4 @@
+<!-- 🙈 Sign-up form with clean monochromatic design -->
 <script>
 	import { applyAction, enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -8,9 +9,7 @@
 	const { onsuccess } = $props();
 
 	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	const handleEnhance = (args) => {
-		const { action, formData, formElement, submitter, cancel } = args;
-		
+	const handleEnhance = ({ action, formData, formElement, submitter, cancel }) => {
 		const parsed = Object.fromEntries(formData);
 		const validatedSignIn = signUpSchema.safeParse(parsed);
 		if (!validatedSignIn.success) {
@@ -47,62 +46,49 @@
 
 <form
 	action="/auth/sign-up/"
-	class="max-w-md space-y-6 rounded-lg bg-white p-6 shadow-sm border border-gray-200"
+	class="max-w-md space-y-6 rounded-lg bg-gray-50 p-6 shadow-sm border border-gray-200"
 	method="POST"
 	use:enhance={handleEnhance}
 >
 	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.email ?? ''}>
-		<span class="mb-1 block text-sm font-medium text-gray-700">Email</span>
+		<span class="mb-1 block text-sm font-medium text-gray-600">Email</span>
 		<input
-			autocomplete="email"
-			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-			name="email"
-			required
 			type="email"
+			name="email"
+			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-black focus:border-black"
 		/>
 	</label>
 
 	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.name ?? ''}>
-		<span class="mb-1 block text-sm font-medium text-gray-700">Name</span>
+		<span class="mb-1 block text-sm font-medium text-gray-600">Name</span>
 		<input
-			autocomplete="name"
-			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-			name="name"
-			required
 			type="text"
+			name="name"
+			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-black focus:border-black"
 		/>
 	</label>
 
 	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.password ?? ''}>
-		<span class="mb-1 block text-sm font-medium text-gray-700">Password</span>
+		<span class="mb-1 block text-sm font-medium text-gray-600">Password</span>
 		<input
-			autocomplete="new-password"
-			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-			name="password"
-			required
 			type="password"
+			name="password"
+			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-black focus:border-black"
 		/>
 	</label>
 
 	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.confirmPassword ?? ''}>
-		<span class="mb-1 block text-sm font-medium text-gray-700">Confirm&nbsp;Password</span>
+		<span class="mb-1 block text-sm font-medium text-gray-600">Confirm Password</span>
 		<input
-			autocomplete="new-password"
-			class="w-full border border-gray-300 bg-transparent px-3 py-2 text-sm rounded-md focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-			name="confirmPassword"
-			required
 			type="password"
+			name="confirmPassword"
+			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-black focus:border-black"
 		/>
 	</label>
 
 	<button type="submit"
-		class="w-full rounded-md px-4 py-2 font-semibold transition-colors
-			bg-gray-900 text-white
-			disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border disabled:border-gray-300
-			hover:bg-black"
+		class="w-full rounded-md bg-black px-4 py-2 font-semibold text-white hover:bg-gray-600"
 	>
 		Sign Up
 	</button>
 </form>
-
-<!-- 🙈 -->

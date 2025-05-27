@@ -9,7 +9,7 @@ export async function extractSubtitle(youtubeUrl) {
 	try {
 		const res = await fetch(endpoint);
 		if (!res.ok) return null;
-		return await res.text();
+		return res.json().then(data => data.transcript || null);
 	} catch (e) {
 		console.error(e);
 		return null;

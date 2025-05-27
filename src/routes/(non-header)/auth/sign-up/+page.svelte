@@ -1,3 +1,4 @@
+<!-- 🙈 Sign-up page with clean monochromatic design -->
 <script>
 	import SignUpForm from '$lib/components/SignUpForm.svelte';
 	import { enhance } from '$app/forms';
