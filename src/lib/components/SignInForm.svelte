@@ -1,7 +1,8 @@
 <script>
-	import { applyAction, enhance } from '$app/forms';
+	import { applyAction, deserialize, enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { signInSchema } from './signInSchema.js';
 
 	/** @type {{ onsuccess?: () => void }} */
 	const { onsuccess } = $props();
@@ -13,7 +14,28 @@
 	});
 
 	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	const handleEnhance = ({}) => {
+	const handleEnhance = ({ action, formData, formElement, submitter, cancel }) => {
+		const parsed = Object.fromEntries(formData);
+		const validatedSignIn = signInSchema.safeParse(parsed);
+		if (!validatedSignIn.success) {
+			let failure = Object.create(null);
+			for (const err of validatedSignIn.error.errors) {
+				const key = String(err.path[0]);
+				failure[key] = err.message;
+			}
+
+			/** @type {import('@sveltejs/kit').ActionResult} */
+			const failureResult = {
+				type: 'failure',
+				status: 400,
+				data: { failure }
+			};
+			cancel();
+			return applyAction(failureResult);
+		}
+
+		submitter?.setAttribute('disabled', 'true');
+
 		return ({ result }) => {
 			if (result.type === 'redirect') {
 				onsuccess?.();
@@ -21,13 +43,10 @@
 			} else {
 				applyAction(result);
 			}
+			submitter?.removeAttribute('disabled');
 		};
 	};
 </script>
-
-<p class="px-3 py-2 text-sm text-red-600">
-	{page.form?.message || ' '}
-</p>
 
 <!-- Google OAuth Form -->
 <form
@@ -79,7 +98,7 @@
 	method="POST"
 	use:enhance={handleEnhance}
 >
-	<label class="block">
+	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.email ?? ''}>
 		<span class="mb-1 block text-sm font-medium text-gray-700">Email</span>
 		<input
 			autocomplete="username"
@@ -89,7 +108,7 @@
 		/>
 	</label>
 
-	<label class="block">
+	<label class="block after:block after:mb-1 after:text-sm after:text-red-600 after:min-h-[1.5em] after:content-[attr(data-error)]" data-error={page.form?.failure?.password ?? ''}>
 		<span class="mb-1 block text-sm font-medium text-gray-700">Password</span>
 		<input
 			autocomplete="current-password"
@@ -100,8 +119,10 @@
 	</label>
 
 	<button
-		class="w-full rounded-md bg-gray-900 px-4 py-2 font-semibold text-white hover:bg-black transition-colors"
+		class="w-full rounded-md bg-gray-900 px-4 py-2 font-semibold text-white hover:bg-black transition-colors after:block after:mt-2 after:text-sm after:text-red-600 after:content-[attr(data-error)] disabled:bg-gray-400 disabled:cursor-not-allowed"
 		type="submit"
+		data-error={page.form?.failure?.message ?? ''}
+		disabled={page.form?.pending}
 	>
 		Sign In
 	</button>

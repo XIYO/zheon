@@ -2,8 +2,6 @@ import { summarizeTranscript } from '$lib/server/summary.js';
 import { extractSubtitle } from '$lib/server/pyExtractSubtitle.js';
 import { fail, redirect } from '@sveltejs/kit';
 
-export const prerender = false;
-
 export const load = async ({ locals: { supabase, user } }) => {
 	if (!user) return { summaries: [] };
 	const { data: summaries, error } = await supabase

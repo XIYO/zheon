@@ -1,26 +1,29 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { dev } from '$app/environment';
+import { signInSchema } from '$lib/components/signInSchema.js';
 
 export const actions = {
 	// 기존 이메일/패스워드 로그인
 	'sign-in': async ({ request, url, locals: { supabase } }) => {
-		const formData = await request.formData();
-		const email = formData.get('email')?.toString();
-		const password = formData.get('password')?.toString();
-		const redirectTo = url.searchParams.get('redirectTo') || '/';
-
-		if (!email || !password) {
-			return fail(400, {
-				message: '이메일과 패스워드를 입력해주세요.'
-			});
+		const formData = Object.fromEntries(await request.formData());
+		const validatedSignIn = signInSchema.safeParse(formData);
+		if (!validatedSignIn.success) {
+			let failure = Object.create(null);
+			for (const err of validatedSignIn.error.errors) {
+				const key = String(err.path[0]);
+				failure[key] = err.message;
+			}
+			return fail(400, { failure });
 		}
-
+		const { email, password } = validatedSignIn.data;
+		const redirectTo = url.searchParams.get('redirectTo') || '/';
 		const { error } = await supabase.auth.signInWithPassword({ email, password });
 		if (error) {
-			return fail(400, { message: error.message });
-		} else {
-			throw redirect(303, redirectTo);
+			const failure = Object.create(null);
+			failure.message = error.message;
+			return fail(400, { failure });
 		}
+		throw redirect(303, redirectTo);
 	},
 
 	// 구글 OAuth 로그인
