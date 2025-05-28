@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 
 export const trailingSlash = 'always';
 
-export async function load({ locals, url }) {
+export async function load({ locals: { safeGetSession }, url, cookies }) {
 	// OAuth 콜백 처리: 메인 페이지에 code 파라미터가 있다면 콜백 페이지로 리디렉트
 	const code = url.searchParams.get('code');
 	if (code && url.pathname === '/') {
@@ -11,13 +11,9 @@ export async function load({ locals, url }) {
 		throw redirect(303, `/auth/callback?${searchParams.toString()}`);
 	}
 
-	if (locals.session) {
-		return {
-			userMetadata: locals.user.user_metadata
-		};
-	}
-
+	const { session } = await safeGetSession()
 	return {
-		userMetadata: null
-	};
+		session,
+		cookies: cookies.getAll(),
+	}
 }

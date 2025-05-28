@@ -69,7 +69,7 @@
 	<a class="text-xl font-extrabold tracking-widest" href="/">展</a>
 
 	<!-- Auth navigation -->
-	{#if !page.data.userMetadata}
+	{#if !page.data.user.user_metadata}
 		<nav class="space-x-6">
 			<a
 				href="/auth/sign-up"
@@ -84,7 +84,7 @@
 		</nav>
 	{:else}
 		<span class="text-sm text-gray-300">
-			환영합니다, {page.data.userMetadata.name}님
+			환영합니다, {page.data.user.user_metadata.name}님
 			<a
 				href="/auth/sign-out/"
 				onclick={handleSignOut}
