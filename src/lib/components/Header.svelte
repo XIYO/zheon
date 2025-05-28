@@ -69,7 +69,7 @@
 	<a class="text-xl font-extrabold tracking-widest" href="/">展</a>
 
 	<!-- Auth navigation -->
-	{#if !page.data.user.user_metadata}
+	{#if !page.data.user}
 		<nav class="space-x-6">
 			<a
 				href="/auth/sign-up"
