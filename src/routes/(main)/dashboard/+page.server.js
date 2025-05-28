@@ -9,23 +9,6 @@ import { getOrCacheSubtitle, processSubtitle, validateLanguage } from '$lib/serv
 import { upsertSummary } from '$lib/server/summary-service.js';
 import { validateYouTubeUrlFromForm, validateLanguageFromForm } from '$lib/server/validation-utils.js';
 
-export const load = async ({ locals: { supabase, user } }) => {
-	if (!user) return { summaries: [] };
-	const { data: summaries, error } = await supabase
-		.from('summary')
-		.select('id, youtube_url, title, summary, user_id')
-		.eq('user_id', user.id)
-		.order('created_at', { ascending: false });
-
-	if (error) {
-		console.error('Load error:', error);
-	}
-
-	return {
-		summaries
-	};
-};
-
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
 		// 1. 사용자 인증 검증
