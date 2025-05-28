@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
-export const load = async ({ locals: { supabase, user }, params }) => {
+export const load = async ({ parent, params }) => {
+	const { supabase, user } = await parent();
 	if (!user) {
 		throw error(401, 'Unauthorized');
 	}
