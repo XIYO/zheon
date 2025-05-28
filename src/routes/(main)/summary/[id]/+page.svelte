@@ -3,8 +3,22 @@
 	let summary = $derived(data.summary);
 
 	function extractYoutubeId(url) {
-		const match = new URL(url).searchParams.get('v');
-		return match || '';
+		try {
+			const parsedUrl = new URL(url);
+			
+			// youtu.be 형태 처리
+			if (parsedUrl.hostname === 'youtu.be') {
+				return parsedUrl.pathname.slice(1); // '/' 제거
+			}
+			
+			// youtube.com 형태 처리
+			if (parsedUrl.hostname.includes('youtube.com')) {
+				return parsedUrl.searchParams.get('v') || '';
+			}
+		} catch {
+			return '';
+		}
+		return '';
 	}
 
 	function extractThumbnail(url) {
