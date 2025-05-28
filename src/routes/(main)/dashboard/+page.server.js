@@ -1,5 +1,5 @@
 import { summarizeTranscript } from '$lib/server/summary.js';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 // 유틸리티 함수들 임포트
 import { validateAndNormalizeUrl } from '$lib/server/youtube-utils.js';
@@ -15,7 +15,7 @@ export const actions = {
 		try {
 			validateUser(user, url);
 		} catch (error) {
-			return fail(400, handleError(error));
+			return redirect(303, `/auth/sign-in?redirectTo=${url.pathname}${url.search}`);
 		}
 
 		// user가 null이 아님을 보장 (validateUser에서 이미 검증됨)
