@@ -19,8 +19,12 @@ export async function getOrCacheSubtitle(youtubeUrl, lang, supabase) {
 		return cachedSubtitle;
 	}
 
-	// 자막 추출 시도
-	const extractedSubtitle = await extractSubtitleWithRetry(youtubeUrl);
+	// 자막 추출 시도 (백엔드에서 재시도 처리)
+	const extractedSubtitle = await extractSubtitle(youtubeUrl, lang);
+	
+	if (!extractedSubtitle || typeof extractedSubtitle !== 'string') {
+		throw new Error('Failed to extract subtitle. Please check the YouTube URL.');
+	}
 	
 	// 캐시에 저장
 	await cacheSubtitle(youtubeUrl, lang, extractedSubtitle, supabase);
@@ -56,43 +60,6 @@ async function getCachedSubtitle(youtubeUrl, lang, supabase) {
 	}
 }
 
-/**
- * 재시도 로직을 포함한 자막 추출
- * @param {string} youtubeUrl - YouTube URL
- * @param {number} maxRetries - 최대 재시도 횟수
- * @returns {Promise<string>} - 추출된 자막
- * @throws {Error} - 모든 재시도가 실패한 경우
- */
-async function extractSubtitleWithRetry(youtubeUrl, maxRetries = 5) {
-	let retryCount = 0;
-	let subtitle;
-
-	while (retryCount < maxRetries) {
-		try {
-			subtitle = await extractSubtitle(youtubeUrl);
-			
-			// 자막이 유효한 객체인지 확인
-			if (subtitle && typeof subtitle === 'string') {
-				break;
-			}
-		} catch (error) {
-			console.warn(`Retry ${retryCount + 1}: Failed to extract subtitle for ${youtubeUrl}`, error);
-		}
-		
-		retryCount++;
-		
-		// 마지막 시도가 아니면 잠시 대기
-		if (retryCount < maxRetries) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
-	}
-
-	if (!subtitle || typeof subtitle !== 'string') {
-		throw new Error('Failed to extract subtitle. Please check the YouTube URL.');
-	}
-
-	return subtitle;
-}
 
 /**
  * 자막을 캐시에 저장합니다

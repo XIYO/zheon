@@ -58,6 +58,7 @@
 		"wrangler": "^4.16.1"
 	},
 	"dependencies": {
+		"@anthropic-ai/sdk": "^0.56.0",
 		"@inlang/paraglide-js": "^2.0.13",
 		"@supabase/ssr": "^0.6.1",
 		"@supabase/supabase-js": "^2.49.8",

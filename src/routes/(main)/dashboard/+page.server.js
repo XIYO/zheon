@@ -1,4 +1,4 @@
-import { summarizeTranscript } from '$lib/server/summary.js';
+import { summarizeTranscript } from '$lib/server/summary-claude.js';
 import { fail, redirect } from '@sveltejs/kit';
 
 // 유틸리티 함수들 임포트
