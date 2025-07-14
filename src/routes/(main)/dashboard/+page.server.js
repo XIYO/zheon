@@ -5,9 +5,16 @@ import { fail, redirect } from '@sveltejs/kit';
 import { validateAndNormalizeUrl } from '$lib/server/youtube-utils.js';
 import { validateUser } from '$lib/server/auth-utils.js';
 import { handleError, handleSubtitleError } from '$lib/server/error-utils.js';
-import { getOrCacheSubtitle, processSubtitle, validateLanguage } from '$lib/server/subtitle-service.js';
+import {
+	getOrCacheSubtitle,
+	processSubtitle,
+	validateLanguage
+} from '$lib/server/subtitle-service.js';
 import { upsertSummary } from '$lib/server/summary-service.js';
-import { validateYouTubeUrlFromForm, validateLanguageFromForm } from '$lib/server/validation-utils.js';
+import {
+	validateYouTubeUrlFromForm,
+	validateLanguageFromForm
+} from '$lib/server/validation-utils.js';
 
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
@@ -65,12 +72,12 @@ export const actions = {
 		// 7. 요약 저장 또는 업데이트
 		try {
 			const summaryData = await upsertSummary(
-				youtubeUrl, 
-				lang, 
-				title, 
-				summary, 
-				content, 
-				user.id, 
+				youtubeUrl,
+				lang,
+				title,
+				summary,
+				content,
+				user.id,
 				supabase
 			);
 

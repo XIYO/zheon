@@ -25,12 +25,12 @@
 	function extractYoutubeId(url) {
 		try {
 			const parsedUrl = new URL(url);
-			
+
 			// youtu.be 형태 처리
 			if (parsedUrl.hostname === 'youtu.be') {
 				return parsedUrl.pathname.slice(1); // '/' 제거
 			}
-			
+
 			// youtube.com 형태 처리
 			if (parsedUrl.hostname.includes('youtube.com')) {
 				return parsedUrl.searchParams.get('v') || '';
@@ -47,13 +47,9 @@
 	}
 </script>
 
-<div
-	class="flex min-h-screen flex-col items-center justify-start bg-gray-50 px-4 py-12"
->
+<div class="flex min-h-screen flex-col items-center justify-start bg-gray-50 px-4 py-12">
 	<div class="mb-8 w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-		<h1 class="mb-2 text-center text-3xl font-bold tracking-tight text-gray-900">
-			展 요약
-		</h1>
+		<h1 class="mb-2 text-center text-3xl font-bold tracking-tight text-gray-900">展 요약</h1>
 		<p class="mb-6 text-center text-sm text-gray-600">유튜브 영상을 입력하면 AI가 요약해줍니다.</p>
 
 		{#if page.form?.message}
@@ -64,8 +60,7 @@
 							<path
 								fill-rule="evenodd"
 								d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-								clip-rule="evenodd"
-							/>
+								clip-rule="evenodd" />
 						</svg>
 					</div>
 					<div class="ml-3">
@@ -82,24 +77,27 @@
 				required
 				type="text"
 				class="w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-				disabled={loading}
-			/>
+				disabled={loading} />
 			<button
 				class="flex w-full items-center justify-center gap-2 rounded-md bg-gray-900 px-4 py-2.5 font-medium text-white transition-colors hover:bg-black disabled:opacity-50"
 				type="submit"
-				disabled={loading}
-			>
+				disabled={loading}>
 				{#if loading}
 					<svg
 						class="h-5 w-5 animate-spin text-white"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-						></circle>
-						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-						></path>
+						viewBox="0 0 24 24">
+						<circle
+							class="opacity-25"
+							cx="12"
+							cy="12"
+							r="10"
+							stroke="currentColor"
+							stroke-width="4">
+						</circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+						</path>
 					</svg>
 					로딩 중...
 				{:else}
@@ -120,13 +118,11 @@
 				{#each summaries as summary (summary.id)}
 					<a
 						href="/summary/{summary.id}/"
-						class="group flex cursor-pointer flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-gray-300"
-					>
+						class="group flex cursor-pointer flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-gray-300">
 						<img
 							src={extractThumbnail(summary.youtube_url)}
 							alt="썸네일"
-							class="aspect-video w-full rounded-md border border-gray-100 object-cover transition-transform group-hover:scale-[1.02]"
-						/>
+							class="aspect-video w-full rounded-md border border-gray-100 object-cover transition-transform group-hover:scale-[1.02]" />
 						<div class="flex flex-col gap-2">
 							<div class="truncate text-base font-semibold text-gray-900 md:text-lg">
 								{summary.title}

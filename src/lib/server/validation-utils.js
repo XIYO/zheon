@@ -10,11 +10,11 @@
  */
 export function validateYouTubeUrlFromForm(formData) {
 	const youtubeUrl = formData.get('youtubeUrl');
-	
+
 	if (!youtubeUrl || typeof youtubeUrl !== 'string') {
 		throw new Error('유튜브 URL이 필요합니다.');
 	}
-	
+
 	return youtubeUrl.trim();
 }
 
@@ -25,7 +25,7 @@ export function validateYouTubeUrlFromForm(formData) {
  */
 export function validateLanguageFromForm(formData) {
 	const lang = formData.get('lang');
-	return (lang === 'en') ? 'en' : 'ko';
+	return lang === 'en' ? 'en' : 'ko';
 }
 
 /**
@@ -43,8 +43,10 @@ export function isValidSubtitle(subtitle) {
  * @returns {boolean} - 유효한 요약 데이터 여부
  */
 export function isValidSummaryData(summaryData) {
-	return summaryData 
-		&& typeof summaryData.title === 'string'
-		&& typeof summaryData.summary === 'string'
-		&& typeof summaryData.content === 'string';
+	return (
+		summaryData &&
+		typeof summaryData.title === 'string' &&
+		typeof summaryData.summary === 'string' &&
+		typeof summaryData.content === 'string'
+	);
 }

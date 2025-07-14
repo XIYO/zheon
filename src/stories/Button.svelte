@@ -20,7 +20,6 @@
 	class:storybook-button--primary={primary}
 	class:storybook-button--secondary={!primary}
 	style:background-color={backgroundColor}
-	onclick={onClick}
->
+	onclick={onClick}>
 	{label}
 </button>

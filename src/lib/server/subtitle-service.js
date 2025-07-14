@@ -21,14 +21,14 @@ export async function getOrCacheSubtitle(youtubeUrl, lang, supabase) {
 
 	// 자막 추출 시도 (백엔드에서 재시도 처리)
 	const extractedSubtitle = await extractSubtitle(youtubeUrl, lang);
-	
+
 	if (!extractedSubtitle || typeof extractedSubtitle !== 'string') {
 		throw new Error('Failed to extract subtitle. Please check the YouTube URL.');
 	}
-	
+
 	// 캐시에 저장
 	await cacheSubtitle(youtubeUrl, lang, extractedSubtitle, supabase);
-	
+
 	return extractedSubtitle;
 }
 
@@ -59,7 +59,6 @@ async function getCachedSubtitle(youtubeUrl, lang, supabase) {
 		return null;
 	}
 }
-
 
 /**
  * 자막을 캐시에 저장합니다

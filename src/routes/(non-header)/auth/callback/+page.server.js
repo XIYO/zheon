@@ -6,27 +6,33 @@ export async function load({ url, locals: { supabase } }) {
 	const error_description = url.searchParams.get('error_description');
 	const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
 
-	console.log('OAuth 콜백 처리:', { 
-		code: !!code, 
-		error_code, 
-		error_description, 
+	console.log('OAuth 콜백 처리:', {
+		code: !!code,
+		error_code,
+		error_description,
 		redirectTo,
-		fullUrl: url.toString() 
+		fullUrl: url.toString()
 	});
 
 	if (error_code) {
 		console.error('OAuth 에러:', error_code, error_description);
-		throw redirect(303, `/auth/sign-in?error=oauth_failed&description=${encodeURIComponent(error_description || '')}`);
+		throw redirect(
+			303,
+			`/auth/sign-in?error=oauth_failed&description=${encodeURIComponent(error_description || '')}`
+		);
 	}
 
 	if (code) {
 		console.log('OAuth 코드 교환 시작:', code.substring(0, 10) + '...');
-		
+
 		const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
 		if (error) {
 			console.error('세션 교환 에러:', error);
-			throw redirect(303, `/auth/sign-in?error=session_failed&description=${encodeURIComponent(error.message)}`);
+			throw redirect(
+				303,
+				`/auth/sign-in?error=session_failed&description=${encodeURIComponent(error.message)}`
+			);
 		}
 
 		if (data?.session && data?.user) {

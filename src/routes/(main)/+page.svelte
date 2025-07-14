@@ -1,6 +1,4 @@
-<section
-	class="grid items-center gap-10 bg-gray-900 px-6 py-24 text-white md:grid-cols-2"
->
+<section class="grid items-center gap-10 bg-gray-900 px-6 py-24 text-white md:grid-cols-2">
 	<div class="space-y-6">
 		<h1 class="text-5xl font-extrabold tracking-tight">展 — Zheon</h1>
 		<p class="text-lg text-gray-300">
@@ -10,16 +8,16 @@
 		<p class="border-t border-gray-600 pt-4 text-sm text-gray-400">
 			자동 생성된 자막 기반 AI 요약, 깔끔하고 구조적인 정보 제공.
 		</p>
-		<a 
-			href="dashboard" 
-			class="inline-flex items-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white border border-gray-600 hover:bg-black hover:border-gray-500 transition-colors"
-		>
+		<a
+			href="dashboard"
+			class="inline-flex items-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white border border-gray-600 hover:bg-black hover:border-gray-500 transition-colors">
 			시작하기
 		</a>
 	</div>
 	<div class="relative h-64 md:h-96">
 		<div class="absolute inset-0 bg-gray-50 rounded-lg border border-gray-200"></div>
-		<div class="absolute inset-4 bg-white rounded border border-gray-300 shadow-sm flex items-center justify-center">
+		<div
+			class="absolute inset-4 bg-white rounded border border-gray-300 shadow-sm flex items-center justify-center">
 			<div class="w-2/3 h-1/3 bg-gray-900 rounded"></div>
 		</div>
 	</div>
@@ -39,10 +37,11 @@
 	<div class="relative h-80">
 		<div class="absolute inset-0 bg-gray-200 rounded-lg"></div>
 		<div
-			class="absolute top-4 right-4 bottom-4 left-4 grid place-items-center border border-gray-300 bg-white p-6 text-center rounded shadow-sm"
-		>
+			class="absolute top-4 right-4 bottom-4 left-4 grid place-items-center border border-gray-300 bg-white p-6 text-center rounded shadow-sm">
 			<p class="font-mono text-xl text-gray-800">
-				"Zheon은 영상의 흐름을<br />텍스트로 재해석합니다."
+				"Zheon은 영상의 흐름을
+				<br />
+				텍스트로 재해석합니다."
 			</p>
 		</div>
 	</div>

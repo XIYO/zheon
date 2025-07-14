@@ -27,12 +27,18 @@
 		<p class="text-lg font-semibold text-gray-900">
 			성공적으로 사인아웃되었습니다.
 			{#if show}
-				<span in:slide={{ delay: 500 }} class="block text-gray-600 text-base font-normal mt-2">잠시 후 홈으로 이동합니다. </span>
+				<span in:slide={{ delay: 500 }} class="block text-gray-600 text-base font-normal mt-2">
+					잠시 후 홈으로 이동합니다.
+				</span>
 			{/if}
 		</p>
 
 		<p class="mt-6">
-			<a class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black transition-colors" href="/">홈으로 이동하기</a>
+			<a
+				class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black transition-colors"
+				href="/">
+				홈으로 이동하기
+			</a>
 		</p>
 	</div>
 </div>

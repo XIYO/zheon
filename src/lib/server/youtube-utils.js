@@ -10,12 +10,12 @@
 export function normalizeYouTubeUrl(url) {
 	try {
 		const parsedUrl = new URL(url);
-		
+
 		// youtu.be 형태 처리
 		if (parsedUrl.hostname === 'youtu.be') {
 			return `https://www.youtube.com/watch?v=${parsedUrl.pathname.slice(1)}`;
 		}
-		
+
 		// youtube.com 형태 처리
 		if (parsedUrl.hostname.includes('youtube.com') && parsedUrl.searchParams.has('v')) {
 			// 시간 파라미터 제거
@@ -51,7 +51,7 @@ export function extractVideoId(url) {
 	try {
 		const normalizedUrl = normalizeYouTubeUrl(url);
 		if (!normalizedUrl) return null;
-		
+
 		const parsedUrl = new URL(normalizedUrl);
 		return parsedUrl.searchParams.get('v');
 	} catch {

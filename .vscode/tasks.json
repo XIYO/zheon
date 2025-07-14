@@ -7,9 +7,7 @@
 			"command": "pnpm run dev",
 			"group": "build",
 			"isBackground": true,
-			"problemMatcher": [
-				"$tsc"
-			]
+			"problemMatcher": ["$tsc"]
 		}
 	]
 }

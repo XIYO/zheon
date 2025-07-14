@@ -6,15 +6,15 @@
  */
 export async function extractSubtitle(youtubeUrl, lang) {
 	if (!youtubeUrl) return null;
-	
+
 	let endpoint = `https://extractor.xiyo.dev/extract-text?url=${encodeURIComponent(youtubeUrl)}`;
 	if (lang) {
 		endpoint += `&lang=${encodeURIComponent(lang)}`;
 	}
-	
+
 	try {
 		const res = await fetch(endpoint);
-		
+
 		if (!res.ok) {
 			const errorData = await res.json().catch(() => null);
 			console.error('Subtitle extraction failed:', {
@@ -24,7 +24,7 @@ export async function extractSubtitle(youtubeUrl, lang) {
 			});
 			return null;
 		}
-		
+
 		const data = await res.json();
 		return data.transcript || null;
 	} catch (e) {

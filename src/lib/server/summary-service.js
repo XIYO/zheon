@@ -73,13 +73,13 @@ export async function updateSummary(summaryId, title, summary, content, supabase
 export async function createSummary(youtubeUrl, lang, title, summary, content, userId, supabase) {
 	const { data: inserted, error } = await supabase
 		.from('summary')
-		.insert({ 
-			youtube_url: youtubeUrl, 
-			lang, 
-			title, 
-			summary, 
-			content, 
-			user_id: userId 
+		.insert({
+			youtube_url: youtubeUrl,
+			lang,
+			title,
+			summary,
+			content,
+			user_id: userId
 		})
 		.select()
 		.single();

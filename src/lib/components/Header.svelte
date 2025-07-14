@@ -63,8 +63,7 @@
 
 <!-- ─────────────────────────── HEADER ─────────────────────────── -->
 <header
-	class="sticky top-0 z-50 flex items-center justify-between bg-black px-6 py-4 text-white shadow-md"
->
+	class="sticky top-0 z-50 flex items-center justify-between bg-black px-6 py-4 text-white shadow-md">
 	<!-- Logo / Title -->
 	<a class="text-xl font-extrabold tracking-widest" href="/">展</a>
 
@@ -74,13 +73,15 @@
 			<a
 				href="/auth/sign-up"
 				class="text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
-				onclick={handleSignUp}
-			>Sign up</a>
+				onclick={handleSignUp}>
+				Sign up
+			</a>
 			<a
 				href="/auth/sign-in"
 				class="text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
-				onclick={handleSignIn}
-			>Sign in</a>
+				onclick={handleSignIn}>
+				Sign in
+			</a>
 		</nav>
 	{:else}
 		<span class="text-sm text-gray-300">
@@ -88,8 +89,7 @@
 			<a
 				href="/auth/sign-out/"
 				onclick={handleSignOut}
-				class="ml-4 text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white"
-			>
+				class="ml-4 text-sm text-gray-300 underline-offset-4 hover:underline hover:text-white">
 				Sign out
 			</a>
 		</span>
@@ -97,25 +97,40 @@
 </header>
 
 <!-- ─────────────────────────── SIGN‑UP DIALOG ─────────────────────────── -->
-<dialog bind:this={signUpDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+<dialog
+	bind:this={signUpDialog}
+	class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
+		<button
+			class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">
+			닫기
+		</button>
 	</form>
 	<SignUpForm onsuccess={onSubmitSignUp} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
-<dialog bind:this={signInDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+<dialog
+	bind:this={signInDialog}
+	class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
+		<button
+			class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">
+			닫기
+		</button>
 	</form>
 	<SignInForm onsuccess={onsuccessSignIn} />
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
-<dialog bind:this={signOutDialog} class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
+<dialog
+	bind:this={signOutDialog}
+	class="m-auto max-w-md rounded-lg backdrop:bg-black/30 bg-gray-50 p-4">
 	<form method="DIALOG" class="mb-4">
-		<button class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">닫기</button>
+		<button
+			class="ml-auto block rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-300">
+			닫기
+		</button>
 	</form>
 	<SignOutForm onsuccess={onSubmitSignOut} />
 </dialog>
