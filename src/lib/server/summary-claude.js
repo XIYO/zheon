@@ -1,8 +1,5 @@
-import { Anthropic } from '@anthropic-ai/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
-import { dev } from '$app/environment';
-
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+import { Anthropic } from '@anthropic-ai/sdk';
 
 /**
  * @param {string} transcript
@@ -13,6 +10,8 @@ export async function summarizeTranscript(
 	transcript,
 	{ model = 'claude-3-5-haiku-20241022', lang = 'ko' } = {}
 ) {
+	// Initialize Anthropic with API key from environment
+	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 	// build speak directive
 	const speakDirective = lang === 'en' ? 'Speak in English.' : 'Speak in Korean.';
