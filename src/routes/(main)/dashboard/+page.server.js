@@ -18,6 +18,12 @@ import {
 
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
+		const requestStartTime = Date.now();
+		console.log(`🚀 Dashboard request started:`, {
+			timestamp: new Date().toISOString(),
+			userAgent: request.headers.get('user-agent'),
+			referer: request.headers.get('referer')
+		});
 		// 1. 사용자 인증 검증
 		try {
 			validateUser(user, url);
@@ -51,17 +57,35 @@ export const actions = {
 
 		// 4. 기존 요약 있는지 먼저 확인 (429 에러 방지)
 		const safeLang = validateLanguage(lang);
+		const dbCheckStartTime = Date.now();
+		console.log(`📄 Checking existing summary for: ${normalizedUrl}`);
+		
 		const existingSummary = await getExistingSummary(normalizedUrl, safeLang, user.id, supabase);
+		const dbCheckTime = Date.now() - dbCheckStartTime;
 		
 		if (existingSummary) {
 			// 이미 요약이 있으면 자막 추출 없이 바로 반환
-			console.log(`Existing summary found for ${normalizedUrl}, skipping subtitle extraction`);
+			const totalTime = Date.now() - requestStartTime;
+			console.log(`✅ Existing summary found - fast path:`, {
+				url: normalizedUrl,
+				dbCheckTime: `${dbCheckTime}ms`,
+				totalTime: `${totalTime}ms`,
+				summaryId: existingSummary.id,
+				timestamp: new Date().toISOString()
+			});
 			return { summary: existingSummary, fromCache: true };
 		}
 
 		// 5. 새로운 영상만 자막 추출 시도
-		console.log(`New video detected: ${normalizedUrl}, starting subtitle extraction`);
+		console.log(`🎆 New video detected - full processing path:`, {
+			url: normalizedUrl,
+			dbCheckTime: `${dbCheckTime}ms`,
+			timestamp: new Date().toISOString()
+		});
+		
+		const subtitleStartTime = Date.now();
 		const subtitleResult = await getOrCacheSubtitle(normalizedUrl, safeLang);
+		const subtitleTime = Date.now() - subtitleStartTime;
 		
 		if (!subtitleResult.success) {
 			const error = subtitleResult.error;
@@ -86,15 +110,23 @@ export const actions = {
 		let transcript;
 		try {
 			transcript = processSubtitle(subtitleResult.subtitle);
+			console.log(`📝 Subtitle processed:`, {
+				subtitleTime: `${subtitleTime}ms`,
+				transcriptLength: transcript.length,
+				timestamp: new Date().toISOString()
+			});
 		} catch (error) {
 			return fail(400, handleSubtitleError(error));
 		}
 
 		// 7. 요약 생성
+		const summaryStartTime = Date.now();
 		const { title, summary, content } = await summarizeTranscript(transcript, { lang: safeLang });
+		const summaryTime = Date.now() - summaryStartTime;
 
 		// 8. 새로운 요약 저장
 		try {
+			const dbSaveStartTime = Date.now();
 			const summaryData = await upsertSummary(
 				normalizedUrl, // 정규화된 URL 사용
 				safeLang,
@@ -104,8 +136,23 @@ export const actions = {
 				user.id,
 				supabase
 			);
+			const dbSaveTime = Date.now() - dbSaveStartTime;
+			const totalTime = Date.now() - requestStartTime;
 
-			console.log(`New summary created for ${normalizedUrl}`);
+			console.log(`✅ New summary created - complete processing:`, {
+				url: normalizedUrl,
+				dbCheckTime: `${dbCheckTime}ms`,
+				subtitleTime: `${subtitleTime}ms`,
+				summaryTime: `${summaryTime}ms`,
+				dbSaveTime: `${dbSaveTime}ms`,
+				totalTime: `${totalTime}ms`,
+				summaryId: summaryData.id,
+				titleLength: title.length,
+				summaryLength: summary.length,
+				contentLength: content.length,
+				timestamp: new Date().toISOString()
+			});
+			
 			return { summary: summaryData, fromCache: false };
 		} catch (error) {
 			return fail(500, handleError(error));

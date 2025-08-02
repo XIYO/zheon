@@ -43,6 +43,14 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 
 	for (let attempt = 0; attempt <= maxRetries; attempt++) {
 		try {
+			const startTime = Date.now();
+			console.log(`🚀 [${attempt + 1}/${maxRetries + 1}] Subtitle extraction request:`, {
+				url: youtubeUrl,
+				lang,
+				endpoint,
+				timestamp: new Date().toISOString()
+			});
+
 			const res = await fetch(endpoint, {
 				headers: {
 					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -51,8 +59,29 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 				timeout: 30000 // 30초 타임아웃
 			});
 
+			const responseTime = Date.now() - startTime;
+			console.log(`📡 [${attempt + 1}/${maxRetries + 1}] Response received:`, {
+				status: res.status,
+				statusText: res.statusText,
+				responseTime: `${responseTime}ms`,
+				headers: Object.fromEntries(res.headers.entries()),
+				timestamp: new Date().toISOString()
+			});
+
 			if (res.ok) {
+				const parseStartTime = Date.now();
 				const data = await res.json();
+				const parseTime = Date.now() - parseStartTime;
+				const totalTime = Date.now() - startTime;
+				
+				console.log(`✅ [${attempt + 1}/${maxRetries + 1}] Subtitle extraction successful:`, {
+					subtitleLength: data.transcript?.length || 0,
+					parseTime: `${parseTime}ms`,
+					totalTime: `${totalTime}ms`,
+					hasTranscript: !!data.transcript,
+					timestamp: new Date().toISOString()
+				});
+				
 				return {
 					success: true,
 					data: data.transcript || null
@@ -63,16 +92,21 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 			if (res.status === 429) {
 				const errorData = await res.json().catch(() => null);
 				
+				console.warn(`⚠️ [${attempt + 1}/${maxRetries + 1}] Rate limit hit:`, {
+					status: res.status,
+					statusText: res.statusText,
+					errorData,
+					responseTime: `${responseTime}ms`,
+					timestamp: new Date().toISOString()
+				});
+				
 				if (attempt < maxRetries) {
-					console.warn(`Rate limit hit, retrying in ${Math.pow(2, attempt + 1)} seconds... (attempt ${attempt + 1}/${maxRetries})`);
+					const delayTime = Math.pow(2, attempt + 1);
+					console.log(`🔄 Retrying in ${delayTime} seconds... (attempt ${attempt + 2}/${maxRetries + 1})`);
 					await delay(attempt + 1);
 					continue;
 				} else {
-					console.error('Rate limit exceeded after all retries:', {
-						status: res.status,
-						statusText: res.statusText,
-						error: errorData
-					});
+					console.error(`❌ Rate limit exceeded after all retries (${maxRetries + 1} attempts)`);
 					return {
 						success: false,
 						data: null,
@@ -86,10 +120,12 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 
 			// 기타 HTTP 에러
 			const errorData = await res.json().catch(() => null);
-			console.error('Subtitle extraction failed:', {
+			console.error(`❌ [${attempt + 1}/${maxRetries + 1}] Subtitle extraction failed:`, {
 				status: res.status,
 				statusText: res.statusText,
-				error: errorData
+				errorData,
+				responseTime: `${responseTime}ms`,
+				timestamp: new Date().toISOString()
 			});
 
 			return {
@@ -102,13 +138,22 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 			};
 
 		} catch (e) {
+			const errorTime = Date.now() - startTime;
+			console.error(`🔥 [${attempt + 1}/${maxRetries + 1}] Network/Parse error:`, {
+				error: e.message,
+				errorName: e.name,
+				errorCode: e.code,
+				errorTime: `${errorTime}ms`,
+				stack: e.stack?.split('\n').slice(0, 3).join('\n'),
+				timestamp: new Date().toISOString()
+			});
+			
 			if (attempt < maxRetries && (e.name === 'TypeError' || e.code === 'ECONNRESET')) {
-				console.warn(`Network error, retrying... (attempt ${attempt + 1}/${maxRetries}):`, e.message);
+				console.log(`🔄 Network error, retrying... (attempt ${attempt + 2}/${maxRetries + 1})`);
 				await delay(attempt);
 				continue;
 			}
 
-			console.error('Failed to extract subtitle:', e);
 			return {
 				success: false,
 				data: null,

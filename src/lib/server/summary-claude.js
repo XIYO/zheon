@@ -10,6 +10,14 @@ export async function summarizeTranscript(
 	transcript,
 	{ model = 'claude-3-5-haiku-20241022', lang = 'ko' } = {}
 ) {
+	const startTime = Date.now();
+	console.log(`🤖 Starting Claude summarization:`, {
+		transcriptLength: transcript?.length || 0,
+		model,
+		lang,
+		timestamp: new Date().toISOString()
+	});
+
 	// Initialize Anthropic with API key from environment
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -33,6 +41,15 @@ Return the result as a JSON object with the following structure:
 Transcript:
 ${transcript}`;
 
+	const apiStartTime = Date.now();
+	console.log(`📤 Sending request to Claude API:`, {
+		model,
+		maxTokens: 8192,
+		temperature: 0.3,
+		userPromptLength: userPrompt.length,
+		timestamp: new Date().toISOString()
+	});
+
 	const response = await anthropic.messages.create({
 		model,
 		max_tokens: 8192,
@@ -44,6 +61,16 @@ ${transcript}`;
 				content: userPrompt
 			}
 		]
+	});
+
+	const apiTime = Date.now() - apiStartTime;
+	console.log(`📥 Claude API response received:`, {
+		apiTime: `${apiTime}ms`,
+		usage: response.usage,
+		model: response.model,
+		stopReason: response.stop_reason,
+		responseLength: response.content[0]?.text?.length || 0,
+		timestamp: new Date().toISOString()
 	});
 
 	// Extract JSON from the response
@@ -85,8 +112,13 @@ ${transcript}`;
 		// eslint-disable-next-line no-control-regex
 		parsed.content = parsed.content.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim();
 	} catch (error) {
-		console.error('Failed to parse Claude response:', error);
-		console.error('Response text:', responseText);
+		const parseTime = Date.now() - apiStartTime;
+		console.error(`❌ Failed to parse Claude response after ${parseTime}ms:`, {
+			error: error.message,
+			responseLength: responseText?.length || 0,
+			responsePreview: responseText?.substring(0, 200) + '...',
+			timestamp: new Date().toISOString()
+		});
 
 		// Fallback: try to extract content manually
 		try {
@@ -107,10 +139,19 @@ ${transcript}`;
 				throw new Error('Could not extract required fields from response');
 			}
 		} catch (fallbackError) {
-			console.error('Fallback parsing also failed:', fallbackError);
+			console.error('❌ Fallback parsing also failed:', fallbackError);
 			throw new Error('Invalid function response');
 		}
 	}
+
+	const totalTime = Date.now() - startTime;
+	console.log(`✅ Claude summarization completed:`, {
+		totalTime: `${totalTime}ms`,
+		titleLength: parsed.title?.length || 0,
+		summaryLength: parsed.summary?.length || 0,
+		contentLength: parsed.content?.length || 0,
+		timestamp: new Date().toISOString()
+	});
 
 	return parsed;
 }
