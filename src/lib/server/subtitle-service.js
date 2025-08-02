@@ -31,55 +31,6 @@ export async function getOrCacheSubtitle(youtubeUrl) {
 }
 
 /**
- * 캐시된 자막을 가져옵니다
- * @param {string} youtubeUrl - YouTube URL
- * @param {string} lang - 언어 코드
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase - Supabase 클라이언트
- * @returns {Promise<string | null>} - 캐시된 자막 또는 null
- */
-async function getCachedSubtitle(youtubeUrl, lang, supabase) {
-	try {
-		const { data: existingSubtitle, error } = await supabase
-			.from('subtitles')
-			.select('subtitle')
-			.eq('youtube_url', youtubeUrl)
-			.eq('lang', lang)
-			.maybeSingle();
-
-		if (error) {
-			console.error('Subtitle fetch error:', error);
-			return null;
-		}
-
-		return existingSubtitle?.subtitle || null;
-	} catch (error) {
-		console.error('Error getting cached subtitle:', error);
-		return null;
-	}
-}
-
-/**
- * 자막을 캐시에 저장합니다
- * @param {string} youtubeUrl - YouTube URL
- * @param {string} lang - 언어 코드
- * @param {string} subtitle - 자막 내용
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase - Supabase 클라이언트
- */
-async function cacheSubtitle(youtubeUrl, lang, subtitle, supabase) {
-	try {
-		const { error } = await supabase
-			.from('subtitles')
-			.insert({ youtube_url: youtubeUrl, lang, subtitle });
-
-		if (error) {
-			console.error('Subtitle insert error:', error);
-		}
-	} catch (error) {
-		console.error('Error caching subtitle:', error);
-	}
-}
-
-/**
  * 자막을 검증하고 문자열로 변환합니다
  * @param {unknown} subtitle - 검증할 자막
  * @returns {string} - 검증된 자막 문자열

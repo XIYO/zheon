@@ -22,7 +22,8 @@ export async function summarizeTranscript(
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 	// 항상 한국어로 출력 (영어 자막을 한국어로 요약)
-	const speakDirective = 'Speak in Korean. Translate and summarize the English transcript into Korean.';
+	const speakDirective =
+		'Speak in Korean. Translate and summarize the English transcript into Korean.';
 
 	const systemPrompt =
 		'You are a professional video summarizer. Extract a title, a concise summary, and cleaned content from the transcript.';

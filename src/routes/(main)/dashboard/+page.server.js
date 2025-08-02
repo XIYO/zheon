@@ -5,14 +5,9 @@ import { fail, redirect } from '@sveltejs/kit';
 import { validateAndNormalizeUrl } from '$lib/server/youtube-utils.js';
 import { validateUser } from '$lib/server/auth-utils.js';
 import { handleError, handleSubtitleError } from '$lib/server/error-utils.js';
-import {
-	getOrCacheSubtitle,
-	processSubtitle
-} from '$lib/server/subtitle-service.js';
+import { getOrCacheSubtitle, processSubtitle } from '$lib/server/subtitle-service.js';
 import { upsertSummary, getExistingSummary } from '$lib/server/summary-service.js';
-import {
-	validateYouTubeUrlFromForm
-} from '$lib/server/validation-utils.js';
+import { validateYouTubeUrlFromForm } from '$lib/server/validation-utils.js';
 
 export const actions = {
 	default: async ({ url, request, locals: { supabase, user } }) => {
@@ -58,10 +53,10 @@ export const actions = {
 		const lang = 'ko';
 		const dbCheckStartTime = Date.now();
 		console.log(`📄 Checking existing summary for: ${normalizedUrl} (Korean output)`);
-		
+
 		const existingSummary = await getExistingSummary(normalizedUrl, lang, user.id, supabase);
 		const dbCheckTime = Date.now() - dbCheckStartTime;
-		
+
 		if (existingSummary) {
 			// 이미 요약이 있으면 자막 추출 없이 바로 반환
 			const totalTime = Date.now() - requestStartTime;
@@ -81,14 +76,14 @@ export const actions = {
 			dbCheckTime: `${dbCheckTime}ms`,
 			timestamp: new Date().toISOString()
 		});
-		
+
 		const subtitleStartTime = Date.now();
 		const subtitleResult = await getOrCacheSubtitle(normalizedUrl); // 언어 파라미터 제거
 		const subtitleTime = Date.now() - subtitleStartTime;
-		
+
 		if (!subtitleResult.success) {
 			const error = subtitleResult.error;
-			
+
 			// Rate Limit 에러에 대한 특별 처리
 			if (error?.type === 'RATE_LIMIT') {
 				return fail(429, {
@@ -97,7 +92,7 @@ export const actions = {
 					retryAfter: 300 // 5분 후 재시도 권장
 				});
 			}
-			
+
 			// 기타 에러들
 			return fail(400, {
 				message: error?.message || '자막 추출에 실패했습니다.',
@@ -151,7 +146,7 @@ export const actions = {
 				contentLength: content.length,
 				timestamp: new Date().toISOString()
 			});
-			
+
 			return { summary: summaryData, fromCache: false };
 		} catch (error) {
 			return fail(500, handleError(error));

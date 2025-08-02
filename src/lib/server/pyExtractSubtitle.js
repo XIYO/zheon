@@ -1,9 +1,5 @@
 import { EXTRACT_API_URL } from '$env/static/private';
 
-// 글로벌 요청 제한을 위한 간단한 레이트 리미터
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 1000; // 1초
-
 /**
  * 지수 백오프로 대기하는 함수
  * @param {number} attempt - 시도 횟수 (0부터 시작)
@@ -13,7 +9,7 @@ function delay(attempt) {
 	const baseDelay = 1000; // 1초
 	const maxDelay = 30000; // 최대 30초
 	const delayTime = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-	return new Promise(resolve => setTimeout(resolve, delayTime));
+	return new Promise((resolve) => setTimeout(resolve, delayTime));
 }
 
 /**
@@ -38,8 +34,8 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 	const endpoint = url.toString();
 
 	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		const startTime = Date.now();
 		try {
-			const startTime = Date.now();
 			console.log(`🚀 [${attempt + 1}/${maxRetries + 1}] Subtitle extraction request:`, {
 				url: youtubeUrl,
 				lang: 'en (default)',
@@ -50,7 +46,7 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 			const res = await fetch(endpoint, {
 				headers: {
 					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-					'Accept': 'application/json',
+					Accept: 'application/json'
 				},
 				timeout: 30000 // 30초 타임아웃
 			});
@@ -69,7 +65,7 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 				const data = await res.json();
 				const parseTime = Date.now() - parseStartTime;
 				const totalTime = Date.now() - startTime;
-				
+
 				console.log(`✅ [${attempt + 1}/${maxRetries + 1}] Subtitle extraction successful:`, {
 					subtitleLength: data.transcript?.length || 0,
 					parseTime: `${parseTime}ms`,
@@ -77,7 +73,7 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 					hasTranscript: !!data.transcript,
 					timestamp: new Date().toISOString()
 				});
-				
+
 				return {
 					success: true,
 					data: data.transcript || null
@@ -87,7 +83,7 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 			// Rate Limit 에러 처리
 			if (res.status === 429) {
 				const errorData = await res.json().catch(() => null);
-				
+
 				console.warn(`⚠️ [${attempt + 1}/${maxRetries + 1}] Rate limit hit:`, {
 					status: res.status,
 					statusText: res.statusText,
@@ -95,10 +91,12 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 					responseTime: `${responseTime}ms`,
 					timestamp: new Date().toISOString()
 				});
-				
+
 				if (attempt < maxRetries) {
 					const delayTime = Math.pow(2, attempt + 1);
-					console.log(`🔄 Retrying in ${delayTime} seconds... (attempt ${attempt + 2}/${maxRetries + 1})`);
+					console.log(
+						`🔄 Retrying in ${delayTime} seconds... (attempt ${attempt + 2}/${maxRetries + 1})`
+					);
 					await delay(attempt + 1);
 					continue;
 				} else {
@@ -132,7 +130,6 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 					message: `서버 오류가 발생했습니다. (${res.status})`
 				}
 			};
-
 		} catch (e) {
 			const errorTime = Date.now() - startTime;
 			console.error(`🔥 [${attempt + 1}/${maxRetries + 1}] Network/Parse error:`, {
@@ -143,7 +140,7 @@ export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 				stack: e.stack?.split('\n').slice(0, 3).join('\n'),
 				timestamp: new Date().toISOString()
 			});
-			
+
 			if (attempt < maxRetries && (e.name === 'TypeError' || e.code === 'ECONNRESET')) {
 				console.log(`🔄 Network error, retrying... (attempt ${attempt + 2}/${maxRetries + 1})`);
 				await delay(attempt);

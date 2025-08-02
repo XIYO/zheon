@@ -23,7 +23,7 @@
 		'Segoe UI Symbol',
 		sans-serif;
 	font-feature-settings: 'ss05';
-	
+
 	/* Skeleton UI 커스텀 브랜드 컬러 */
 	--color-primary-50: 240 249 255;
 	--color-primary-100: 224 242 254;
@@ -36,7 +36,7 @@
 	--color-primary-800: 7 89 133;
 	--color-primary-900: 12 74 110;
 	--color-primary-950: 8 47 73;
-	
+
 	--color-secondary-50: 250 245 255;
 	--color-secondary-100: 243 232 255;
 	--color-secondary-200: 233 213 255;
@@ -56,7 +56,11 @@ html {
 }
 
 body {
-	background: linear-gradient(135deg, rgb(var(--color-surface-50)) 0%, rgb(var(--color-surface-100)) 100%);
+	background: linear-gradient(
+		135deg,
+		rgb(var(--color-surface-50)) 0%,
+		rgb(var(--color-surface-100)) 100%
+	);
 	min-height: 100vh;
 }
 
@@ -91,8 +95,14 @@ body {
 
 /* 애니메이션 개선 */
 @keyframes fadeIn {
-	from { opacity: 0; transform: translateY(10px); }
-	to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .animate-fade-in {
@@ -101,7 +111,11 @@ body {
 
 /* 그라데이션 텍스트 유틸리티 */
 .gradient-text {
-	background: linear-gradient(45deg, rgb(var(--color-primary-600)), rgb(var(--color-secondary-600)));
+	background: linear-gradient(
+		45deg,
+		rgb(var(--color-primary-600)),
+		rgb(var(--color-secondary-600))
+	);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
