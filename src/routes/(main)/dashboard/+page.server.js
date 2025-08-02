@@ -7,13 +7,11 @@ import { validateUser } from '$lib/server/auth-utils.js';
 import { handleError, handleSubtitleError } from '$lib/server/error-utils.js';
 import {
 	getOrCacheSubtitle,
-	processSubtitle,
-	validateLanguage
+	processSubtitle
 } from '$lib/server/subtitle-service.js';
 import { upsertSummary, getExistingSummary } from '$lib/server/summary-service.js';
 import {
-	validateYouTubeUrlFromForm,
-	validateLanguageFromForm
+	validateYouTubeUrlFromForm
 } from '$lib/server/validation-utils.js';
 
 export const actions = {
@@ -38,11 +36,11 @@ export const actions = {
 
 		// 2. 폼 데이터 검증
 		const formData = await request.formData();
-		let youtubeUrl, lang;
+		let youtubeUrl;
 
 		try {
 			youtubeUrl = validateYouTubeUrlFromForm(formData);
-			lang = validateLanguageFromForm(formData);
+			// 언어 파라미터 제거 - 항상 영어 자막 추출 후 한국어로 요약
 		} catch (error) {
 			return fail(400, handleError(error));
 		}
@@ -56,11 +54,12 @@ export const actions = {
 		}
 
 		// 4. 기존 요약 있는지 먼저 확인 (429 에러 방지)
-		const safeLang = validateLanguage(lang);
+		// 언어는 항상 'ko' 고정 (영어 자막을 한국어로 요약)
+		const lang = 'ko';
 		const dbCheckStartTime = Date.now();
-		console.log(`📄 Checking existing summary for: ${normalizedUrl}`);
+		console.log(`📄 Checking existing summary for: ${normalizedUrl} (Korean output)`);
 		
-		const existingSummary = await getExistingSummary(normalizedUrl, safeLang, user.id, supabase);
+		const existingSummary = await getExistingSummary(normalizedUrl, lang, user.id, supabase);
 		const dbCheckTime = Date.now() - dbCheckStartTime;
 		
 		if (existingSummary) {
@@ -84,7 +83,7 @@ export const actions = {
 		});
 		
 		const subtitleStartTime = Date.now();
-		const subtitleResult = await getOrCacheSubtitle(normalizedUrl, safeLang);
+		const subtitleResult = await getOrCacheSubtitle(normalizedUrl); // 언어 파라미터 제거
 		const subtitleTime = Date.now() - subtitleStartTime;
 		
 		if (!subtitleResult.success) {
@@ -119,9 +118,9 @@ export const actions = {
 			return fail(400, handleSubtitleError(error));
 		}
 
-		// 7. 요약 생성
+		// 7. 요약 생성 (영어 자막을 한국어로 번역 및 요약)
 		const summaryStartTime = Date.now();
-		const { title, summary, content } = await summarizeTranscript(transcript, { lang: safeLang });
+		const { title, summary, content } = await summarizeTranscript(transcript); // lang 파라미터 제거
 		const summaryTime = Date.now() - summaryStartTime;
 
 		// 8. 새로운 요약 저장
@@ -129,7 +128,7 @@ export const actions = {
 			const dbSaveStartTime = Date.now();
 			const summaryData = await upsertSummary(
 				normalizedUrl, // 정규화된 URL 사용
-				safeLang,
+				lang, // 항상 'ko'
 				title,
 				summary,
 				content,

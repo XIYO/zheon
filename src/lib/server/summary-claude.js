@@ -8,37 +8,37 @@ import { Anthropic } from '@anthropic-ai/sdk';
  */
 export async function summarizeTranscript(
 	transcript,
-	{ model = 'claude-3-5-haiku-20241022', lang = 'ko' } = {}
+	{ model = 'claude-3-5-haiku-20241022' } = {}
 ) {
 	const startTime = Date.now();
-	console.log(`🤖 Starting Claude summarization:`, {
+	console.log(`🤖 Starting Claude translation & summarization:`, {
 		transcriptLength: transcript?.length || 0,
 		model,
-		lang,
+		mode: 'English → Korean',
 		timestamp: new Date().toISOString()
 	});
 
 	// Initialize Anthropic with API key from environment
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-	// build speak directive
-	const speakDirective = lang === 'en' ? 'Speak in English.' : 'Speak in Korean.';
+	// 항상 한국어로 출력 (영어 자막을 한국어로 요약)
+	const speakDirective = 'Speak in Korean. Translate and summarize the English transcript into Korean.';
 
 	const systemPrompt =
 		'You are a professional video summarizer. Extract a title, a concise summary, and cleaned content from the transcript.';
 
-	const userPrompt = `Below is the full transcript of a YouTube video. Clean filler words and redundant phrasing, preserve flow, then provide JSON output with keys title, summary, and content.
+	const userPrompt = `Below is the full transcript of a YouTube video in English. Please translate and summarize it into Korean, cleaning filler words and redundant phrasing while preserving the flow.
 
 ${speakDirective}
 
 Return the result as a JSON object with the following structure:
 {
-  "title": "5-10 character concise title",
-  "summary": "high-level summary of video",
-  "content": "cleaned full transcript"
+  "title": "5-10 character Korean title",
+  "summary": "Korean high-level summary of video",
+  "content": "Korean cleaned and translated full transcript"
 }
 
-Transcript:
+English Transcript:
 ${transcript}`;
 
 	const apiStartTime = Date.now();

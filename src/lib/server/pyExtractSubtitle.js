@@ -17,13 +17,12 @@ function delay(attempt) {
 }
 
 /**
- * 유튜브 자막을 Python 서버에서 추출 (재시도 로직 포함)
+ * 유튜브 자막을 Python 서버에서 추출 (영어 자막 기본)
  * @param {string} youtubeUrl - 자막을 추출할 유튜브 URL
- * @param {string} [lang] - 언어 코드 (옵션)
  * @param {number} [maxRetries=3] - 최대 재시도 횟수
  * @returns {Promise<{success: boolean, data: string|null, error?: {type: string, message: string}}>} - 추출 결과
  */
-export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
+export async function extractSubtitle(youtubeUrl, maxRetries = 3) {
 	if (!youtubeUrl) {
 		return {
 			success: false,
@@ -34,10 +33,7 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 
 	const url = new URL(EXTRACT_API_URL);
 	url.searchParams.set('url', youtubeUrl);
-
-	if (lang) {
-		url.searchParams.set('lang', lang);
-	}
+	// 언어 파라미터 제거 - 기본적으로 영어 자막 추출
 
 	const endpoint = url.toString();
 
@@ -46,7 +42,7 @@ export async function extractSubtitle(youtubeUrl, lang, maxRetries = 3) {
 			const startTime = Date.now();
 			console.log(`🚀 [${attempt + 1}/${maxRetries + 1}] Subtitle extraction request:`, {
 				url: youtubeUrl,
-				lang,
+				lang: 'en (default)',
 				endpoint,
 				timestamp: new Date().toISOString()
 			});

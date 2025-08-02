@@ -71,7 +71,7 @@
 						</div>
 						<h1 class="h2 font-black tracking-tight text-surface-900">요약</h1>
 					</div>
-					<p class="text-lg text-surface-600">유튜브 영상을 입력하면 AI가 요약해줍니다.</p>
+					<p class="text-lg text-surface-600">유튜브 영상의 영어 자막을 AI가 한국어로 번역 및 요약해줍니다.</p>
 				</div>
 			</div>
 		</div>
@@ -131,7 +131,7 @@
 								<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
 								</svg>
-								<span>AI 요약 시작</span>
+								<span>AI 번역 및 요약 시작</span>
 							{/if}
 						</div>
 					</button>

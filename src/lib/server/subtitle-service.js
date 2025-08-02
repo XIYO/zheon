@@ -5,14 +5,14 @@ import { extractSubtitle } from './pyExtractSubtitle.js';
  */
 
 /**
- * 자막을 추출합니다 (캐시 시스템 제거, 간소화)
+ * 자막을 추출합니다 (영어 자막 기본, Claude가 한국어로 요약)
  * @param {string} youtubeUrl - 정규화된 YouTube URL
- * @param {string} lang - 언어 코드 ('ko' 또는 'en')
  * @returns {Promise<{success: boolean, subtitle?: string, error?: {type: string, message: string}}>} - 추출 결과
  */
-export async function getOrCacheSubtitle(youtubeUrl, lang) {
-	// 직접 자막 추출 (캐시 없이)
-	const extractionResult = await extractSubtitle(youtubeUrl, lang);
+export async function getOrCacheSubtitle(youtubeUrl) {
+	// 영어 자막 추출 (언어 파라미터 없이 - 기본적으로 영어)
+	console.log('🌍 Using English subtitles for better accuracy, Claude will translate to Korean');
+	const extractionResult = await extractSubtitle(youtubeUrl); // lang 파라미터 제거
 
 	if (!extractionResult.success || !extractionResult.data) {
 		return {
