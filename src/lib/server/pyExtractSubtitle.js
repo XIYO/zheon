@@ -1,3 +1,5 @@
+import { EXTRACT_API_URL } from '$env/static/private';
+
 /**
  * 유튜브 자막을 Python 서버에서 추출
  * @param {string} youtubeUrl - 자막을 추출할 유튜브 URL
@@ -7,10 +9,14 @@
 export async function extractSubtitle(youtubeUrl, lang) {
 	if (!youtubeUrl) return null;
 
-	let endpoint = `https://extractor.xiyo.dev/extract-text?url=${encodeURIComponent(youtubeUrl)}`;
+	const url = new URL(EXTRACT_API_URL);
+	url.searchParams.set('url', youtubeUrl);
+
 	if (lang) {
-		endpoint += `&lang=${encodeURIComponent(lang)}`;
+		url.searchParams.set('lang', lang);
 	}
+
+	const endpoint = url.toString();
 
 	try {
 		const res = await fetch(endpoint);

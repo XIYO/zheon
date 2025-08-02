@@ -21,7 +21,7 @@ export const actions = {
 		// 1. 사용자 인증 검증
 		try {
 			validateUser(user, url);
-		} catch (error) {
+		} catch {
 			return redirect(303, `/auth/sign-in?redirectTo=${url.pathname}${url.search}`);
 		}
 

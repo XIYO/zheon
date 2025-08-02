@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { OPENAI_API_KEY } from '$env/static/private';
-import { dev } from '$app/environment';
 
 /** @typedef {import('openai').ChatCompletionMessageParam} ChatCompletionMessageParam */
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });

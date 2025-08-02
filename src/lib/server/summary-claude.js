@@ -63,7 +63,8 @@ ${transcript}`;
 		// Clean the string - remove control characters and normalize whitespace
 		jsonString = jsonString
 			.trim()
-			.replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ') // Remove control characters
+			// eslint-disable-next-line no-control-regex
+			.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ') // Remove control characters
 			.replace(/\r\n/g, '\n') // Normalize line endings
 			.replace(/\r/g, '\n')
 			.replace(/\t/g, '  '); // Replace tabs with spaces
@@ -77,9 +78,12 @@ ${transcript}`;
 		}
 
 		// Clean the parsed content as well
-		parsed.title = parsed.title.replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim();
-		parsed.summary = parsed.summary.replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim();
-		parsed.content = parsed.content.replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim();
+		// eslint-disable-next-line no-control-regex
+		parsed.title = parsed.title.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim();
+		// eslint-disable-next-line no-control-regex
+		parsed.summary = parsed.summary.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim();
+		// eslint-disable-next-line no-control-regex
+		parsed.content = parsed.content.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim();
 	} catch (error) {
 		console.error('Failed to parse Claude response:', error);
 		console.error('Response text:', responseText);
@@ -92,9 +96,12 @@ ${transcript}`;
 
 			if (titleMatch && summaryMatch && contentMatch) {
 				parsed = {
-					title: titleMatch[1].replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim(),
-					summary: summaryMatch[1].replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim(),
-					content: contentMatch[1].replace(/[\u0000-\u001F\u007F-\u009F]/gu, ' ').trim()
+					// eslint-disable-next-line no-control-regex
+					title: titleMatch[1].replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim(),
+					// eslint-disable-next-line no-control-regex
+					summary: summaryMatch[1].replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim(),
+					// eslint-disable-next-line no-control-regex
+					content: contentMatch[1].replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim()
 				};
 			} else {
 				throw new Error('Could not extract required fields from response');

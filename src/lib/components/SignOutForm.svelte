@@ -7,7 +7,7 @@
 	const { onsuccess } = $props();
 
 	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	const handleEnhance = ({}) => {
+	const handleEnhance = () => {
 		return ({ result }) => {
 			if (result.type === 'redirect') {
 				onsuccess?.();
