@@ -10,7 +10,7 @@ import {
 	processSubtitle,
 	validateLanguage
 } from '$lib/server/subtitle-service.js';
-import { upsertSummary } from '$lib/server/summary-service.js';
+import { upsertSummary, getExistingSummary } from '$lib/server/summary-service.js';
 import {
 	validateYouTubeUrlFromForm,
 	validateLanguageFromForm
@@ -49,31 +49,55 @@ export const actions = {
 			return fail(400, handleError(error));
 		}
 
-		// 4. 자막 추출 및 캐싱
-		let subtitle;
-		try {
-			subtitle = await getOrCacheSubtitle(normalizedUrl, lang, supabase);
-		} catch (error) {
-			return fail(400, handleSubtitleError(error));
+		// 4. 기존 요약 있는지 먼저 확인 (429 에러 방지)
+		const safeLang = validateLanguage(lang);
+		const existingSummary = await getExistingSummary(normalizedUrl, safeLang, user.id, supabase);
+		
+		if (existingSummary) {
+			// 이미 요약이 있으면 자막 추출 없이 바로 반환
+			console.log(`Existing summary found for ${normalizedUrl}, skipping subtitle extraction`);
+			return { summary: existingSummary, fromCache: true };
 		}
 
-		// 5. 자막 처리 및 검증
+		// 5. 새로운 영상만 자막 추출 시도
+		console.log(`New video detected: ${normalizedUrl}, starting subtitle extraction`);
+		const subtitleResult = await getOrCacheSubtitle(normalizedUrl, safeLang);
+		
+		if (!subtitleResult.success) {
+			const error = subtitleResult.error;
+			
+			// Rate Limit 에러에 대한 특별 처리
+			if (error?.type === 'RATE_LIMIT') {
+				return fail(429, {
+					message: error.message,
+					type: 'rate_limit',
+					retryAfter: 300 // 5분 후 재시도 권장
+				});
+			}
+			
+			// 기타 에러들
+			return fail(400, {
+				message: error?.message || '자막 추출에 실패했습니다.',
+				type: error?.type?.toLowerCase() || 'extraction_error'
+			});
+		}
+
+		// 6. 자막 처리 및 검증
 		let transcript;
 		try {
-			transcript = processSubtitle(subtitle);
+			transcript = processSubtitle(subtitleResult.subtitle);
 		} catch (error) {
 			return fail(400, handleSubtitleError(error));
 		}
 
-		// 6. 요약 생성
-		const safeLang = validateLanguage(lang);
+		// 7. 요약 생성
 		const { title, summary, content } = await summarizeTranscript(transcript, { lang: safeLang });
 
-		// 7. 요약 저장 또는 업데이트
+		// 8. 새로운 요약 저장
 		try {
 			const summaryData = await upsertSummary(
-				youtubeUrl,
-				lang,
+				normalizedUrl, // 정규화된 URL 사용
+				safeLang,
 				title,
 				summary,
 				content,
@@ -81,7 +105,8 @@ export const actions = {
 				supabase
 			);
 
-			return { summary: summaryData };
+			console.log(`New summary created for ${normalizedUrl}`);
+			return { summary: summaryData, fromCache: false };
 		} catch (error) {
 			return fail(500, handleError(error));
 		}

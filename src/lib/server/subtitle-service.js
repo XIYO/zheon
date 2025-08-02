@@ -5,31 +5,29 @@ import { extractSubtitle } from './pyExtractSubtitle.js';
  */
 
 /**
- * 자막을 추출하거나 캐시에서 가져옵니다
+ * 자막을 추출합니다 (캐시 시스템 제거, 간소화)
  * @param {string} youtubeUrl - 정규화된 YouTube URL
  * @param {string} lang - 언어 코드 ('ko' 또는 'en')
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase - Supabase 클라이언트
- * @returns {Promise<string>} - 추출된 자막
- * @throws {Error} - 자막 추출 실패 시
+ * @returns {Promise<{success: boolean, subtitle?: string, error?: {type: string, message: string}}>} - 추출 결과
  */
-export async function getOrCacheSubtitle(youtubeUrl, lang, supabase) {
-	// 캐시된 자막이 있는지 확인
-	const cachedSubtitle = await getCachedSubtitle(youtubeUrl, lang, supabase);
-	if (cachedSubtitle) {
-		return cachedSubtitle;
+export async function getOrCacheSubtitle(youtubeUrl, lang) {
+	// 직접 자막 추출 (캐시 없이)
+	const extractionResult = await extractSubtitle(youtubeUrl, lang);
+
+	if (!extractionResult.success || !extractionResult.data) {
+		return {
+			success: false,
+			error: extractionResult.error || {
+				type: 'EXTRACTION_FAILED',
+				message: '자막 추출에 실패했습니다. YouTube URL을 확인해주세요.'
+			}
+		};
 	}
 
-	// 자막 추출 시도 (백엔드에서 재시도 처리)
-	const extractedSubtitle = await extractSubtitle(youtubeUrl, lang);
-
-	if (!extractedSubtitle || typeof extractedSubtitle !== 'string') {
-		throw new Error('Failed to extract subtitle. Please check the YouTube URL.');
-	}
-
-	// 캐시에 저장
-	await cacheSubtitle(youtubeUrl, lang, extractedSubtitle, supabase);
-
-	return extractedSubtitle;
+	return {
+		success: true,
+		subtitle: extractionResult.data
+	};
 }
 
 /**
