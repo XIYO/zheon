@@ -1,33 +1,33 @@
-<section class="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+<section class="relative overflow-hidden bg-gradient-to-br from-surface-900 via-surface-800 to-surface-900">
 	<!-- 배경 패턴 -->
-	<div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+	<div class="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-secondary-600/10"></div>
 	<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 	
 	<div class="relative grid items-center gap-16 px-6 py-32 md:grid-cols-2 lg:px-8">
-		<div class="space-y-8">
+		<div class="space-y-8 animate-fade-in">
 			<div class="space-y-4">
 				<div class="flex items-center space-x-3">
 					<div class="relative">
-						<span class="text-6xl font-black tracking-tight text-white">展</span>
-						<div class="absolute -inset-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 blur-xl"></div>
+						<span class="text-6xl font-black tracking-tight gradient-text">展</span>
+						<div class="absolute -inset-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 opacity-20 blur-xl"></div>
 					</div>
 					<h1 class="text-5xl font-black tracking-tight text-white lg:text-6xl">Zheon</h1>
 				</div>
-				<p class="text-xl leading-relaxed text-neutral-300 lg:text-2xl">
+				<p class="text-xl leading-relaxed text-surface-300 lg:text-2xl">
 					유튜브 영상의 스크립트를 마치 책처럼 펼쳐 보여주는 요약 서비스. 핵심만 빠르게 이해하고,
 					키워드별로 내용을 탐색하세요.
 				</p>
 			</div>
 			
 			<div class="space-y-6">
-				<div class="h-px bg-gradient-to-r from-transparent via-neutral-600 to-transparent"></div>
-				<p class="text-lg text-neutral-400">
+				<div class="h-px bg-gradient-to-r from-transparent via-surface-600 to-transparent"></div>
+				<p class="text-lg text-surface-400">
 					자동 생성된 자막 기반 AI 요약, 깔끔하고 구조적인 정보 제공.
 				</p>
 				
 				<a
 					href="dashboard"
-					class="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-4 text-lg font-semibold text-white shadow-xl shadow-blue-600/25 transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-600/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900">
+					class="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary-600 to-primary-700 px-8 py-4 text-lg font-semibold text-white shadow-xl shadow-primary-600/25 transition-all hover:from-primary-700 hover:to-primary-800 hover:shadow-primary-600/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-surface-900">
 					<span>시작하기</span>
 					<svg class="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -121,25 +121,25 @@
 		</div>
 	</div>
 </section>
-<section class="relative bg-gradient-to-br from-neutral-50 to-neutral-100 px-6 py-32 lg:px-8">
+<section class="relative bg-gradient-to-br from-surface-50 to-surface-100 px-6 py-32 lg:px-8">
 	<!-- 배경 패턴 -->
 	<div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(59,130,246,0.15),transparent_50%)]"></div>
 	<div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.15),transparent_50%)]"></div>
 	
 	<div class="relative grid items-center gap-16 md:grid-cols-2">
-		<div class="space-y-8">
+		<div class="space-y-8 animate-fade-in">
 			<div class="space-y-6">
-				<h2 class="text-4xl font-bold text-neutral-900 lg:text-5xl">
+				<h2 class="h1 text-surface-900">
 					알고 보면 더 흥미로운
-					<span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+					<span class="gradient-text">
 						Zheon의 작동 방식
 					</span>
 				</h2>
-				<p class="text-xl leading-relaxed text-neutral-700">
+				<p class="text-xl leading-relaxed text-surface-700">
 					Zheon은 유튜브 영상의 자막 데이터를 분석해 문맥 흐름을 파악하고, 사용자가 원하는 주제별로
 					내용을 재구성합니다.
 				</p>
-				<p class="text-lg text-neutral-600">
+				<p class="text-lg text-surface-600">
 					AI 요약 모델과 자연어 처리 기술이 결합되어, 수동 편집 없이도 완성도 높은 전개형 요약을
 					제공합니다.
 				</p>
@@ -147,89 +147,89 @@
 			
 			<!-- 기능 하이라이트 -->
 			<div class="grid gap-4 sm:grid-cols-2">
-				<div class="group rounded-2xl border border-neutral-200 bg-white/60 p-6 backdrop-blur-sm transition-all hover:border-blue-300 hover:shadow-lg">
-					<div class="mb-3 inline-flex rounded-full bg-blue-100 p-3">
-						<svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<div class="card group p-6 bg-surface-50/60 backdrop-blur-sm border border-surface-200 transition-all hover:border-primary-300 hover:shadow-lg">
+					<div class="mb-3 inline-flex rounded-full bg-primary-100 p-3">
+						<svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
 						</svg>
 					</div>
-					<h3 class="font-semibold text-neutral-900">실시간 처리</h3>
-					<p class="text-sm text-neutral-600">빠른 AI 분석으로 즉시 요약 제공</p>
+					<h3 class="h4 font-semibold text-surface-900">실시간 처리</h3>
+					<p class="text-sm text-surface-600">빠른 AI 분석으로 즉시 요약 제공</p>
 				</div>
 				
-				<div class="group rounded-2xl border border-neutral-200 bg-white/60 p-6 backdrop-blur-sm transition-all hover:border-purple-300 hover:shadow-lg">
-					<div class="mb-3 inline-flex rounded-full bg-purple-100 p-3">
-						<svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<div class="card group p-6 bg-surface-50/60 backdrop-blur-sm border border-surface-200 transition-all hover:border-secondary-300 hover:shadow-lg">
+					<div class="mb-3 inline-flex rounded-full bg-secondary-100 p-3">
+						<svg class="h-6 w-6 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
 						</svg>
 					</div>
-					<h3 class="font-semibold text-neutral-900">스마트 분석</h3>
-					<p class="text-sm text-neutral-600">문맥을 이해하는 고도화된 요약</p>
+					<h3 class="h4 font-semibold text-surface-900">스마트 분석</h3>
+					<p class="text-sm text-surface-600">문맥을 이해하는 고도화된 요약</p>
 				</div>
 			</div>
 		</div>
 		
 		<!-- 인터랙티브 데모 카드 -->
-		<div class="relative">
+		<div class="relative animate-fade-in">
 			<div class="relative mx-auto h-96 w-full max-w-md">
 				<!-- 글로우 효과 -->
-				<div class="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/30 to-purple-500/30 blur-2xl"></div>
+				<div class="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary-500/30 to-secondary-500/30 blur-2xl"></div>
 				
 				<!-- 메인 카드 -->
-				<div class="relative h-full overflow-hidden rounded-3xl border border-white/20 bg-white/80 shadow-2xl backdrop-blur-xl">
+				<div class="card relative h-full overflow-hidden bg-surface-50/80 shadow-2xl backdrop-blur-xl border border-surface-200/50">
 					<div class="p-8">
 						<!-- 헤더 -->
 						<div class="mb-6 flex items-center justify-between">
 							<div class="flex items-center space-x-3">
-								<div class="h-3 w-3 rounded-full bg-red-400"></div>
-								<div class="h-3 w-3 rounded-full bg-yellow-400"></div>
-								<div class="h-3 w-3 rounded-full bg-green-400"></div>
+								<div class="h-3 w-3 rounded-full bg-error-400"></div>
+								<div class="h-3 w-3 rounded-full bg-warning-400"></div>
+								<div class="h-3 w-3 rounded-full bg-success-400"></div>
 							</div>
-							<div class="text-sm font-medium text-neutral-500">Zheon AI</div>
+							<div class="text-sm font-medium text-surface-500">Zheon AI</div>
 						</div>
 						
 						<!-- 프로세스 시각화 -->
 						<div class="space-y-6">
 							<div class="space-y-3">
 								<div class="flex items-center gap-3">
-									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center">
 										<span class="text-xs font-bold text-white">1</span>
 									</div>
-									<div class="text-sm font-medium text-neutral-700">영상 분석</div>
+									<div class="text-sm font-medium text-surface-700">영상 분석</div>
 								</div>
-								<div class="ml-11 h-2 w-3/4 rounded-full bg-gradient-to-r from-blue-200 to-blue-300"></div>
+								<div class="ml-11 h-2 w-3/4 rounded-full bg-gradient-to-r from-primary-200 to-primary-300"></div>
 							</div>
 							
 							<div class="space-y-3">
 								<div class="flex items-center gap-3">
-									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 flex items-center justify-center">
 										<span class="text-xs font-bold text-white">2</span>
 									</div>
-									<div class="text-sm font-medium text-neutral-700">내용 구조화</div>
+									<div class="text-sm font-medium text-surface-700">내용 구조화</div>
 								</div>
-								<div class="ml-11 h-2 w-2/3 rounded-full bg-gradient-to-r from-purple-200 to-purple-300"></div>
+								<div class="ml-11 h-2 w-2/3 rounded-full bg-gradient-to-r from-secondary-200 to-secondary-300"></div>
 							</div>
 							
 							<div class="space-y-3">
 								<div class="flex items-center gap-3">
-									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+									<div class="h-8 w-8 rounded-full bg-gradient-to-r from-success-500 to-success-600 flex items-center justify-center">
 										<span class="text-xs font-bold text-white">3</span>
 									</div>
-									<div class="text-sm font-medium text-neutral-700">요약 완성</div>
+									<div class="text-sm font-medium text-surface-700">요약 완성</div>
 								</div>
-								<div class="ml-11 h-2 w-5/6 rounded-full bg-gradient-to-r from-green-200 to-green-300"></div>
+								<div class="ml-11 h-2 w-5/6 rounded-full bg-gradient-to-r from-success-200 to-success-300"></div>
 							</div>
 						</div>
 						
 						<!-- 결과 미리보기 -->
-						<div class="mt-8 rounded-2xl bg-gradient-to-br from-neutral-50 to-neutral-100 p-4">
+						<div class="mt-8 card p-4 bg-gradient-to-br from-surface-50 to-surface-100 border border-surface-200">
 							<div class="text-center">
-								<div class="mb-2 text-lg font-bold text-neutral-800">"Zheon은 영상의 흐름을</div>
-								<div class="text-lg font-bold text-neutral-800">텍스트로 재해석합니다."</div>
+								<div class="mb-2 h4 font-bold gradient-text">"Zheon은 영상의 흐름을</div>
+								<div class="h4 font-bold gradient-text">텍스트로 재해석합니다."</div>
 								<div class="mt-3 flex justify-center gap-1">
-									<div class="h-1 w-6 rounded-full bg-blue-400"></div>
-									<div class="h-1 w-4 rounded-full bg-purple-400"></div>
-									<div class="h-1 w-8 rounded-full bg-green-400"></div>
+									<div class="h-1 w-6 rounded-full bg-primary-400"></div>
+									<div class="h-1 w-4 rounded-full bg-secondary-400"></div>
+									<div class="h-1 w-8 rounded-full bg-success-400"></div>
 								</div>
 							</div>
 						</div>
