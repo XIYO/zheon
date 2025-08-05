@@ -54,13 +54,34 @@ supabase functions serve youtube-process --no-verify-jwt  # JWT 검증 없이
 
 #### 테스트
 
+**Deno Task 방식 (권장)**:
 ```bash
-pnpm edge:test          # 모든 테스트
-pnpm edge:test:watch    # 감시 모드
-pnpm edge:test:unit     # 단위 테스트만
+# supabase 디렉토리에서 실행
+cd supabase && deno task test                    # 모든 테스트
+cd supabase && deno task test --filter="Hello"  # 특정 테스트만
+
+# 또는 프로젝트 루트에서
+deno task test --filter="Hello Function"        # 필터링 테스트
+```
+
+**npm 스크립트 방식**:
+```bash
+pnpm edge:test          # 모든 테스트 (deno task test 래퍼)
 pnpm edge:format        # 코드 포맷팅
-pnpm edge:lint          # 린트 검사
+pnpm edge:lint          # 린트 검사  
 pnpm edge:check         # 타입 체크
+```
+
+**개별 테스트 실행**:
+```bash
+# 절대 경로로 직접 실행
+deno test --allow-all --env-file=.env ./supabase/tests/hello-test.ts
+
+# 테스트 옵션들
+deno test --help                    # 모든 옵션 확인
+deno test --filter="pattern"        # 패턴 매칭
+deno test --watch                   # 감시 모드
+deno test --coverage                # 커버리지 수집
 ```
 
 #### 배포
@@ -219,6 +240,31 @@ channel.on('broadcast', { event: 'subtitle-ready' }, (payload) => {
 ```
 
 ### 테스트 및 검증
+
+#### Hello Function 테스트 분석
+
+**테스트 성공 원리**: `verify_jwt = true` 설정에도 불구하고 테스트가 성공하는 이유
+
+1. **supabase.functions.invoke() 특별 처리**
+   ```typescript
+   // invoke() 메서드는 내부적으로 특별한 인증 로직 사용
+   const { data, error } = await supabase.functions.invoke('hello', {
+     body: { name: "World" }
+   })
+   ```
+
+2. **테스트 환경에서의 anon key 동작**
+   - 직접 HTTP 요청: 401 Unauthorized (차단됨)
+   - invoke() 요청: 200 OK (성공함)
+   - **함수 실행 카운트**: 인증 실패 시 차감 안 됨 ⭐
+
+3. **실제 테스트 결과**
+   ```bash
+   # 3개의 Hello Function 테스트 모두 성공
+   ✅ Hello function test passed: { message: "Hello World!" }
+   ✅ Hello function integration working perfectly!  
+   ✅ Production hello function working correctly
+   ```
 
 #### Deno Test 사용 (공식 권장)
 

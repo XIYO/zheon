@@ -1,69 +1,100 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { extractYouTubeSubtitles } from "../_shared/youtube-extractor.ts";
 import { corsValidation, corsResponse, corsError } from "../_shared/cors.ts";
+import { validateUrl } from "../_shared/runnables/validate-url.ts";
+import { checkDuplicate } from "../_shared/runnables/check-duplicate.ts";
+import { extractSubtitles } from "../_shared/runnables/extract-subtitles.ts";
+import { generateSummary } from "../_shared/runnables/generate-summary.ts";
+import { saveToDB } from "../_shared/runnables/save-to-db.ts";
 
-console.log("Summary function started");
+console.log("🦜 Summary Pipeline Started");
 
 Deno.serve(async (req) => {
   const validation = corsValidation(req, ["POST"]);
   if (validation) return validation;
   
   try {
-    // 요청 본문 파싱
-    let requestBody;
-    try {
-      requestBody = await req.json();
-    } catch {
-      return corsError("Invalid JSON in request body", "INVALID_JSON", 400);
+    let url: string | undefined;
+    
+    // Content-Type에 따라 다르게 처리
+    const contentType = req.headers.get("content-type") || "";
+    
+    if (contentType.includes("multipart/form-data")) {
+      // FormData로 전송된 경우
+      const formData = await req.formData();
+      url = formData.get("url") as string;
+    } else if (contentType.includes("application/x-www-form-urlencoded")) {
+      // URL encoded form으로 전송된 경우
+      const text = await req.text();
+      const params = new URLSearchParams(text);
+      url = params.get("url") || undefined;
+    } else {
+      // JSON으로 전송된 경우 (기존 방식)
+      const body = await req.json().catch(() => ({}));
+      url = body.url;
+    }
+    
+    if (!url) {
+      return corsError("URL is required", "MISSING_URL", 400);
     }
 
-    const { youtubeUrl } = requestBody;
+    console.log(`🚀 Processing: ${url}`);
 
-    // YouTube URL 검증
-    if (!youtubeUrl || typeof youtubeUrl !== "string") {
-      return corsError("YouTube URL is required", "MISSING_URL", 400);
-    }
+    // 파이프라인: URL검증 → 중복체크 → 추출 → 요약 → 저장
+    const pipeline = validateUrl
+      .pipe(checkDuplicate)
+      .pipe(extractSubtitles)
+      .pipe(generateSummary)
+      .pipe(saveToDB);
 
-    console.log(`Processing YouTube URL: ${youtubeUrl}`);
+    // 실행
+    const result = await pipeline.invoke({ url });
+    
+    console.log("🎯 Pipeline result:", result);
 
-    // 공유 함수를 사용해서 자막 추출
-    const extractionResult = await extractYouTubeSubtitles(youtubeUrl);
-
-    if (!extractionResult.success) {
-      const errorCode = extractionResult.error?.includes("Invalid YouTube URL")
-        ? "INVALID_URL_FORMAT"
-        : extractionResult.error?.includes("No transcript")
-        ? "NO_TRANSCRIPT"
-        : extractionResult.error?.includes("EXTRACT_API_URL")
-        ? "MISSING_API_CONFIG"
-        : extractionResult.error?.includes("Failed to extract")
-        ? "EXTRACTOR_API_ERROR"
-        : "EXTRACTION_ERROR";
-
-      return corsError(
-        extractionResult.error || "Unknown extraction error",
-        errorCode,
-        errorCode === "MISSING_API_CONFIG" ||
-          errorCode === "EXTRACTOR_API_ERROR"
-          ? 500
-          : 400,
-      );
-    }
-
-    // 성공 응답
+    // 간단한 성공 응답
     return corsResponse({
       status: "success",
-      message: "Transcript extracted successfully",
-      youtubeUrl: extractionResult.youtubeUrl,
-      transcript: {
-        text: extractionResult.transcript!,
-        characters: extractionResult.transcript!.length,
-        cached: extractionResult.cached || false,
-      },
-      timestamp: new Date().toISOString(),
+      message: "Video processed successfully",
+      debug: {
+        record_id: result?.record_id,
+        saved_at: result?.saved_at
+      }
     });
+
   } catch (error) {
-    console.error("Summary function error:", error);
-    return corsError("Internal server error", "INTERNAL_ERROR", 500);
+    console.error("❌ Pipeline error:", error);
+    
+    // 지원하지 않는 URL 에러인 경우 400 Bad Request 반환
+    if (error instanceof Error && error.message.includes("Unsupported URL")) {
+      return corsError(
+        error.message,
+        "UNSUPPORTED_URL", 
+        400
+      );
+    }
+    
+    // Invalid URL 에러인 경우 400 Bad Request 반환
+    if (error instanceof Error && (error.message.includes("Invalid URL") || error.message.includes("Could not extract"))) {
+      return corsError(
+        error.message,
+        "INVALID_URL", 
+        400
+      );
+    }
+    
+    // 중복 URL 에러인 경우 409 Conflict 반환
+    if (error instanceof Error && error.message.includes("already exists")) {
+      return corsError(
+        error.message,
+        "DUPLICATE_URL", 
+        409
+      );
+    }
+    
+    return corsError(
+      error instanceof Error ? error.message : "Pipeline failed", 
+      "PIPELINE_ERROR", 
+      500
+    );
   }
 });

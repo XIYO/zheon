@@ -20,7 +20,7 @@
 		"deploy": "pnpm build && wrangler pages deploy",
 		"wrangler": "wrangler",
 		"edge:test:all": "cd supabase && deno task test",
-		"edge:deploy": "supabase functions deploy",
+		"edge:deploy": "supabase functions deploy --project-ref iefgdhwmgljjacafqomd",
 		"edge:deploy:with-secrets": "supabase secrets set --env-file=.env --project-ref iefgdhwmgljjacafqomd && supabase functions deploy --project-ref iefgdhwmgljjacafqomd",
 		"edge:secrets:set": "supabase secrets set --env-file=.env --project-ref iefgdhwmgljjacafqomd",
 		"edge:secrets:list": "supabase secrets list --project-ref iefgdhwmgljjacafqomd",
