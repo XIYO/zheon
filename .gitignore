@@ -28,3 +28,33 @@ src/lib/paraglide
 
 *storybook.log
 storybook-static
+
+# Supabase - Track Edge Functions and configuration
+# supabase/ - Now tracking for Edge Functions development
+.branches
+.temp
+
+# Task Master local files
+.taskmaster/docs/prd.txt
+.taskmaster/tasks/task-*.md
+.taskmaster/reports/
+*.prompt
+
+# Test files
+test-*.js
+test-*.ts
+check-*.js
+get-*.js
+
+# IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Misc
+*.log
+*.map
+*.swp
+*.swo
+coverage
+.nyc_output
