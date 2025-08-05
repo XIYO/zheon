@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@langchain/google-genai": "npm:@langchain/google-genai@^0.1.0",
+    "@langchain/core": "npm:@langchain/core@^0.3.0"
+  }
+}

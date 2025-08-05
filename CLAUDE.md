@@ -62,3 +62,13 @@ Use ONLY these Skeleton presets. Keep basic design minimal. Apply varied styles 
 - General areas: stick to neutral/surface presets
 - No custom colors outside these presets
 - Maintain consistency across similar elements
+
+# Supabase Development
+
+Supabase 관련 개발 지침은 `supabase/CLAUDE.md`를 참조하세요.
+
+- Edge Functions 개발 가이드
+- 테스트 및 배포 방법
+- 환경 변수 설정
+- Realtime/Broadcast 사용법
+- 디버깅 및 문제 해결
