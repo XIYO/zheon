@@ -1,6 +1,6 @@
 /**
  * YouTube 영상 요약 생성 Runnable
- * 입력: { youtube_url: string, transcript: string, transcript_length: number, cached: boolean }
+ * 입력: { url: string, transcript: string, transcript_length: number, cached: boolean }
  * 출력: 입력 데이터 + { summary: string, summary_method: string }
  */
 
@@ -11,11 +11,24 @@ import { RunnableLambda } from "npm:@langchain/core/runnables";
 
 export const generateSummary = RunnableLambda.from(
   async (input: { 
-    youtube_url: string; 
+    url: string; 
     transcript: string; 
     transcript_length: number; 
     cached: boolean;
+    _skip_save?: boolean;
+    _existing_record?: any;
   }) => {
+    // 중복 체크에서 스킵 플래그가 설정된 경우
+    if (input._skip_save) {
+      console.log(`[Summary] ⏭️ Skipping generation - using existing record`);
+      // 기존 레코드 정보를 그대로 전달
+      return {
+        ...input,
+        summary: "CACHED",
+        summary_method: "cached"
+      };
+    }
+    
     console.log(`[Summary] Generating for ${input.transcript_length} chars...`);
     
     // TODO: 실제 LangChain 요약 구현

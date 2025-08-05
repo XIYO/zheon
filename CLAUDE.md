@@ -72,3 +72,18 @@ Supabase 관련 개발 지침은 `supabase/CLAUDE.md`를 참조하세요.
 - 환경 변수 설정
 - Realtime/Broadcast 사용법
 - 디버깅 및 문제 해결
+
+## Supabase CLI 사용법
+
+시스템에 Supabase CLI가 직접 설치되어 있으므로 `pnpm` 없이 직접 명령어를 사용합니다:
+
+```bash
+# 타입 생성 (pnpm 없이)
+supabase gen types typescript --linked
+
+# 마이그레이션 실행
+supabase migration up
+
+# Edge Functions 배포
+supabase functions deploy
+```

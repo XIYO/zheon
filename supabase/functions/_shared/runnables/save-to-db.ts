@@ -9,10 +9,11 @@ import { createSupabaseClient } from "../supabase-client.ts";
 
 export const saveToDB = RunnableLambda.from(
   async (input: { 
-    youtube_url: string; 
+    url: string; 
     transcript: string;
     summary: string;
     summary_method: string;
+    title?: string;
     _skip_save?: boolean;
     _existing_record?: any;
   }) => {
@@ -20,7 +21,7 @@ export const saveToDB = RunnableLambda.from(
     
     // 중복 레코드가 이미 업데이트되었으면 저장 스킵
     if (input._skip_save && input._existing_record) {
-      console.log(`[Save] ✅ Skipping save - existing record updated (ID: ${input._existing_record.id})`);
+      console.log(`[Save] ✅ Skipping save - existing summary record updated (ID: ${input._existing_record.id})`);
       return {
         record_id: input._existing_record.id,
         saved_at: new Date().toISOString(), // 업데이트된 시간
@@ -30,27 +31,50 @@ export const saveToDB = RunnableLambda.from(
     
     const supabase = createSupabaseClient();
     
-    // subtitles 테이블에 저장 (새로운 레코드만)
-    const { data, error } = await supabase
+    // 두 테이블에 모두 저장 (subtitles와 summary)
+    
+    // 1. subtitles 테이블에 저장 - 백엔드에서 처리하므로 주석 처리
+    /*
+    const { data: subtitleData, error: subtitleError } = await supabase
       .from("subtitles")
       .insert({
-        youtube_url: input.youtube_url,
+        url: input.url, // url 컬럼 사용
         subtitle: input.transcript,
         created_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Database error: ${error.message}`);
+    if (subtitleError) {
+      throw new Error(`Subtitles save error: ${subtitleError.message}`);
+    }
+    */
+
+    // 2. summary 테이블에 저장 (공개 캐시, 소유권 없음)
+    const { data: summaryData, error: summaryError } = await supabase
+      .from("summary")
+      .insert({
+        url: input.url,
+        title: input.title || 'YouTube Video Summary',
+        summary: input.summary,
+        content: input.transcript, // 전체 자막 내용도 저장
+        lang: 'ko', // 기본 언어 설정
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (summaryError) {
+      throw new Error(`Summary save error: ${summaryError.message}`);
     }
     
-    console.log(`[Save] ✅ Saved new record with ID: ${data.id}`);
+    console.log(`[Save] ✅ Saved new summary record - ID: ${summaryData.id}`);
+    // 기존: console.log(`[Save] ✅ Saved new records - Subtitle ID: ${subtitleData.id}, Summary ID: ${summaryData.id}`);
     
-    // 최종 결과 (필요한 정보만)
+    // 최종 결과 (summary 테이블 기준)
     return {
-      record_id: data.id,
-      saved_at: data.created_at,
+      record_id: summaryData.id,
+      saved_at: summaryData.created_at,
       was_duplicate: false
     };
   }

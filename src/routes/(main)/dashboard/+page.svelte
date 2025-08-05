@@ -15,9 +15,13 @@
 		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
 				handleSignIn();
-			} else if (result.type === 'success' && result.data?.fromCache) {
-				// 기존 요약이 있는 경우 빠른 피드백
-				console.log('Existing summary found, displaying immediately');
+			} else if (result.type === 'success' && result.data?.success) {
+				// Edge Function 성공 처리
+				if (result.data?.fromCache) {
+					console.log('Existing summary found, displaying immediately');
+				} else {
+					console.log('New summary created successfully');
+				}
 				update({ invalidateAll: true });
 			} else {
 				update({ invalidateAll: true });
@@ -121,7 +125,10 @@
 							<p class="text-sm font-medium">{page.form.message}</p>
 							{#if isRateLimit}
 								<p class="mt-2 text-xs opacity-80">
-									이미 요약된 영상은 바로 보여지며, 새로운 영상만 잠시 후 시도해주세요.
+									현재 많은 사용자가 이용 중입니다. 5분 후에 다시 시도해주세요.
+								</p>
+								<p class="mt-1 text-xs opacity-70">
+									💡 팁: 이미 요약된 영상은 아래 목록에서 바로 확인할 수 있습니다.
 								</p>
 							{/if}
 						</div>
@@ -201,7 +208,7 @@
 							<!-- 썸네일 -->
 							<div class="relative overflow-hidden">
 								<img
-									src={extractThumbnail(summary.youtube_url)}
+									src={extractThumbnail(summary.url)}
 									alt="썸네일"
 									class="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-110" />
 								<div

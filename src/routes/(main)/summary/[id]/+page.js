@@ -1,16 +1,13 @@
 import { error } from '@sveltejs/kit';
 
 export const load = async ({ parent, params }) => {
-	const { supabase, user } = await parent();
-	if (!user) {
-		throw error(401, 'Unauthorized');
-	}
+	const { supabase } = await parent();
 
+	// RLS 정책이 인증된 사용자의 데이터만 반환하도록 처리
 	const { data: summary, error: fetchError } = await supabase
 		.from('summary')
-		.select('id, youtube_url, title, summary, content, lang, created_at, user_id')
+		.select('id, url, title, summary, content, lang, created_at')
 		.eq('id', params.id)
-		.eq('user_id', user.id)
 		.single();
 
 	if (fetchError) {

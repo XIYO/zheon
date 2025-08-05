@@ -1,7 +1,7 @@
 /**
  * URL 검증 및 정규화 Runnable
  * 입력: { url: string }
- * 출력: { youtube_url: string } (정규화된 URL)
+ * 출력: { url: string } (정규화된 URL)
  * 
  * 지원하는 YouTube URL 형태:
  * - https://www.youtube.com/watch?v=VIDEO_ID
@@ -97,7 +97,7 @@ export const validateUrl = RunnableLambda.from(
       console.log(`[Validate] 🔄 Normalized: ${input.url} → ${normalizedUrl}`);
       
       return {
-        youtube_url: normalizedUrl
+        url: normalizedUrl
       };
     } catch (error) {
       console.log(`[Validate] ❌ URL validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { corsValidation, corsResponse, corsError } from "../_shared/cors.ts";
+import { createSupabaseClient } from "../_shared/supabase-client.ts";
 import { validateUrl } from "../_shared/runnables/validate-url.ts";
 import { checkDuplicate } from "../_shared/runnables/check-duplicate.ts";
 import { extractSubtitles } from "../_shared/runnables/extract-subtitles.ts";
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
       .pipe(generateSummary)
       .pipe(saveToDB);
 
-    // 실행
+    // 실행 (공개 캐시 시스템)
     const result = await pipeline.invoke({ url });
     
     console.log("🎯 Pipeline result:", result);
@@ -54,10 +55,13 @@ Deno.serve(async (req) => {
     // 간단한 성공 응답
     return corsResponse({
       status: "success",
-      message: "Video processed successfully",
+      message: result?.was_duplicate 
+        ? "Using cached summary" 
+        : "Video processed successfully",
       debug: {
         record_id: result?.record_id,
-        saved_at: result?.saved_at
+        saved_at: result?.saved_at,
+        was_duplicate: result?.was_duplicate || false
       }
     });
 

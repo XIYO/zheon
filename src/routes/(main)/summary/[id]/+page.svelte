@@ -97,14 +97,14 @@
 								<!-- 썸네일 -->
 								<div class="relative overflow-hidden">
 									<img
-										src={extractThumbnail(summary.youtube_url)}
+										src={extractThumbnail(summary.url)}
 										alt="Video thumbnail"
 										class="aspect-video w-full object-cover" />
 									<div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
 
 									<!-- 재생 버튼 -->
 									<a
-										href={summary.youtube_url}
+										href={summary.url}
 										target="_blank"
 										rel="noopener noreferrer"
 										aria-label="YouTube에서 영상 재생"
@@ -170,7 +170,7 @@
 
 									<!-- YouTube 링크 -->
 									<a
-										href={summary.youtube_url}
+										href={summary.url}
 										target="_blank"
 										rel="noopener noreferrer"
 										class="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl hover:scale-[1.02]">
