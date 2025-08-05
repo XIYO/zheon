@@ -50,7 +50,7 @@ export const saveToDB = RunnableLambda.from(
     }
     */
 
-    // 2. summary 테이블에 저장 (공개 캐시, 소유권 없음)
+    // 2. summary 테이블에 저장 (Service Role Key 사용, owners 없이 저장)
     const { data: summaryData, error: summaryError } = await supabase
       .from("summary")
       .insert({
