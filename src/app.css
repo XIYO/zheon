@@ -2,6 +2,8 @@
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton/optional/presets';
 @import '@skeletonlabs/skeleton/themes/cerberus';
+@import '@skeletonlabs/skeleton/themes/catppuccin';
+@import './typo.css';
 @source '../node_modules/@skeletonlabs/skeleton-svelte/dist';
 
 :root {
