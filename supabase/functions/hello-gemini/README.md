@@ -1,12 +1,10 @@
 # Hello Gemini Edge Function
 
-A production-ready Supabase Edge Function that integrates with Google's Gemini
-AI API to generate content based on user prompts.
+A production-ready Supabase Edge Function that integrates with Google's Gemini AI API to generate content based on user prompts.
 
 ## Features
 
-- ✅ **Direct Gemini Integration**: Uses Google's Generative AI SDK (not
-  LangChain)
+- ✅ **Direct Gemini Integration**: Uses Google's Generative AI SDK (not LangChain)
 - ✅ **Production Ready**: Comprehensive error handling and validation
 - ✅ **TypeScript Support**: Full type safety with proper interfaces
 - ✅ **CORS Enabled**: Supports cross-origin requests
@@ -25,7 +23,7 @@ AI API to generate content based on user prompts.
 
 ```json
 {
-  "prompt": "Your text prompt here"
+	"prompt": "Your text prompt here"
 }
 ```
 
@@ -35,10 +33,10 @@ AI API to generate content based on user prompts.
 
 ```json
 {
-  "message": "Content generated successfully",
-  "response": "Generated content from Gemini",
-  "model": "gemini-1.5-flash",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+	"message": "Content generated successfully",
+	"response": "Generated content from Gemini",
+	"model": "gemini-1.5-flash",
+	"timestamp": "2024-01-01T12:00:00.000Z"
 }
 ```
 
@@ -46,9 +44,9 @@ AI API to generate content based on user prompts.
 
 ```json
 {
-  "error": "Error description",
-  "code": "ERROR_CODE",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+	"error": "Error description",
+	"code": "ERROR_CODE",
+	"timestamp": "2024-01-01T12:00:00.000Z"
 }
 ```
 
@@ -106,42 +104,36 @@ curl -i --location --request POST 'https://iefgdhwmgljjacafqomd.supabase.co/func
 ### JavaScript/TypeScript
 
 ```typescript
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  "https://iefgdhwmgljjacafqomd.supabase.co",
-  "your-anon-key",
-);
+const supabase = createClient('https://iefgdhwmgljjacafqomd.supabase.co', 'your-anon-key');
 
-const { data, error } = await supabase.functions.invoke("hello-gemini", {
-  body: {
-    prompt: "Tell me a joke about developers",
-  },
+const { data, error } = await supabase.functions.invoke('hello-gemini', {
+	body: {
+		prompt: 'Tell me a joke about developers'
+	}
 });
 
 if (error) {
-  console.error("Error:", error);
+	console.error('Error:', error);
 } else {
-  console.log("Generated:", data.response);
+	console.log('Generated:', data.response);
 }
 ```
 
 ### Fetch API
 
 ```javascript
-const response = await fetch(
-  "https://iefgdhwmgljjacafqomd.supabase.co/functions/v1/hello-gemini",
-  {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer your-anon-key",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      prompt: "Explain TypeScript benefits",
-    }),
-  },
-);
+const response = await fetch('https://iefgdhwmgljjacafqomd.supabase.co/functions/v1/hello-gemini', {
+	method: 'POST',
+	headers: {
+		Authorization: 'Bearer your-anon-key',
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({
+		prompt: 'Explain TypeScript benefits'
+	})
+});
 
 const data = await response.json();
 console.log(data.response);
@@ -152,16 +144,19 @@ console.log(data.response);
 ### Local Testing
 
 1. **Start Supabase:**
+
    ```bash
    supabase start
    ```
 
 2. **Serve the function:**
+
    ```bash
    supabase functions serve hello-gemini
    ```
 
 3. **Test the function:**
+
    ```bash
    # Run comprehensive tests
    deno test --allow-all --env-file=.env supabase/tests/hello-gemini-test.ts
@@ -262,8 +257,7 @@ The function includes comprehensive logging:
 
 ### Debug Mode
 
-Enable detailed logging by checking the function logs in Supabase Dashboard or
-using the CLI.
+Enable detailed logging by checking the function logs in Supabase Dashboard or using the CLI.
 
 ## License
 

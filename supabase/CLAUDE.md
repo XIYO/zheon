@@ -55,6 +55,7 @@ supabase functions serve youtube-process --no-verify-jwt  # JWT 검증 없이
 #### 테스트
 
 **Deno Task 방식 (권장)**:
+
 ```bash
 # supabase 디렉토리에서 실행
 cd supabase && deno task test                    # 모든 테스트
@@ -65,14 +66,16 @@ deno task test --filter="Hello Function"        # 필터링 테스트
 ```
 
 **npm 스크립트 방식**:
+
 ```bash
 pnpm edge:test          # 모든 테스트 (deno task test 래퍼)
 pnpm edge:format        # 코드 포맷팅
-pnpm edge:lint          # 린트 검사  
+pnpm edge:lint          # 린트 검사
 pnpm edge:check         # 타입 체크
 ```
 
 **개별 테스트 실행**:
+
 ```bash
 # 절대 경로로 직접 실행
 deno test --allow-all --env-file=.env ./supabase/tests/hello-test.ts
@@ -150,7 +153,7 @@ udd **/*.ts
 
 ```typescript
 // npm 대신 JSR 사용
-import { createClient } from "jsr:@supabase/supabase-js@2"  // ✅ JSR (권장)
+import { createClient } from 'jsr:@supabase/supabase-js@2'; // ✅ JSR (권장)
 // import { createClient } from "npm:@supabase/supabase-js@2"  // ❌ npm
 ```
 
@@ -166,56 +169,55 @@ JSR 장점:
 #### 기본 구조
 
 ```typescript
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 Deno.serve(async (req) => {
-  try {
-    const { data } = await req.json()
-    
-    // 처리 로직
-    
-    return new Response(
-      JSON.stringify({ success: true, data: result }),
-      { headers: { "Content-Type": "application/json" } }
-    )
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    )
-  }
-})
+	try {
+		const { data } = await req.json();
+
+		// 처리 로직
+
+		return new Response(JSON.stringify({ success: true, data: result }), {
+			headers: { 'Content-Type': 'application/json' }
+		});
+	} catch (error) {
+		return new Response(JSON.stringify({ error: error.message }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+});
 ```
 
-#### 코드 공유 (_shared 폴더)
+#### 코드 공유 (\_shared 폴더)
 
 ```typescript
 // supabase/functions/_shared/supabaseClient.ts
-import { createClient } from "jsr:@supabase/supabase-js@2"
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 export const supabaseClient = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_ANON_KEY")!
-)
+	Deno.env.get('SUPABASE_URL')!,
+	Deno.env.get('SUPABASE_ANON_KEY')!
+);
 
 // 함수에서 사용
-import { supabaseClient } from "../_shared/supabaseClient.ts"
+import { supabaseClient } from '../_shared/supabaseClient.ts';
 ```
 
 #### 함수 간 호출 (HTTP 체이닝)
 
 ```typescript
 const response = await fetch(
-  "https://iefgdhwmgljjacafqomd.supabase.co/functions/v1/other-function",
-  {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ data })
-  }
-)
+	'https://iefgdhwmgljjacafqomd.supabase.co/functions/v1/other-function',
+	{
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ data })
+	}
+);
 ```
 
 ### Realtime 통합
@@ -224,19 +226,19 @@ const response = await fetch(
 
 ```typescript
 // Edge Function에서
-const { data, error } = await supabaseClient
-  .channel('subtitle-updates')
-  .send({
-    type: 'broadcast',
-    event: 'subtitle-ready',
-    payload: { videoId, status: 'completed' }
-  })
+const { data, error } = await supabaseClient.channel('subtitle-updates').send({
+	type: 'broadcast',
+	event: 'subtitle-ready',
+	payload: { videoId, status: 'completed' }
+});
 
 // 프론트엔드에서
-const channel = supabase.channel('subtitle-updates')
-channel.on('broadcast', { event: 'subtitle-ready' }, (payload) => {
-  console.log('Subtitle ready:', payload)
-}).subscribe()
+const channel = supabase.channel('subtitle-updates');
+channel
+	.on('broadcast', { event: 'subtitle-ready' }, (payload) => {
+		console.log('Subtitle ready:', payload);
+	})
+	.subscribe();
 ```
 
 ### 테스트 및 검증
@@ -246,11 +248,12 @@ channel.on('broadcast', { event: 'subtitle-ready' }, (payload) => {
 **테스트 성공 원리**: `verify_jwt = true` 설정에도 불구하고 테스트가 성공하는 이유
 
 1. **supabase.functions.invoke() 특별 처리**
+
    ```typescript
    // invoke() 메서드는 내부적으로 특별한 인증 로직 사용
    const { data, error } = await supabase.functions.invoke('hello', {
-     body: { name: "World" }
-   })
+   	body: { name: 'World' }
+   });
    ```
 
 2. **테스트 환경에서의 anon key 동작**
@@ -262,7 +265,7 @@ channel.on('broadcast', { event: 'subtitle-ready' }, (payload) => {
    ```bash
    # 3개의 Hello Function 테스트 모두 성공
    ✅ Hello function test passed: { message: "Hello World!" }
-   ✅ Hello function integration working perfectly!  
+   ✅ Hello function integration working perfectly!
    ✅ Production hello function working correctly
    ```
 
@@ -274,24 +277,21 @@ Supabase Edge Functions는 Deno의 내장 테스트 프레임워크를 사용합
 
 ```typescript
 // supabase/functions/tests/function-name-test.ts
-import { assert, assertEquals } from "jsr:@std/assert@1"
-import { createClient } from "jsr:@supabase/supabase-js@2"
-import "jsr:@std/dotenv/load"
+import { assert, assertEquals } from 'jsr:@std/assert@1';
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+import 'jsr:@std/dotenv/load';
 
-Deno.test("Function Test", async () => {
-  const client = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
-  )
-  
-  // ✅ 공식 권장: invoke() 사용
-  const { data, error } = await client.functions.invoke("function-name", {
-    body: { test: "data" }
-  })
-  
-  assert(!error)
-  assertEquals(data.status, "success")
-})
+Deno.test('Function Test', async () => {
+	const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
+
+	// ✅ 공식 권장: invoke() 사용
+	const { data, error } = await client.functions.invoke('function-name', {
+		body: { test: 'data' }
+	});
+
+	assert(!error);
+	assertEquals(data.status, 'success');
+});
 ```
 
 #### 테스트 규칙
@@ -371,39 +371,32 @@ DROP SCHEMA test CASCADE;
 
 ```typescript
 // 방법 1: Supabase 클라이언트 사용 (RLS 적용)
-import { createClient } from "jsr:@supabase/supabase-js@2"
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 Deno.serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    {
-      global: {
-        headers: { Authorization: req.headers.get("Authorization")! }
-      }
-    }
-  )
-  
-  // RLS가 적용된 쿼리
-  const { data, error } = await supabase
-    .from("subtitles")
-    .select("*")
-    .eq("video_id", "test")
-  
-  return new Response(JSON.stringify({ data }))
-})
+	const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+		global: {
+			headers: { Authorization: req.headers.get('Authorization')! }
+		}
+	});
+
+	// RLS가 적용된 쿼리
+	const { data, error } = await supabase.from('subtitles').select('*').eq('video_id', 'test');
+
+	return new Response(JSON.stringify({ data }));
+});
 
 // 방법 2: Service Role Key 사용 (RLS 우회)
 const supabaseAdmin = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-)
+	Deno.env.get('SUPABASE_URL')!,
+	Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+);
 
 // 방법 3: 직접 PostgreSQL 연결 (Deno Postgres)
-import postgres from "https://deno.land/x/postgresjs/mod.js"
+import postgres from 'https://deno.land/x/postgresjs/mod.js';
 
-const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!)
-const result = await sql`SELECT * FROM subtitles`
+const sql = postgres(Deno.env.get('SUPABASE_DB_URL')!);
+const result = await sql`SELECT * FROM subtitles`;
 ```
 
 ### 디버깅
@@ -413,7 +406,7 @@ const result = await sql`SELECT * FROM subtitles`
    ```bash
    # inspect 모드로 실행
    supabase functions serve --inspect-mode brk
-   
+
    # Chrome에서 chrome://inspect 접속
    # 127.0.0.1:8083 추가하여 디버깅
    ```

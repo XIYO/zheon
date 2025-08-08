@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeYouTubeUrl, validateAndNormalizeUrl, extractVideoId } from '../../../src/lib/server/youtube-utils.js';
+import {
+	normalizeYouTubeUrl,
+	validateAndNormalizeUrl,
+	extractVideoId
+} from '../../../src/lib/server/youtube-utils.js';
 
 describe('youtube-utils', () => {
 	describe('extractVideoId', () => {
@@ -125,7 +129,7 @@ describe('youtube-utils', () => {
 				'http://www.youtube.com/watch?v=dQw4w9WgXcQ'
 			];
 
-			validUrls.forEach(url => {
+			validUrls.forEach((url) => {
 				expect(() => {
 					validateAndNormalizeUrl(url);
 				}).not.toThrow();
@@ -134,10 +138,22 @@ describe('youtube-utils', () => {
 
 		it('should normalize all valid formats to standard format', () => {
 			const testCases = [
-				{ input: 'https://youtu.be/dQw4w9WgXcQ', expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-				{ input: 'https://www.youtube.com/embed/dQw4w9WgXcQ', expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-				{ input: 'https://m.youtube.com/watch?v=dQw4w9WgXcQ', expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-				{ input: 'http://youtube.com/watch?v=dQw4w9WgXcQ', expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+				{
+					input: 'https://youtu.be/dQw4w9WgXcQ',
+					expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+				},
+				{
+					input: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+					expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+				},
+				{
+					input: 'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
+					expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+				},
+				{
+					input: 'http://youtube.com/watch?v=dQw4w9WgXcQ',
+					expected: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+				}
 			];
 
 			testCases.forEach(({ input, expected }) => {

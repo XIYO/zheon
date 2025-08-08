@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { 
-	validateYouTubeUrlFromForm, 
-	validateLanguageFromForm, 
-	isValidSubtitle, 
-	isValidSummaryData 
+import {
+	validateYouTubeUrlFromForm,
+	validateLanguageFromForm,
+	isValidSubtitle,
+	isValidSummaryData
 } from '../../../src/lib/server/validation-utils.js';
 
 describe('validation-utils', () => {
@@ -11,7 +11,7 @@ describe('validation-utils', () => {
 		it('should validate correct YouTube URL', () => {
 			const formData = new FormData();
 			formData.append('youtubeUrl', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-			
+
 			expect(() => {
 				validateYouTubeUrlFromForm(formData);
 			}).not.toThrow();
@@ -19,7 +19,7 @@ describe('validation-utils', () => {
 
 		it('should throw error for missing URL', () => {
 			const formData = new FormData();
-			
+
 			expect(() => {
 				validateYouTubeUrlFromForm(formData);
 			}).toThrow('YouTube URL이 제공되지 않았습니다.');
@@ -28,7 +28,7 @@ describe('validation-utils', () => {
 		it('should throw error for empty URL', () => {
 			const formData = new FormData();
 			formData.append('youtubeUrl', '');
-			
+
 			expect(() => {
 				validateYouTubeUrlFromForm(formData);
 			}).toThrow('YouTube URL이 제공되지 않았습니다.');
@@ -37,7 +37,7 @@ describe('validation-utils', () => {
 		it('should throw error for invalid URL format', () => {
 			const formData = new FormData();
 			formData.append('youtubeUrl', 'not-a-url');
-			
+
 			expect(() => {
 				validateYouTubeUrlFromForm(formData);
 			}).toThrow('올바른 YouTube URL을 입력해주세요.');
@@ -52,10 +52,10 @@ describe('validation-utils', () => {
 				'https://m.youtube.com/watch?v=dQw4w9WgXcQ'
 			];
 
-			validUrls.forEach(url => {
+			validUrls.forEach((url) => {
 				const formData = new FormData();
 				formData.append('youtubeUrl', url);
-				
+
 				expect(() => {
 					validateYouTubeUrlFromForm(formData);
 				}).not.toThrow();
@@ -67,7 +67,7 @@ describe('validation-utils', () => {
 		it('should return "ko" for Korean language', () => {
 			const formData = new FormData();
 			formData.append('lang', 'ko');
-			
+
 			const result = validateLanguageFromForm(formData);
 			expect(result).toBe('ko');
 		});
@@ -75,14 +75,14 @@ describe('validation-utils', () => {
 		it('should return "en" for English language', () => {
 			const formData = new FormData();
 			formData.append('lang', 'en');
-			
+
 			const result = validateLanguageFromForm(formData);
 			expect(result).toBe('en');
 		});
 
 		it('should default to "ko" for missing language', () => {
 			const formData = new FormData();
-			
+
 			const result = validateLanguageFromForm(formData);
 			expect(result).toBe('ko');
 		});
@@ -90,7 +90,7 @@ describe('validation-utils', () => {
 		it('should default to "ko" for invalid language', () => {
 			const formData = new FormData();
 			formData.append('lang', 'fr');
-			
+
 			const result = validateLanguageFromForm(formData);
 			expect(result).toBe('ko');
 		});

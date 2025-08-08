@@ -4,10 +4,13 @@ test.describe('Dashboard Page', () => {
 	test.beforeEach(async ({ page }) => {
 		// Mock authentication for testing
 		await page.addInitScript(() => {
-			window.localStorage.setItem('supabase.auth.token', JSON.stringify({
-				access_token: 'mock-token',
-				user: { id: 'test-user-id', email: 'test@example.com' }
-			}));
+			window.localStorage.setItem(
+				'supabase.auth.token',
+				JSON.stringify({
+					access_token: 'mock-token',
+					user: { id: 'test-user-id', email: 'test@example.com' }
+				})
+			);
 		});
 	});
 
@@ -69,15 +72,15 @@ test.describe('Dashboard Page', () => {
 		await page.goto('/dashboard');
 
 		const submitButton = page.locator('button[type="submit"], input[type="submit"]').first();
-		
+
 		// Try to submit without entering URL
 		await submitButton.click();
 
 		// Check for required field validation or error message
 		const urlInput = page.locator('input[name="youtubeUrl"], input[type="url"]').first();
-		
+
 		// Check HTML5 validation
-		const validationMessage = await urlInput.evaluate(el => el.validationMessage);
+		const validationMessage = await urlInput.evaluate((el) => el.validationMessage);
 		if (validationMessage) {
 			expect(validationMessage).toBeTruthy();
 		} else {
@@ -89,7 +92,7 @@ test.describe('Dashboard Page', () => {
 
 	test('valid YouTube URL processing workflow', async ({ page }) => {
 		// Mock the API response to avoid actual external calls
-		await page.route('**/api/**', async route => {
+		await page.route('**/api/**', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
@@ -123,18 +126,19 @@ test.describe('Dashboard Page', () => {
 		// Check if we're redirected to summary page or results are shown
 		const currentUrl = page.url();
 		const pageContent = await page.textContent('body');
-		
+
 		const isRedirected = currentUrl.includes('/summary/') || currentUrl.includes('/result/');
-		const hasResults = pageContent.includes('Test Video Title') || 
-						  pageContent.includes('요약') || 
-						  pageContent.includes('summary');
+		const hasResults =
+			pageContent.includes('Test Video Title') ||
+			pageContent.includes('요약') ||
+			pageContent.includes('summary');
 
 		expect(isRedirected || hasResults).toBeTruthy();
 	});
 
 	test('handles network errors gracefully', async ({ page }) => {
 		// Mock network error
-		await page.route('**/api/**', async route => {
+		await page.route('**/api/**', async (route) => {
 			await route.abort('failed');
 		});
 
@@ -160,7 +164,7 @@ test.describe('Dashboard Page', () => {
 
 		// Check if main elements are still visible on mobile
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-		
+
 		const urlInput = page.locator('input[name="youtubeUrl"], input[type="url"]').first();
 		await expect(urlInput).toBeVisible();
 
@@ -177,14 +181,14 @@ test.describe('Dashboard Page', () => {
 
 		// Test tab navigation
 		await page.keyboard.press('Tab');
-		
+
 		// Check if focus moves to the URL input
 		const urlInput = page.locator('input[name="youtubeUrl"], input[type="url"]').first();
 		await expect(urlInput).toBeFocused();
 
 		// Continue tabbing to submit button
 		await page.keyboard.press('Tab');
-		
+
 		const submitButton = page.locator('button[type="submit"], input[type="submit"]').first();
 		await expect(submitButton).toBeFocused();
 
@@ -197,8 +201,10 @@ test.describe('Dashboard Page', () => {
 		await page.waitForTimeout(1000);
 		const currentUrl = page.url();
 		const pageContent = await page.textContent('body');
-		
+
 		// Check if something happened (form submission detected)
-		expect(currentUrl !== '/dashboard' || pageContent.includes('처리') || pageContent.includes('loading')).toBeTruthy();
+		expect(
+			currentUrl !== '/dashboard' || pageContent.includes('처리') || pageContent.includes('loading')
+		).toBeTruthy();
 	});
 });

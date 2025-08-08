@@ -21,7 +21,7 @@ describe('SignOutForm Component', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockSupabase = {
 			auth: {
 				signOut: vi.fn().mockResolvedValue({ error: null })
@@ -37,9 +37,10 @@ describe('SignOutForm Component', () => {
 		});
 
 		// Look for sign-out button
-		const signOutButton = screen.queryByRole('button', { name: /sign.?out|로그아웃/i }) ||
-							  screen.queryByText(/sign.?out|로그아웃/i) ||
-							  screen.queryByRole('button');
+		const signOutButton =
+			screen.queryByRole('button', { name: /sign.?out|로그아웃/i }) ||
+			screen.queryByText(/sign.?out|로그아웃/i) ||
+			screen.queryByRole('button');
 
 		expect(signOutButton).toBeDefined();
 	});
@@ -51,8 +52,7 @@ describe('SignOutForm Component', () => {
 			}
 		});
 
-		const signOutButton = screen.queryByRole('button') ||
-							  screen.getByRole('button');
+		const signOutButton = screen.queryByRole('button') || screen.getByRole('button');
 
 		await fireEvent.click(signOutButton);
 
@@ -75,7 +75,7 @@ describe('SignOutForm Component', () => {
 
 		if (signOutButton) {
 			await fireEvent.click(signOutButton);
-			
+
 			// Component should handle error without crashing
 			expect(container).toBeDefined();
 		}
@@ -83,10 +83,8 @@ describe('SignOutForm Component', () => {
 
 	it('should display loading state during sign-out', async () => {
 		// Mock delayed sign-out
-		mockSupabase.auth.signOut.mockImplementation(() => 
-			new Promise(resolve => 
-				setTimeout(() => resolve({ error: null }), 100)
-			)
+		mockSupabase.auth.signOut.mockImplementation(
+			() => new Promise((resolve) => setTimeout(() => resolve({ error: null }), 100))
 		);
 
 		const { container } = render(SignOutForm, {
@@ -99,7 +97,7 @@ describe('SignOutForm Component', () => {
 
 		if (signOutButton) {
 			await fireEvent.click(signOutButton);
-			
+
 			// Check for loading state indicators
 			const loadingElements = [
 				screen.queryByText(/loading|로딩|처리/i),
@@ -128,16 +126,17 @@ describe('SignOutForm Component', () => {
 		// Check button accessibility
 		const button = container.querySelector('button');
 		if (button) {
-			const hasAccessibleName = button.textContent.trim() || 
-									  button.getAttribute('aria-label') ||
-									  button.getAttribute('title');
+			const hasAccessibleName =
+				button.textContent.trim() ||
+				button.getAttribute('aria-label') ||
+				button.getAttribute('title');
 			expect(hasAccessibleName).toBeTruthy();
 		}
 	});
 
 	it('should call navigation after successful sign-out', async () => {
 		const { goto } = await import('$app/navigation');
-		
+
 		render(SignOutForm, {
 			props: {
 				supabase: mockSupabase
@@ -148,10 +147,10 @@ describe('SignOutForm Component', () => {
 
 		if (signOutButton) {
 			await fireEvent.click(signOutButton);
-			
+
 			// Wait for async sign-out to complete
-			await new Promise(resolve => setTimeout(resolve, 100));
-			
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
 			// Check if navigation was triggered
 			if (goto.mock?.calls?.length > 0) {
 				expect(goto).toHaveBeenCalled();
@@ -161,7 +160,7 @@ describe('SignOutForm Component', () => {
 
 	it('should use form enhancement for better UX', () => {
 		const { enhance } = require('$app/forms');
-		
+
 		render(SignOutForm, {
 			props: {
 				supabase: mockSupabase
@@ -188,10 +187,10 @@ describe('SignOutForm Component', () => {
 		const button = container.querySelector('button');
 		if (button) {
 			const classes = button.className;
-			
+
 			// Should have some styling classes
 			expect(classes).toBeDefined();
-			
+
 			// Check for common Skeleton UI patterns
 			const hasSkeletonClasses = /preset-|btn|bg-|text-/.test(classes);
 			if (hasSkeletonClasses) {
@@ -217,7 +216,7 @@ describe('SignOutForm Component', () => {
 			await fireEvent.click(signOutButton);
 			await fireEvent.click(signOutButton);
 			await fireEvent.click(signOutButton);
-			
+
 			// Should not cause multiple sign-out calls or errors
 			// Component should handle gracefully
 			expect(true).toBe(true);
@@ -236,10 +235,10 @@ describe('SignOutForm Component', () => {
 		if (signOutButton) {
 			// Check initial state
 			expect(signOutButton.disabled).toBeFalsy();
-			
+
 			// Click and check if button handles state changes
 			await fireEvent.click(signOutButton);
-			
+
 			// Button might be temporarily disabled during sign-out
 			// This is implementation-dependent, so we just check it doesn't crash
 			expect(container).toBeDefined();
@@ -257,7 +256,7 @@ describe('SignOutForm Component', () => {
 
 		if (signOutButton) {
 			await fireEvent.click(signOutButton);
-			
+
 			// Check for confirmation dialog or immediate sign-out
 			// Either behavior is acceptable
 			expect(container).toBeDefined();
@@ -277,10 +276,10 @@ describe('SignOutForm Component', () => {
 			// Test focus
 			signOutButton.focus();
 			expect(document.activeElement).toBe(signOutButton);
-			
+
 			// Test Enter key
 			await fireEvent.keyDown(signOutButton, { key: 'Enter' });
-			
+
 			// Should trigger sign-out
 			expect(mockSupabase.auth.signOut).toHaveBeenCalled();
 		}

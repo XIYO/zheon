@@ -5,7 +5,7 @@ describe('auth-utils', () => {
 	describe('validateUser', () => {
 		it('should throw redirect when user is null', () => {
 			const url = new URL('http://localhost:3000/dashboard?param=value');
-			
+
 			expect(() => {
 				validateUser(null, url);
 			}).toThrow();
@@ -13,7 +13,7 @@ describe('auth-utils', () => {
 
 		it('should throw redirect when user is undefined', () => {
 			const url = new URL('http://localhost:3000/dashboard');
-			
+
 			expect(() => {
 				validateUser(undefined, url);
 			}).toThrow();
@@ -22,7 +22,7 @@ describe('auth-utils', () => {
 		it('should not throw when user is valid', () => {
 			const user = { id: 'user-123', email: 'test@example.com' };
 			const url = new URL('http://localhost:3000/dashboard');
-			
+
 			expect(() => {
 				validateUser(user, url);
 			}).not.toThrow();
@@ -30,7 +30,7 @@ describe('auth-utils', () => {
 
 		it('should include current path and search params in redirect', () => {
 			const url = new URL('http://localhost:3000/dashboard?tab=summary&id=123');
-			
+
 			expect(() => {
 				validateUser(null, url);
 			}).toThrow();
@@ -52,8 +52,8 @@ describe('auth-utils', () => {
 		});
 
 		it('should return true for user with additional properties', () => {
-			const user = { 
-				id: 'user-123', 
+			const user = {
+				id: 'user-123',
 				email: 'test@example.com',
 				name: 'Test User'
 			};

@@ -4,5 +4,7 @@
 </script>
 
 <div class="min-h-screen preset-tonal-surface flex items-center justify-center p-6">
-	<SignOutForm />
+	<div class="card preset-tonal-surface max-w-md w-full p-6 rounded-2xl shadow-xl">
+		<SignOutForm />
+	</div>
 </div>

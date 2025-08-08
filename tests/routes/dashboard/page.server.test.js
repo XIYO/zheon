@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { actions } from '../../../src/routes/(main)/dashboard/+page.server.js';
-import { 
-	createMockSupabase, 
-	createMockUser, 
-	createMockFormData, 
+import {
+	createMockSupabase,
+	createMockUser,
+	createMockFormData,
 	createMockUrl,
 	createMockEvent,
 	createMockLocals
@@ -43,7 +43,7 @@ vi.mock('$lib/server/validation-utils.js', () => ({
 
 vi.mock('@sveltejs/kit', () => ({
 	fail: vi.fn((status, data) => ({ status, data, type: 'failure' })),
-	redirect: vi.fn((status, location) => { 
+	redirect: vi.fn((status, location) => {
 		const error = new Error(`Redirect to ${location}`);
 		error.status = status;
 		error.location = location;
@@ -58,7 +58,7 @@ describe('Dashboard Server Actions', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockSupabase = createMockSupabase();
 		mockUser = createMockUser();
 		mockUrl = createMockUrl('http://localhost:3000/dashboard');
@@ -130,7 +130,10 @@ describe('Dashboard Server Actions', () => {
 
 			expect(result.status).toBe(400);
 			expect(handleError).toHaveBeenCalled();
-			expect(fail).toHaveBeenCalledWith(400, { message: 'Invalid YouTube URL', type: 'validation_error' });
+			expect(fail).toHaveBeenCalledWith(400, {
+				message: 'Invalid YouTube URL',
+				type: 'validation_error'
+			});
 		});
 
 		it('should return existing summary from cache', async () => {
@@ -183,7 +186,9 @@ describe('Dashboard Server Actions', () => {
 			const { validateYouTubeUrlFromForm } = await import('$lib/server/validation-utils.js');
 			const { validateAndNormalizeUrl } = await import('$lib/server/youtube-utils.js');
 			const { getExistingSummary, upsertSummary } = await import('$lib/server/summary-service.js');
-			const { getOrCacheSubtitle, processSubtitle } = await import('$lib/server/subtitle-service.js');
+			const { getOrCacheSubtitle, processSubtitle } = await import(
+				'$lib/server/subtitle-service.js'
+			);
 			const { summarizeTranscript } = await import('$lib/server/summary-claude.js');
 
 			const mockTranscript = 'This is a test video transcript content.';
@@ -232,7 +237,9 @@ describe('Dashboard Server Actions', () => {
 				fromCache: false
 			});
 
-			expect(getOrCacheSubtitle).toHaveBeenCalledWith('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+			expect(getOrCacheSubtitle).toHaveBeenCalledWith(
+				'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+			);
 			expect(processSubtitle).toHaveBeenCalledWith(mockTranscript);
 			expect(summarizeTranscript).toHaveBeenCalledWith(mockTranscript);
 			expect(upsertSummary).toHaveBeenCalledWith(
@@ -264,12 +271,12 @@ describe('Dashboard Server Actions', () => {
 				}
 			});
 
-			fail.mockReturnValue({ 
-				status: 400, 
-				data: { 
+			fail.mockReturnValue({
+				status: 400,
+				data: {
 					message: 'Failed to extract subtitles',
 					type: 'extraction_error'
-				} 
+				}
 			});
 
 			const formData = createMockFormData({
@@ -314,13 +321,13 @@ describe('Dashboard Server Actions', () => {
 				}
 			});
 
-			fail.mockReturnValue({ 
-				status: 429, 
-				data: { 
+			fail.mockReturnValue({
+				status: 429,
+				data: {
 					message: 'Rate limit exceeded',
 					type: 'rate_limit',
 					retryAfter: 300
-				} 
+				}
 			});
 
 			const formData = createMockFormData({
@@ -352,7 +359,9 @@ describe('Dashboard Server Actions', () => {
 			const { validateYouTubeUrlFromForm } = await import('$lib/server/validation-utils.js');
 			const { validateAndNormalizeUrl } = await import('$lib/server/youtube-utils.js');
 			const { getExistingSummary } = await import('$lib/server/summary-service.js');
-			const { getOrCacheSubtitle, processSubtitle } = await import('$lib/server/subtitle-service.js');
+			const { getOrCacheSubtitle, processSubtitle } = await import(
+				'$lib/server/subtitle-service.js'
+			);
 			const { handleSubtitleError } = await import('$lib/server/error-utils.js');
 			const { fail } = await import('@sveltejs/kit');
 
@@ -370,12 +379,12 @@ describe('Dashboard Server Actions', () => {
 				message: 'Invalid subtitle format',
 				type: 'subtitle_error'
 			});
-			fail.mockReturnValue({ 
-				status: 400, 
-				data: { 
+			fail.mockReturnValue({
+				status: 400,
+				data: {
 					message: 'Invalid subtitle format',
 					type: 'subtitle_error'
-				} 
+				}
 			});
 
 			const formData = createMockFormData({
@@ -407,7 +416,9 @@ describe('Dashboard Server Actions', () => {
 			const { validateYouTubeUrlFromForm } = await import('$lib/server/validation-utils.js');
 			const { validateAndNormalizeUrl } = await import('$lib/server/youtube-utils.js');
 			const { getExistingSummary, upsertSummary } = await import('$lib/server/summary-service.js');
-			const { getOrCacheSubtitle, processSubtitle } = await import('$lib/server/subtitle-service.js');
+			const { getOrCacheSubtitle, processSubtitle } = await import(
+				'$lib/server/subtitle-service.js'
+			);
 			const { summarizeTranscript } = await import('$lib/server/summary-claude.js');
 			const { handleError } = await import('$lib/server/error-utils.js');
 			const { fail } = await import('@sveltejs/kit');
@@ -433,12 +444,12 @@ describe('Dashboard Server Actions', () => {
 				message: 'Database connection failed',
 				type: 'database_error'
 			});
-			fail.mockReturnValue({ 
-				status: 500, 
-				data: { 
+			fail.mockReturnValue({
+				status: 500,
+				data: {
 					message: 'Database connection failed',
 					type: 'database_error'
-				} 
+				}
 			});
 
 			const formData = createMockFormData({

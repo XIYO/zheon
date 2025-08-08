@@ -19,7 +19,7 @@ export const actions = {
 		try {
 			youtubeUrl = validateYouTubeUrlFromForm(formData);
 		} catch (error) {
-			return fail(400, { 
+			return fail(400, {
 				message: error?.message || 'YouTube URL 검증에 실패했습니다.',
 				type: 'validation_error'
 			});
@@ -40,7 +40,7 @@ export const actions = {
 			if (error) {
 				// 에러 상세 정보 추출
 				let errorDetails = { message: error.message, code: 'UNKNOWN' };
-				
+
 				if (error.context) {
 					try {
 						const errorBody = await error.context.text();
@@ -72,7 +72,8 @@ export const actions = {
 
 				if (errorDetails.message?.includes('Failed to extract video data')) {
 					return fail(400, {
-						message: '이 영상의 자막을 추출할 수 없습니다. 영어 자막이 있는 다른 영상을 시도해보세요.',
+						message:
+							'이 영상의 자막을 추출할 수 없습니다. 영어 자막이 있는 다른 영상을 시도해보세요.',
 						type: 'subtitle_extraction_error'
 					});
 				}
@@ -95,7 +96,7 @@ export const actions = {
 			if (data?.status === 'success') {
 				const recordId = data.debug?.record_id || data.record_id;
 				const wasDuplicate = data.debug?.was_duplicate || data.was_duplicate || false;
-				
+
 				console.log(`✅ Edge Function completed successfully:`, {
 					edgeTime: `${edgeTime}ms`,
 					totalTime: `${totalTime}ms`,
@@ -105,10 +106,10 @@ export const actions = {
 				});
 
 				// 중복 처리된 경우와 새로 생성된 경우 구분
-				return { 
-					success: true, 
+				return {
+					success: true,
 					fromCache: wasDuplicate,
-					recordId 
+					recordId
 				};
 			}
 
@@ -118,11 +119,10 @@ export const actions = {
 				message: '예상치 못한 응답 형태입니다.',
 				type: 'unexpected_response'
 			});
-
 		} catch (fetchError) {
 			const edgeTime = Date.now() - edgeStartTime;
 			const totalTime = Date.now() - requestStartTime;
-			
+
 			console.error(`❌ Edge Function call failed:`, {
 				error: fetchError.message,
 				edgeTime: `${edgeTime}ms`,

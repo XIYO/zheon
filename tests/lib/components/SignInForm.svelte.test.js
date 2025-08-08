@@ -7,7 +7,7 @@ vi.mock('$app/stores', () => ({
 	page: {
 		subscribe: vi.fn((callback) => {
 			callback({
-				url: { 
+				url: {
 					pathname: '/auth/sign-in',
 					searchParams: new URLSearchParams()
 				},
@@ -38,12 +38,12 @@ describe('SignInForm Component', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockSupabase = {
 			auth: {
-				signInWithOAuth: vi.fn().mockResolvedValue({ 
-					data: { url: 'https://oauth.provider.com/auth' }, 
-					error: null 
+				signInWithOAuth: vi.fn().mockResolvedValue({
+					data: { url: 'https://oauth.provider.com/auth' },
+					error: null
 				})
 			}
 		};
@@ -64,7 +64,7 @@ describe('SignInForm Component', () => {
 			screen.queryByText(/google/i)
 		];
 
-		const hasSignInElement = signInElements.some(element => element !== null);
+		const hasSignInElement = signInElements.some((element) => element !== null);
 		expect(hasSignInElement).toBe(true);
 	});
 
@@ -76,8 +76,8 @@ describe('SignInForm Component', () => {
 		});
 
 		// Look for Google sign-in button
-		const googleButton = screen.queryByRole('button', { name: /google|구글/i }) ||
-							 screen.queryByText(/google|구글/i);
+		const googleButton =
+			screen.queryByRole('button', { name: /google|구글/i }) || screen.queryByText(/google|구글/i);
 
 		if (googleButton) {
 			expect(googleButton).toBeDefined();
@@ -95,12 +95,11 @@ describe('SignInForm Component', () => {
 		});
 
 		// Look for any button that might trigger sign-in
-		const signInButton = screen.queryByRole('button') ||
-							 container.querySelector('button');
+		const signInButton = screen.queryByRole('button') || container.querySelector('button');
 
 		if (signInButton) {
 			await fireEvent.click(signInButton);
-			
+
 			// Check if OAuth method was called
 			expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
 				provider: 'google',
@@ -123,12 +122,11 @@ describe('SignInForm Component', () => {
 			}
 		});
 
-		const signInButton = screen.queryByRole('button') ||
-							 container.querySelector('button');
+		const signInButton = screen.queryByRole('button') || container.querySelector('button');
 
 		if (signInButton) {
 			await fireEvent.click(signInButton);
-			
+
 			// Check if error is handled (component should not crash)
 			expect(container).toBeDefined();
 		}
@@ -136,10 +134,11 @@ describe('SignInForm Component', () => {
 
 	it('should display loading state during sign-in', async () => {
 		// Mock a delayed response
-		mockSupabase.auth.signInWithOAuth.mockImplementation(() => 
-			new Promise(resolve => 
-				setTimeout(() => resolve({ data: { url: 'test' }, error: null }), 100)
-			)
+		mockSupabase.auth.signInWithOAuth.mockImplementation(
+			() =>
+				new Promise((resolve) =>
+					setTimeout(() => resolve({ data: { url: 'test' }, error: null }), 100)
+				)
 		);
 
 		const { container } = render(SignInForm, {
@@ -148,12 +147,11 @@ describe('SignInForm Component', () => {
 			}
 		});
 
-		const signInButton = screen.queryByRole('button') ||
-							 container.querySelector('button');
+		const signInButton = screen.queryByRole('button') || container.querySelector('button');
 
 		if (signInButton) {
 			await fireEvent.click(signInButton);
-			
+
 			// Check for loading indicators
 			const loadingElements = [
 				screen.queryByText(/loading|로딩|처리/i),
@@ -181,32 +179,35 @@ describe('SignInForm Component', () => {
 
 		// Check for button accessibility
 		const buttons = container.querySelectorAll('button');
-		buttons.forEach(button => {
+		buttons.forEach((button) => {
 			// Buttons should have accessible names or text content
-			const hasAccessibleName = button.textContent.trim() || 
-									  button.getAttribute('aria-label') ||
-									  button.getAttribute('title');
+			const hasAccessibleName =
+				button.textContent.trim() ||
+				button.getAttribute('aria-label') ||
+				button.getAttribute('title');
 			expect(hasAccessibleName).toBeTruthy();
 		});
 	});
 
 	it('should handle redirect URL parameter', () => {
 		// Mock page store with redirect parameter
-		vi.mocked(vi.doMock('$app/stores', () => ({
-			page: {
-				subscribe: vi.fn((callback) => {
-					callback({
-						url: { 
-							pathname: '/auth/sign-in',
-							searchParams: new URLSearchParams('redirectTo=/dashboard')
-						},
-						params: {},
-						route: { id: '/auth/sign-in' }
-					});
-					return { unsubscribe: vi.fn() };
-				})
-			}
-		})));
+		vi.mocked(
+			vi.doMock('$app/stores', () => ({
+				page: {
+					subscribe: vi.fn((callback) => {
+						callback({
+							url: {
+								pathname: '/auth/sign-in',
+								searchParams: new URLSearchParams('redirectTo=/dashboard')
+							},
+							params: {},
+							route: { id: '/auth/sign-in' }
+						});
+						return { unsubscribe: vi.fn() };
+					})
+				}
+			}))
+		);
 
 		render(SignInForm, {
 			props: {
@@ -232,12 +233,11 @@ describe('SignInForm Component', () => {
 			}
 		});
 
-		const signInButton = screen.queryByRole('button') ||
-							 container.querySelector('button');
+		const signInButton = screen.queryByRole('button') || container.querySelector('button');
 
 		if (signInButton) {
 			await fireEvent.click(signInButton);
-			
+
 			expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
 				provider: 'google',
 				options: {
@@ -258,7 +258,7 @@ describe('SignInForm Component', () => {
 		const elements = container.querySelectorAll('*');
 		let hasSkeletonClasses = false;
 
-		elements.forEach(element => {
+		elements.forEach((element) => {
 			const classes = element.className;
 			if (typeof classes === 'string' && /preset-|bg-surface|btn/.test(classes)) {
 				hasSkeletonClasses = true;
@@ -271,7 +271,7 @@ describe('SignInForm Component', () => {
 
 	it('should handle form submission enhancement', () => {
 		const { enhance } = require('$app/forms');
-		
+
 		render(SignInForm, {
 			props: {
 				supabase: mockSupabase
@@ -299,15 +299,14 @@ describe('SignInForm Component', () => {
 			}
 		});
 
-		const signInButton = screen.queryByRole('button') ||
-							 container.querySelector('button');
+		const signInButton = screen.queryByRole('button') || container.querySelector('button');
 
 		if (signInButton) {
 			await fireEvent.click(signInButton);
-			
+
 			// Wait for potential error display
-			await new Promise(resolve => setTimeout(resolve, 100));
-			
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
 			// Check for error display elements
 			const errorElements = [
 				screen.queryByRole('alert'),

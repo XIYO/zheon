@@ -4,21 +4,25 @@ test.describe('Summary Page', () => {
 	test.beforeEach(async ({ page }) => {
 		// Mock authentication
 		await page.addInitScript(() => {
-			window.localStorage.setItem('supabase.auth.token', JSON.stringify({
-				access_token: 'mock-token',
-				user: { id: 'test-user-id', email: 'test@example.com' }
-			}));
+			window.localStorage.setItem(
+				'supabase.auth.token',
+				JSON.stringify({
+					access_token: 'mock-token',
+					user: { id: 'test-user-id', email: 'test@example.com' }
+				})
+			);
 		});
 
 		// Mock summary data API
-		await page.route('**/api/summary/**', async route => {
+		await page.route('**/api/summary/**', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
 				body: JSON.stringify({
 					id: 'test-summary-123',
 					title: 'Test Video: Understanding AI and Machine Learning',
-					summary: 'This video explains the fundamental concepts of artificial intelligence and machine learning, covering basic algorithms and real-world applications.',
+					summary:
+						'This video explains the fundamental concepts of artificial intelligence and machine learning, covering basic algorithms and real-world applications.',
 					content: `Introduction to AI and ML
 
 Artificial Intelligence (AI) and Machine Learning (ML) are transformative technologies that are reshaping how we interact with computers and data.
@@ -51,7 +55,9 @@ The video concludes by discussing the ethical implications and future prospects 
 		await page.waitForTimeout(2000);
 
 		// Check if title is displayed
-		await expect(page.locator('h1, .title, [data-testid="title"]')).toContainText(/test video|understanding ai/i);
+		await expect(page.locator('h1, .title, [data-testid="title"]')).toContainText(
+			/test video|understanding ai/i
+		);
 
 		// Check if summary section exists
 		const summarySection = page.locator('.summary, [data-testid="summary"], .content').first();
@@ -64,7 +70,7 @@ The video concludes by discussing the ethical implications and future prospects 
 
 	test('summary page handles missing summary gracefully', async ({ page }) => {
 		// Mock 404 response for missing summary
-		await page.route('**/api/summary/nonexistent-id', async route => {
+		await page.route('**/api/summary/nonexistent-id', async (route) => {
 			await route.fulfill({
 				status: 404,
 				contentType: 'application/json',
@@ -82,7 +88,7 @@ The video concludes by discussing the ethical implications and future prospects 
 		// Check for error message or 404 page
 		const pageContent = await page.textContent('body');
 		const hasErrorHandling = /not found|찾을 수 없|404|error|오류/i.test(pageContent);
-		
+
 		expect(hasErrorHandling).toBeTruthy();
 	});
 
@@ -151,7 +157,7 @@ The video concludes by discussing the ethical implications and future prospects 
 				await expect(element).toBeVisible({ timeout: 1000 });
 				await element.click();
 				navElementFound = true;
-				
+
 				// Check if navigation occurred
 				await page.waitForTimeout(1000);
 				const newUrl = page.url();
@@ -178,17 +184,16 @@ The video concludes by discussing the ethical implications and future prospects 
 
 		// Check if text is properly line-broken and readable
 		const textContent = await page.textContent('body');
-		
+
 		// Should have proper spacing and structure
-		const hasProperFormatting = textContent.includes('\n') || 
-									textContent.length > 100; // Indicates substantial content
-		
+		const hasProperFormatting = textContent.includes('\n') || textContent.length > 100; // Indicates substantial content
+
 		expect(hasProperFormatting).toBeTruthy();
 
 		// Check for proper heading structure if present
 		const headings = page.locator('h1, h2, h3, h4, h5, h6');
 		const headingCount = await headings.count();
-		
+
 		if (headingCount > 0) {
 			await expect(headings.first()).toBeVisible();
 		}
@@ -196,7 +201,7 @@ The video concludes by discussing the ethical implications and future prospects 
 
 	test('summary page handles long content gracefully', async ({ page }) => {
 		// Mock very long content
-		await page.route('**/api/summary/long-content-123', async route => {
+		await page.route('**/api/summary/long-content-123', async (route) => {
 			const longContent = 'This is a very long content. '.repeat(1000);
 			await route.fulfill({
 				status: 200,

@@ -35,7 +35,7 @@ describe('Header Component', () => {
 
 	it('should render header with logo', () => {
 		const mockUser = createMockUser();
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -57,7 +57,7 @@ describe('Header Component', () => {
 				full_name: 'John Doe'
 			}
 		});
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -93,7 +93,7 @@ describe('Header Component', () => {
 			screen.queryByRole('link', { name: /sign.?in/i })
 		];
 
-		const hasSignInElement = signInElements.some(element => element !== null);
+		const hasSignInElement = signInElements.some((element) => element !== null);
 		// Sign-in element may or may not be present depending on header design
 		// This test passes if header renders without errors
 		expect(true).toBe(true);
@@ -101,7 +101,7 @@ describe('Header Component', () => {
 
 	it('should show sign-out option when authenticated', () => {
 		const mockUser = createMockUser();
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -119,7 +119,7 @@ describe('Header Component', () => {
 			screen.queryByRole('button', { name: /sign.?out/i })
 		];
 
-		const hasSignOutElement = signOutElements.some(element => element !== null);
+		const hasSignOutElement = signOutElements.some((element) => element !== null);
 		// Sign-out element may or may not be present depending on header design
 		// This test passes if header renders without errors
 		expect(true).toBe(true);
@@ -127,7 +127,7 @@ describe('Header Component', () => {
 
 	it('should handle navigation links correctly', () => {
 		const mockUser = createMockUser();
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -153,7 +153,7 @@ describe('Header Component', () => {
 
 	it('should be responsive and accessible', () => {
 		const mockUser = createMockUser();
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -188,7 +188,7 @@ describe('Header Component', () => {
 		};
 
 		const mockUser = createMockUser();
-		
+
 		const { component } = render(Header, {
 			props: {
 				data: {
@@ -201,7 +201,7 @@ describe('Header Component', () => {
 
 		// Look for sign-out button and click it
 		const signOutButton = screen.queryByRole('button', { name: /sign.?out|로그아웃/i });
-		
+
 		if (signOutButton) {
 			await fireEvent.click(signOutButton);
 			// Check if signOut was called
@@ -214,7 +214,7 @@ describe('Header Component', () => {
 
 	it('should display correct theme classes', () => {
 		const mockUser = createMockUser();
-		
+
 		const { container } = render(Header, {
 			props: {
 				data: {
@@ -227,12 +227,12 @@ describe('Header Component', () => {
 
 		// Check if Skeleton UI classes are applied
 		const headerElement = container.querySelector('header, nav, .header');
-		
+
 		if (headerElement) {
 			const classes = headerElement.className;
 			// Check for common Skeleton UI patterns
 			const hasSkeletonClasses = /bg-surface|preset-|backdrop-blur|glass/.test(classes);
-			
+
 			if (hasSkeletonClasses) {
 				expect(hasSkeletonClasses).toBe(true);
 			}
@@ -249,7 +249,7 @@ describe('Header Component', () => {
 				avatar_url: 'https://example.com/avatar.jpg'
 			}
 		});
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -262,21 +262,21 @@ describe('Header Component', () => {
 
 		// Check if avatar image is present
 		const avatarImage = screen.queryByRole('img', { name: /avatar|profile/i });
-		
+
 		if (avatarImage) {
 			expect(avatarImage).toBeDefined();
 		}
 
 		// Check if user initials are displayed as fallback
 		const userInitials = screen.queryByText(/JS|J/);
-		
+
 		// Either avatar or initials might be present
 		expect(true).toBe(true);
 	});
 
 	it('should handle mobile menu toggle', async () => {
 		const mockUser = createMockUser();
-		
+
 		render(Header, {
 			props: {
 				data: {
@@ -288,13 +288,14 @@ describe('Header Component', () => {
 		});
 
 		// Look for mobile menu toggle button
-		const menuToggle = screen.queryByRole('button', { name: /menu|toggle|햄버거/i }) ||
-						  screen.queryByLabelText(/menu|toggle/i) ||
-						  screen.querySelector('[aria-expanded]');
+		const menuToggle =
+			screen.queryByRole('button', { name: /menu|toggle|햄버거/i }) ||
+			screen.queryByLabelText(/menu|toggle/i) ||
+			screen.querySelector('[aria-expanded]');
 
 		if (menuToggle) {
 			await fireEvent.click(menuToggle);
-			
+
 			// Check if menu state changed
 			const expandedState = menuToggle.getAttribute('aria-expanded');
 			if (expandedState !== null) {

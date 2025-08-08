@@ -65,22 +65,8 @@
 	<div class="flex items-center">
 		{#if !page.data.user}
 			<nav>
-				<button onclick={handleSignIn} class="btn variant-filled-primary btn-lg" type="button">
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-						<path
-							fill="#4285F4"
-							d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-						<path
-							fill="#34A853"
-							d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-						<path
-							fill="#FBBC05"
-							d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-						<path
-							fill="#EA4335"
-							d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-					</svg>
-					<span>Google 로그인</span>
+				<button onclick={handleSignIn} class="btn variant-filled-primary btn-sm" type="button">
+					<span>시작하기 / 로그인</span>
 				</button>
 			</nav>
 		{:else}
@@ -104,7 +90,7 @@
 						<div class="opacity-70">환영합니다!</div>
 					</div>
 				</div>
-				<button onclick={handleSignOut} class="btn hover:preset-tonal btn-base" type="button">
+				<button onclick={handleSignOut} class="btn variant-ghost-surface btn-base" type="button">
 					<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							stroke-linecap="round"
@@ -122,49 +108,125 @@
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
 <dialog
 	bind:this={signInDialog}
-	class="m-auto max-w-md rounded-2xl border-0 bg-transparent p-0 backdrop:bg-black/50 backdrop:backdrop-blur-sm">
-	<div class="card p-6 space-y-6 preset-tonal-surface shadow-2xl">
-		<!-- 헤더 -->
-		<header class="flex items-center justify-between">
-			<h2 class="h3 font-bold gradient-text">로그인</h2>
-			<form method="DIALOG">
-				<button aria-label="닫기" class="btn hover:preset-tonal btn-sm" type="button">
-					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
-			</form>
-		</header>
-		<!-- 컨텐츠 -->
-		<SignInForm onsuccess={onsuccessSignIn} />
+	class="m-auto max-w-md rounded-2xl border-0 bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-md">
+	<div
+		class="relative overflow-hidden rounded-2xl border border-primary-500/30 bg-surface-900/95 backdrop-blur-xl">
+		<!-- Cyberpunk Grid Background -->
+		<div class="absolute inset-0">
+			<div
+				class="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:2rem_2rem]">
+			</div>
+			<div
+				class="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-secondary-500/10">
+			</div>
+		</div>
+
+		<!-- Scan Lines Effect -->
+		<div
+			class="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(var(--color-primary-500),0.03)_25%,rgba(var(--color-primary-500),0.03)_26%,transparent_27%,transparent_74%,rgba(var(--color-primary-500),0.03)_75%,rgba(var(--color-primary-500),0.03)_76%,transparent_77%,transparent)] bg-[length:50px_50px] animate-scan">
+		</div>
+
+		<div class="relative p-6 space-y-6">
+			<!-- Header with Glitch Effect -->
+			<header class="flex items-center justify-between border-b border-primary-500/20 pb-4">
+				<div class="flex items-center gap-3">
+					<div class="h-2 w-2 rounded-full bg-primary-400 animate-pulse"></div>
+					<h2 class="font-mono text-2xl font-bold text-primary-400">AUTHENTICATE</h2>
+				</div>
+				<form method="dialog">
+					<button
+						aria-label="닫기"
+						class="group rounded-lg border border-error-500/30 bg-error-500/10 p-2 transition-all hover:bg-error-500/20 hover:border-error-400"
+						type="submit">
+						<svg
+							class="h-5 w-5 text-error-400"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</form>
+			</header>
+
+			<!-- Terminal Status -->
+			<div class="rounded-lg border border-surface-700/50 bg-surface-900/80 p-3 font-mono text-xs">
+				<div class="flex items-center gap-2 text-success-400">
+					<span class="animate-pulse">▶</span>
+					<span>system.auth.ready</span>
+				</div>
+				<div class="mt-1 text-surface-400">Awaiting user credentials...</div>
+			</div>
+
+			<!-- Content -->
+			<SignInForm onsuccess={onsuccessSignIn} />
+		</div>
 	</div>
 </dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
 <dialog
 	bind:this={signOutDialog}
-	class="m-auto max-w-md rounded-2xl border-0 bg-transparent p-0 backdrop:bg-black/50 backdrop:backdrop-blur-sm">
-	<div class="card p-6 space-y-6 preset-tonal-surface shadow-2xl">
-		<!-- 헤더 -->
-		<header class="flex items-center justify-between">
-			<h2 class="h3 font-bold preset-tonal-error">로그아웃</h2>
-			<form method="DIALOG">
-				<button aria-label="닫기" class="btn hover:preset-tonal btn-sm" type="button">
-					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
-			</form>
-		</header>
-		<!-- 컨텐츠 -->
-		<SignOutForm onsuccess={onSubmitSignOut} />
+	class="m-auto max-w-md rounded-2xl border-0 bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-md">
+	<div
+		class="relative overflow-hidden rounded-2xl border border-error-500/30 bg-surface-900/95 backdrop-blur-xl">
+		<!-- Cyberpunk Grid Background -->
+		<div class="absolute inset-0">
+			<div
+				class="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:2rem_2rem]">
+			</div>
+			<div
+				class="absolute inset-0 bg-gradient-to-br from-error-500/10 via-transparent to-surface-800/50">
+			</div>
+		</div>
+
+		<!-- Scan Lines Effect -->
+		<div
+			class="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(var(--color-error-500),0.03)_25%,rgba(var(--color-error-500),0.03)_26%,transparent_27%,transparent_74%,rgba(var(--color-error-500),0.03)_75%,rgba(var(--color-error-500),0.03)_76%,transparent_77%,transparent)] bg-[length:50px_50px] animate-scan">
+		</div>
+
+		<div class="relative p-6 space-y-6">
+			<!-- Header with Warning Style -->
+			<header class="flex items-center justify-between border-b border-error-500/20 pb-4">
+				<div class="flex items-center gap-3">
+					<div class="h-2 w-2 rounded-full bg-error-400 animate-pulse"></div>
+					<h2 class="font-mono text-2xl font-bold text-error-400">DISCONNECT</h2>
+				</div>
+				<form method="dialog">
+					<button
+						aria-label="닫기"
+						class="group rounded-lg border border-surface-600/30 bg-surface-700/20 p-2 transition-all hover:bg-surface-600/30 hover:border-surface-500"
+						type="submit">
+						<svg
+							class="h-5 w-5 text-surface-400"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</form>
+			</header>
+
+			<!-- Terminal Warning -->
+			<div class="rounded-lg border border-error-500/30 bg-error-500/10 p-3 font-mono text-xs">
+				<div class="flex items-center gap-2 text-error-400">
+					<span class="animate-pulse">⚠</span>
+					<span>system.auth.termination</span>
+				</div>
+				<div class="mt-1 text-surface-400">Session will be terminated...</div>
+			</div>
+
+			<!-- Content -->
+			<SignOutForm onsuccess={onSubmitSignOut} />
+		</div>
 	</div>
 </dialog>

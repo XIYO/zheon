@@ -52,8 +52,8 @@ Line 3: End of content`;
 
 		it('should throw error for non-string types', () => {
 			const invalidInputs = [123, {}, [], true, false];
-			
-			invalidInputs.forEach(input => {
+
+			invalidInputs.forEach((input) => {
 				expect(() => {
 					processSubtitle(input);
 				}).toThrow('Subtitle is invalid or undefined.');
@@ -96,8 +96,8 @@ Line 3: End of content`;
 
 		it('should default to "ko" for invalid language codes', () => {
 			const invalidLangs = ['fr', 'de', 'es', 'ja', 'zh'];
-			
-			invalidLangs.forEach(lang => {
+
+			invalidLangs.forEach((lang) => {
 				const result = validateLanguage(lang);
 				expect(result).toBe('ko');
 			});
@@ -117,8 +117,8 @@ Line 3: End of content`;
 
 		it('should default to "ko" for non-string inputs', () => {
 			const nonStringInputs = [123, {}, [], true, false];
-			
-			nonStringInputs.forEach(input => {
+
+			nonStringInputs.forEach((input) => {
 				const result = validateLanguage(input);
 				expect(result).toBe('ko');
 			});

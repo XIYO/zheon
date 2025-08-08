@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-	getExistingSummary, 
-	updateSummary, 
-	createSummary, 
-	upsertSummary 
+import {
+	getExistingSummary,
+	updateSummary,
+	createSummary,
+	upsertSummary
 } from '../../../src/lib/server/summary-service.js';
 import { createMockSupabase, createMockSummary } from '../../../src/lib/test-utils.js';
 
@@ -20,19 +20,19 @@ describe('summary-service', () => {
 			single: vi.fn(),
 			maybeSingle: vi.fn()
 		};
-		
+
 		// Make each method return the chain for proper chaining
 		chain.select.mockReturnValue(chain);
 		chain.eq.mockReturnValue(chain);
 		chain.update.mockReturnValue(chain);
 		chain.insert.mockReturnValue(chain);
-		
+
 		// Set the final resolve value
 		if (resolveValue) {
 			chain.single.mockResolvedValue(resolveValue);
 			chain.maybeSingle.mockResolvedValue(resolveValue);
 		}
-		
+
 		return chain;
 	};
 
@@ -44,7 +44,7 @@ describe('summary-service', () => {
 	describe('getExistingSummary', () => {
 		it('should return existing summary when found', async () => {
 			const mockSummary = createMockSummary();
-			
+
 			const chain = createQueryChain({
 				data: mockSummary,
 				error: null
@@ -83,7 +83,7 @@ describe('summary-service', () => {
 
 		it('should return null when database error occurs', async () => {
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
+
 			const chain = createQueryChain({
 				data: null,
 				error: { message: 'Database connection failed' }
@@ -99,14 +99,16 @@ describe('summary-service', () => {
 			);
 
 			expect(result).toBeNull();
-			expect(consoleErrorSpy).toHaveBeenCalledWith('Fetch existing summary error:', { message: 'Database connection failed' });
-			
+			expect(consoleErrorSpy).toHaveBeenCalledWith('Fetch existing summary error:', {
+				message: 'Database connection failed'
+			});
+
 			consoleErrorSpy.mockRestore();
 		});
 
 		it('should return null when exception is thrown', async () => {
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
+
 			mockSupabase.from.mockImplementation(() => {
 				throw new Error('Network error');
 			});
@@ -119,8 +121,11 @@ describe('summary-service', () => {
 			);
 
 			expect(result).toBeNull();
-			expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting existing summary:', expect.any(Error));
-			
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				'Error getting existing summary:',
+				expect.any(Error)
+			);
+
 			consoleErrorSpy.mockRestore();
 		});
 
@@ -137,7 +142,10 @@ describe('summary-service', () => {
 			);
 
 			expect(chain.select).toHaveBeenCalledWith('id, youtube_url, title, summary, user_id');
-			expect(chain.eq).toHaveBeenCalledWith('youtube_url', 'https://www.youtube.com/watch?v=testVideo');
+			expect(chain.eq).toHaveBeenCalledWith(
+				'youtube_url',
+				'https://www.youtube.com/watch?v=testVideo'
+			);
 			expect(chain.eq).toHaveBeenCalledWith('lang', 'en');
 			expect(chain.eq).toHaveBeenCalledWith('user_id', 'user-456');
 			expect(chain.maybeSingle).toHaveBeenCalled();
@@ -173,7 +181,7 @@ describe('summary-service', () => {
 
 		it('should throw error when update fails', async () => {
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
+
 			const chain = createQueryChain({
 				data: null,
 				error: { message: 'Update failed' }
@@ -181,13 +189,15 @@ describe('summary-service', () => {
 
 			mockSupabase.from.mockReturnValue(chain);
 
-			await expect(updateSummary(
-				'test-summary-123',
-				'Updated Title',
-				'Updated summary',
-				'Updated content',
-				mockSupabase
-			)).rejects.toThrow('Failed to update summary');
+			await expect(
+				updateSummary(
+					'test-summary-123',
+					'Updated Title',
+					'Updated summary',
+					'Updated content',
+					mockSupabase
+				)
+			).rejects.toThrow('Failed to update summary');
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith('Update error:', { message: 'Update failed' });
 			consoleErrorSpy.mockRestore();
@@ -246,7 +256,7 @@ describe('summary-service', () => {
 
 		it('should throw error when creation fails', async () => {
 			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
+
 			const chain = createQueryChain({
 				data: null,
 				error: { message: 'Insert failed' }
@@ -254,15 +264,17 @@ describe('summary-service', () => {
 
 			mockSupabase.from.mockReturnValue(chain);
 
-			await expect(createSummary(
-				'https://www.youtube.com/watch?v=newVideo',
-				'ko',
-				'New Title',
-				'New summary',
-				'New content',
-				'user-123',
-				mockSupabase
-			)).rejects.toThrow('Failed to create summary');
+			await expect(
+				createSummary(
+					'https://www.youtube.com/watch?v=newVideo',
+					'ko',
+					'New Title',
+					'New summary',
+					'New content',
+					'user-123',
+					mockSupabase
+				)
+			).rejects.toThrow('Failed to create summary');
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith('Insert error:', { message: 'Insert failed' });
 			consoleErrorSpy.mockRestore();

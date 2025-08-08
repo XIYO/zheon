@@ -16,7 +16,7 @@ test.describe('Authentication Flow', () => {
 
 		// Should redirect to sign-in page
 		await page.waitForURL(/auth\/sign-in/, { timeout: 5000 });
-		
+
 		const currentUrl = page.url();
 		expect(currentUrl).toMatch(/auth\/sign-in/);
 
@@ -54,7 +54,7 @@ test.describe('Authentication Flow', () => {
 		await page.goto('/auth/sign-in');
 
 		const pageContent = await page.textContent('body');
-		
+
 		// Check for authentication-related text
 		const hasAuthText = /sign.?in|로그인|인증|계정|account|login/i.test(pageContent);
 		expect(hasAuthText).toBeTruthy();
@@ -63,10 +63,13 @@ test.describe('Authentication Flow', () => {
 	test('sign-out functionality works', async ({ page }) => {
 		// Mock authenticated state
 		await page.addInitScript(() => {
-			window.localStorage.setItem('supabase.auth.token', JSON.stringify({
-				access_token: 'mock-token',
-				user: { id: 'test-user-id', email: 'test@example.com' }
-			}));
+			window.localStorage.setItem(
+				'supabase.auth.token',
+				JSON.stringify({
+					access_token: 'mock-token',
+					user: { id: 'test-user-id', email: 'test@example.com' }
+				})
+			);
 		});
 
 		await page.goto('/dashboard');
@@ -94,12 +97,11 @@ test.describe('Authentication Flow', () => {
 		if (signOutElementFound) {
 			// Should redirect after sign-out
 			await page.waitForTimeout(2000);
-			
+
 			const currentUrl = page.url();
-			const isRedirected = currentUrl.includes('/auth/') || 
-							   currentUrl === '/' || 
-							   currentUrl.includes('sign-out');
-			
+			const isRedirected =
+				currentUrl.includes('/auth/') || currentUrl === '/' || currentUrl.includes('sign-out');
+
 			expect(isRedirected).toBeTruthy();
 		} else {
 			// If no sign-out button found, that's also a valid test result
@@ -114,14 +116,15 @@ test.describe('Authentication Flow', () => {
 
 		// Should either redirect to dashboard or show success message
 		await page.waitForTimeout(3000);
-		
+
 		const currentUrl = page.url();
 		const pageContent = await page.textContent('body');
-		
-		const isSuccessfulAuth = currentUrl.includes('/dashboard') || 
-								currentUrl === '/' ||
-								/success|성공|완료|welcome/i.test(pageContent);
-		
+
+		const isSuccessfulAuth =
+			currentUrl.includes('/dashboard') ||
+			currentUrl === '/' ||
+			/success|성공|완료|welcome/i.test(pageContent);
+
 		expect(isSuccessfulAuth).toBeTruthy();
 	});
 
@@ -130,10 +133,10 @@ test.describe('Authentication Flow', () => {
 
 		for (const route of protectedRoutes) {
 			await page.goto(route);
-			
+
 			// Should redirect to auth
 			await page.waitForTimeout(2000);
-			
+
 			const currentUrl = page.url();
 			expect(currentUrl).toMatch(/auth|sign-in/);
 		}
@@ -142,14 +145,17 @@ test.describe('Authentication Flow', () => {
 	test('authenticated user can access protected routes', async ({ page }) => {
 		// Mock authenticated state
 		await page.addInitScript(() => {
-			window.localStorage.setItem('supabase.auth.token', JSON.stringify({
-				access_token: 'mock-token',
-				user: { id: 'test-user-id', email: 'test@example.com' }
-			}));
+			window.localStorage.setItem(
+				'supabase.auth.token',
+				JSON.stringify({
+					access_token: 'mock-token',
+					user: { id: 'test-user-id', email: 'test@example.com' }
+				})
+			);
 		});
 
 		// Mock the auth check to return authenticated state
-		await page.route('**/auth/session', async route => {
+		await page.route('**/auth/session', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
@@ -163,10 +169,10 @@ test.describe('Authentication Flow', () => {
 		});
 
 		await page.goto('/dashboard');
-		
+
 		// Should stay on dashboard page
 		await page.waitForTimeout(2000);
-		
+
 		const currentUrl = page.url();
 		expect(currentUrl).toMatch(/dashboard/);
 	});
@@ -174,20 +180,23 @@ test.describe('Authentication Flow', () => {
 	test('session persistence across page reloads', async ({ page }) => {
 		// Mock authenticated state
 		await page.addInitScript(() => {
-			window.localStorage.setItem('supabase.auth.token', JSON.stringify({
-				access_token: 'mock-token',
-				user: { id: 'test-user-id', email: 'test@example.com' }
-			}));
+			window.localStorage.setItem(
+				'supabase.auth.token',
+				JSON.stringify({
+					access_token: 'mock-token',
+					user: { id: 'test-user-id', email: 'test@example.com' }
+				})
+			);
 		});
 
 		await page.goto('/dashboard');
-		
+
 		// Reload the page
 		await page.reload();
-		
+
 		// Should still be authenticated (not redirected to sign-in)
 		await page.waitForTimeout(2000);
-		
+
 		const currentUrl = page.url();
 		expect(currentUrl).toMatch(/dashboard/);
 	});

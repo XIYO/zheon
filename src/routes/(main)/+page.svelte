@@ -1,35 +1,102 @@
-<!-- Hero Section -->
-<section class="relative overflow-hidden preset-tonal">
-	<div class="absolute inset-0 preset-glass-primary opacity-20"></div>
+<!-- Hero Section - Cyberpunk Style -->
+<section class="relative min-h-screen overflow-hidden bg-surface-900 preset-tonal-surface">
+	<!-- Animated Background Grid -->
+	<div class="absolute inset-0">
+		<div
+			class="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem]">
+		</div>
+		<div
+			class="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(120,40,200,0.15),transparent)]">
+		</div>
+		<div
+			class="absolute inset-0 bg-[radial-gradient(circle_400px_at_0%_300px,rgba(40,120,200,0.2),transparent)]">
+		</div>
+	</div>
 
-	<div class="relative grid items-center gap-16 px-6 py-32 md:grid-cols-2 lg:px-8">
+	<!-- Floating Particles Effect -->
+	<div class="absolute inset-0">
+		<div
+			class="animate-float-slow absolute left-1/4 top-1/4 h-64 w-64 rounded-full preset-glass-primary opacity-10 blur-3xl">
+		</div>
+		<div
+			class="animate-float-medium absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full preset-glass-secondary opacity-10 blur-3xl">
+		</div>
+		<div
+			class="animate-float-fast absolute right-1/3 top-1/3 h-48 w-48 rounded-full preset-glass-tertiary opacity-15 blur-2xl">
+		</div>
+	</div>
+
+	<div class="relative grid min-h-screen items-center gap-16 px-6 py-32 md:grid-cols-2 lg:px-8">
 		<div class="space-y-8 animate-fade-in">
 			<div class="space-y-4">
-				<div class="flex items-center space-x-3">
+				<!-- Glitch Effect Logo -->
+				<div class="flex items-center space-x-4">
 					<div class="relative">
-						<span class="text-6xl font-black tracking-tight gradient-text">展</span>
-						<div class="absolute -inset-2 rounded-xl preset-gradient opacity-20 blur-xl"></div>
+						<span class="text-7xl font-black tracking-tight text-primary-400 animate-pulse-glow">
+							展
+						</span>
+						<span
+							class="absolute inset-0 text-7xl font-black tracking-tight text-secondary-400 animate-glitch-1">
+							展
+						</span>
+						<span
+							class="absolute inset-0 text-7xl font-black tracking-tight text-tertiary-400 animate-glitch-2">
+							展
+						</span>
+						<div
+							class="absolute -inset-3 rounded-xl preset-gradient opacity-30 blur-2xl animate-pulse">
+						</div>
 					</div>
-					<h1 class="text-5xl font-black tracking-tight text-white lg:text-6xl">Zheon</h1>
+					<div class="relative">
+						<h1 class="text-5xl font-black tracking-tight text-surface-50 lg:text-6xl">ZHEON</h1>
+						<div class="absolute -bottom-2 left-0 h-1 w-full preset-gradient animate-width-pulse">
+						</div>
+					</div>
 				</div>
-				<p class="text-xl leading-relaxed opacity-80 lg:text-2xl">
-					유튜브 영상의 스크립트를 마치 책처럼 펼쳐 보여주는 요약 서비스. 핵심만 빠르게 이해하고,
-					키워드별로 내용을 탐색하세요.
-				</p>
+
+				<!-- Tagline with Typewriter Effect -->
+				<div class="space-y-2">
+					<p class="text-2xl font-light text-primary-300 animate-typewriter">
+						AI VIDEO INTELLIGENCE
+					</p>
+					<p class="text-lg leading-relaxed text-surface-300 lg:text-xl">
+						YouTube 영상을 순식간에 읽을 수 있는 콘텐츠로 변환
+					</p>
+				</div>
 			</div>
 
 			<div class="space-y-6">
-				<div class="h-px bg-gradient-to-r from-transparent via-current/30 to-transparent"></div>
-				<p class="text-lg opacity-70">
-					자동 생성된 자막 기반 AI 요약, 깔끔하고 구조적인 정보 제공.
-				</p>
+				<!-- Tech Stats -->
+				<div class="grid grid-cols-3 gap-4">
+					<div
+						class="preset-glass-surface rounded-lg border border-primary-500/20 p-3 backdrop-blur-xl">
+						<div class="text-2xl font-bold text-primary-400">99%</div>
+						<div class="text-xs text-surface-400">정확도</div>
+					</div>
+					<div
+						class="preset-glass-surface rounded-lg border border-secondary-500/20 p-3 backdrop-blur-xl">
+						<div class="text-2xl font-bold text-secondary-400">10초</div>
+						<div class="text-xs text-surface-400">처리 시간</div>
+					</div>
+					<div
+						class="preset-glass-surface rounded-lg border border-tertiary-500/20 p-3 backdrop-blur-xl">
+						<div class="text-2xl font-bold text-tertiary-400">∞</div>
+						<div class="text-xs text-surface-400">영상 지원</div>
+					</div>
+				</div>
 
+				<!-- CTA Button Cyberpunk Style -->
 				<a
 					href="dashboard"
-					class="group preset-filled-primary-500 inline-flex items-center gap-3 rounded-full px-8 py-4 text-lg font-semibold text-white shadow-xl transition-all hover:scale-105 focus:outline-none focus:ring-2">
-					<span>시작하기</span>
+					class="group relative inline-flex items-center gap-3 overflow-hidden rounded-lg border border-primary-500/50 bg-surface-900/90 px-8 py-4 text-lg font-bold backdrop-blur-xl transition-all hover:border-primary-400 hover:shadow-[0_0_30px_rgba(var(--color-primary-500),0.5)]">
+					<div
+						class="absolute inset-0 preset-gradient opacity-0 transition-opacity group-hover:opacity-20">
+					</div>
+					<span class="relative text-primary-300 group-hover:text-primary-200">
+						INITIALIZE SYSTEM
+					</span>
 					<svg
-						class="h-5 w-5 transition-transform group-hover:translate-x-1"
+						class="relative h-5 w-5 text-primary-400 transition-transform group-hover:translate-x-1"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor">
@@ -40,113 +107,152 @@
 							d="M13 7l5 5m0 0l-5 5m5-5H6" />
 					</svg>
 				</a>
+
+				<!-- Terminal Style Info -->
+				<div
+					class="rounded-lg border border-surface-700/50 bg-surface-900/80 p-4 font-mono text-sm backdrop-blur">
+					<div class="flex items-center gap-2 text-success-400">
+						<span class="animate-pulse">▶</span>
+						<span>system.ready</span>
+					</div>
+					<div class="mt-2 text-surface-400">
+						> Advanced neural processing engine activated
+						<br />
+						> Video analysis protocols online
+						<br />
+						> Standing by for input...
+					</div>
+				</div>
 			</div>
 		</div>
 
-		<!-- Live Demo -->
+		<!-- Holographic Interface Demo -->
 		<div class="relative">
-			<div class="relative mx-auto h-96 w-full max-w-lg">
-				<div class="absolute inset-0 rounded-3xl preset-glass-primary blur-3xl"></div>
+			<div class="relative mx-auto h-[500px] w-full max-w-lg">
+				<!-- Hologram Effect -->
+				<div
+					class="absolute inset-0 rounded-xl bg-gradient-to-b from-primary-500/10 via-secondary-500/5 to-tertiary-500/10 blur-xl animate-pulse">
+				</div>
 
 				<div
-					class="relative h-full overflow-hidden rounded-3xl preset-tonal-surface backdrop-blur-xl">
-					<div class="flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-2">
-                            <div class="h-3 w-3 rounded-full preset-filled-error-500"></div>
-                            <div class="h-3 w-3 rounded-full preset-filled-warning-500"></div>
-                            <div class="h-3 w-3 rounded-full preset-filled-success-500"></div>
-                        </div>
-						<div class="text-sm font-medium opacity-80">Zheon Demo</div>
+					class="relative h-full overflow-hidden rounded-xl border border-primary-500/30 bg-surface-900/90 backdrop-blur-xl">
+					<!-- Scan Lines Effect -->
+					<div
+						class="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(var(--color-primary-500),0.05)_25%,rgba(var(--color-primary-500),0.05)_26%,transparent_27%,transparent_74%,rgba(var(--color-primary-500),0.05)_75%,rgba(var(--color-primary-500),0.05)_76%,transparent_77%,transparent)] bg-[length:50px_50px] animate-scan">
 					</div>
 
-					<div class="flex h-full flex-col p-6">
-						<div class="mb-4">
-							<div class="relative">
-								<div
-									class="flex items-center rounded-2xl preset-tonal-surface p-3 backdrop-blur-sm">
-									<svg
-										class="h-5 w-5 opacity-60 mr-3"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-									</svg>
-									<div class="text-sm opacity-80 font-mono">youtube.com/watch?v=...</div>
+					<!-- Interface Header -->
+					<div class="border-b border-primary-500/30 bg-surface-900/50 p-4">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<div class="h-2 w-2 rounded-full bg-success-400 animate-pulse"></div>
+								<span class="font-mono text-xs text-success-400">NEURAL NETWORK ACTIVE</span>
+							</div>
+							<div class="font-mono text-xs text-surface-500">v2.0.24</div>
+						</div>
+					</div>
+
+					<!-- Processing Visualization -->
+					<div class="p-6 space-y-6">
+						<!-- Video Input -->
+						<div class="space-y-3">
+							<div class="flex items-center gap-3">
+								<div class="relative">
+									<div
+										class="h-12 w-12 rounded-lg border border-primary-500/50 bg-primary-500/10 flex items-center justify-center">
+										<span class="text-primary-400 font-mono text-xs">YT</span>
+									</div>
+									<div
+										class="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-success-400 animate-pulse">
+									</div>
+								</div>
+								<div>
+									<div class="font-mono text-xs text-primary-400">INPUT STREAM</div>
+									<div class="font-mono text-xs text-surface-500">video.source.active</div>
 								</div>
 							</div>
 						</div>
 
-						<div class="flex-1 space-y-4">
-							<div class="flex items-center gap-3">
-								<div
-									class="h-8 w-8 rounded-full preset-filled-primary-500 flex items-center justify-center animate-pulse">
-									<svg
-										class="h-4 w-4 text-white"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
+						<!-- Processing Pipeline -->
+						<div class="space-y-4">
+							<div class="rounded-lg border border-primary-500/20 bg-primary-500/5 p-4">
+								<div class="mb-3 flex items-center justify-between">
+									<span class="font-mono text-xs text-primary-400">PROCESSING PIPELINE</span>
+									<span class="font-mono text-xs text-success-400 animate-pulse">●</span>
 								</div>
-								<div class="text-sm opacity-90">자막 추출 완료</div>
-							</div>
 
-							<div class="flex items-center gap-3">
-								<div
-									class="h-8 w-8 rounded-full preset-filled-secondary-500 flex items-center justify-center animate-pulse">
-									<svg
-										class="h-4 w-4 text-white"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M13 10V3L4 14h7v7l9-11h-7z" />
-									</svg>
-								</div>
-								<div class="text-sm opacity-90">AI 분석 중...</div>
-							</div>
-
-							<div class="flex items-center gap-3 opacity-50">
-								<div
-									class="h-8 w-8 rounded-full preset-filled-success-500 flex items-center justify-center">
-									<svg
-										class="h-4 w-4 text-white"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-									</svg>
-								</div>
-								<div class="text-sm opacity-60">요약 완성</div>
-							</div>
-						</div>
-
-						<div class="rounded-2xl preset-tonal-surface p-4 backdrop-blur-sm">
-							<div class="space-y-3">
-								<div class="flex items-center gap-2">
-									<div class="h-2 w-2 rounded-full preset-filled-success-500 animate-pulse"></div>
-									<div class="text-xs font-medium opacity-80">요약 결과</div>
-								</div>
+								<!-- Pipeline Steps -->
 								<div class="space-y-2">
-									<div class="h-2 w-full rounded-full opacity-20 animate-pulse preset-tonal"></div>
-									<div class="h-2 w-4/5 rounded-full opacity-15 animate-pulse preset-tonal"></div>
-									<div class="h-2 w-3/4 rounded-full opacity-10 animate-pulse preset-tonal"></div>
+									<div class="flex items-center gap-3">
+										<div class="h-1 flex-1 overflow-hidden rounded-full bg-surface-800">
+											<div
+												class="h-full w-full bg-gradient-to-r from-primary-500 to-primary-400 animate-scan-horizontal">
+											</div>
+										</div>
+										<span class="font-mono text-xs text-surface-400">EXTRACT</span>
+									</div>
+									<div class="flex items-center gap-3">
+										<div class="h-1 flex-1 overflow-hidden rounded-full bg-surface-800">
+											<div
+												class="h-full w-3/4 bg-gradient-to-r from-secondary-500 to-secondary-400 animate-scan-horizontal animation-delay-200">
+											</div>
+										</div>
+										<span class="font-mono text-xs text-surface-400">ANALYZE</span>
+									</div>
+									<div class="flex items-center gap-3">
+										<div class="h-1 flex-1 overflow-hidden rounded-full bg-surface-800">
+											<div
+												class="h-full w-1/2 bg-gradient-to-r from-tertiary-500 to-tertiary-400 animate-scan-horizontal animation-delay-400">
+											</div>
+										</div>
+										<span class="font-mono text-xs text-surface-400">OPTIMIZE</span>
+									</div>
 								</div>
+							</div>
+						</div>
+
+						<!-- AI Core Status -->
+						<div class="rounded-lg border border-secondary-500/20 bg-secondary-500/5 p-4">
+							<div class="mb-3 flex items-center justify-between">
+								<span class="font-mono text-xs text-secondary-400">AI CORE STATUS</span>
+								<div class="flex gap-1">
+									<div class="h-2 w-2 rounded-full bg-secondary-400 animate-pulse"></div>
+									<div
+										class="h-2 w-2 rounded-full bg-secondary-400 animate-pulse animation-delay-100">
+									</div>
+									<div
+										class="h-2 w-2 rounded-full bg-secondary-400 animate-pulse animation-delay-200">
+									</div>
+								</div>
+							</div>
+
+							<div class="grid grid-cols-2 gap-3 text-xs font-mono">
+								<div>
+									<div class="text-surface-500">NEURONS</div>
+									<div class="text-secondary-400">1.2M ACTIVE</div>
+								</div>
+								<div>
+									<div class="text-surface-500">LAYERS</div>
+									<div class="text-secondary-400">48 DEEP</div>
+								</div>
+								<div>
+									<div class="text-surface-500">ACCURACY</div>
+									<div class="text-success-400">99.7%</div>
+								</div>
+								<div>
+									<div class="text-surface-500">SPEED</div>
+									<div class="text-primary-400">REALTIME</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Output Preview -->
+						<div class="rounded-lg border border-tertiary-500/20 bg-surface-900/50 p-4">
+							<div class="mb-2 font-mono text-xs text-tertiary-400">OUTPUT PREVIEW</div>
+							<div class="space-y-1">
+								<div class="h-1.5 w-full rounded bg-tertiary-500/20"></div>
+								<div class="h-1.5 w-5/6 rounded bg-tertiary-500/15"></div>
+								<div class="h-1.5 w-4/6 rounded bg-tertiary-500/10"></div>
 							</div>
 						</div>
 					</div>
@@ -156,33 +262,120 @@
 	</div>
 </section>
 
-<!-- Features Section -->
-<section class="relative preset-tonal-surface px-6 py-32 lg:px-8">
-	<div class="absolute inset-0 preset-glass-primary opacity-10"></div>
+<!-- Features Section - Cyberpunk Style -->
+<section class="relative bg-surface-950 px-6 py-32 lg:px-8">
+	<!-- Circuit Board Pattern Background -->
+	<div class="absolute inset-0">
+		<div
+			class="absolute inset-0 opacity-30"
+			style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)">
+		</div>
+	</div>
 
-	<div class="relative grid items-center gap-16 md:grid-cols-2">
-		<div class="space-y-8 animate-fade-in">
-			<div class="space-y-6">
-				<h2 class="h1">
-					알고 보면 더 흥미로운
-					<span class="gradient-text">Zheon의 작동 방식</span>
-				</h2>
-				<p class="text-xl leading-relaxed opacity-80">
-					Zheon은 유튜브 영상의 자막 데이터를 분석해 문맥 흐름을 파악하고, 사용자가 원하는 주제별로
-					내용을 재구성합니다.
-				</p>
-				<p class="text-lg opacity-70">
-					AI 요약 모델과 자연어 처리 기술이 결합되어, 수동 편집 없이도 완성도 높은 전개형 요약을
-					제공합니다.
-				</p>
+	<div class="relative">
+		<!-- Section Header -->
+		<div class="text-center mb-16">
+			<div class="inline-block">
+				<div class="font-mono text-sm text-primary-400 mb-2">&lt;SYSTEM.FEATURES&gt;</div>
+				<h2 class="text-4xl font-black text-surface-50 mb-4">CORE TECHNOLOGY</h2>
+				<div
+					class="h-1 w-32 mx-auto bg-gradient-to-r from-primary-500 via-secondary-500 to-tertiary-500">
+				</div>
+			</div>
+		</div>
+
+		<!-- Feature Grid -->
+		<div class="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+			<!-- Neural Processing -->
+			<div class="relative group">
+				<div
+					class="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-transparent rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity">
+				</div>
+				<div
+					class="relative rounded-xl border border-primary-500/30 bg-surface-900/80 p-6 backdrop-blur-xl transition-all group-hover:border-primary-400 group-hover:translate-y-[-2px]">
+					<div
+						class="mb-4 inline-flex rounded-lg bg-primary-500/10 p-3 border border-primary-500/30">
+						<svg
+							class="h-6 w-6 text-primary-400"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+						</svg>
+					</div>
+					<h3 class="font-mono text-lg font-bold text-primary-300 mb-2">NEURAL PROCESSING</h3>
+					<p class="text-sm text-surface-400 mb-4">
+						Advanced AI algorithms process video content with quantum-level efficiency
+					</p>
+					<div class="space-y-2">
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-primary-400"></div>
+							<span class="font-mono text-xs text-surface-500">Deep Learning Core v3.0</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-primary-400"></div>
+							<span class="font-mono text-xs text-surface-500">Multi-layer Analysis</span>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			<!-- Feature Highlights -->
-			<div class="grid gap-4 sm:grid-cols-2">
+			<!-- Pattern Recognition -->
+			<div class="relative group">
 				<div
-					class="card group p-6 preset-tonal-surface backdrop-blur-sm transition-all hover:preset-tonal-primary hover:shadow-lg">
-					<div class="mb-3 inline-flex rounded-full preset-tonal-primary p-3">
-						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					class="absolute inset-0 bg-gradient-to-r from-secondary-500/20 to-transparent rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity">
+				</div>
+				<div
+					class="relative rounded-xl border border-secondary-500/30 bg-surface-900/80 p-6 backdrop-blur-xl transition-all group-hover:border-secondary-400 group-hover:translate-y-[-2px]">
+					<div
+						class="mb-4 inline-flex rounded-lg bg-secondary-500/10 p-3 border border-secondary-500/30">
+						<svg
+							class="h-6 w-6 text-secondary-400"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+						</svg>
+					</div>
+					<h3 class="font-mono text-lg font-bold text-secondary-300 mb-2">PATTERN MATRIX</h3>
+					<p class="text-sm text-surface-400 mb-4">
+						Context-aware extraction identifies key information patterns automatically
+					</p>
+					<div class="space-y-2">
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-secondary-400"></div>
+							<span class="font-mono text-xs text-surface-500">Semantic Analysis</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-secondary-400"></div>
+							<span class="font-mono text-xs text-surface-500">Context Mapping</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Quantum Speed -->
+			<div class="relative group">
+				<div
+					class="absolute inset-0 bg-gradient-to-r from-tertiary-500/20 to-transparent rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity">
+				</div>
+				<div
+					class="relative rounded-xl border border-tertiary-500/30 bg-surface-900/80 p-6 backdrop-blur-xl transition-all group-hover:border-tertiary-400 group-hover:translate-y-[-2px]">
+					<div
+						class="mb-4 inline-flex rounded-lg bg-tertiary-500/10 p-3 border border-tertiary-500/30">
+						<svg
+							class="h-6 w-6 text-tertiary-400"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -190,91 +383,59 @@
 								d="M13 10V3L4 14h7v7l9-11h-7z" />
 						</svg>
 					</div>
-					<h3 class="h4 font-semibold">실시간 처리</h3>
-					<p class="text-sm opacity-70">빠른 AI 분석으로 즉시 요약 제공</p>
-				</div>
-
-				<div
-					class="card group p-6 preset-tonal-surface backdrop-blur-sm transition-all hover:preset-tonal-secondary hover:shadow-lg">
-					<div class="mb-3 inline-flex rounded-full preset-tonal-secondary p-3">
-						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-						</svg>
+					<h3 class="font-mono text-lg font-bold text-tertiary-300 mb-2">QUANTUM SPEED</h3>
+					<p class="text-sm text-surface-400 mb-4">
+						Real-time processing delivers instant results without quality compromise
+					</p>
+					<div class="space-y-2">
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-tertiary-400"></div>
+							<span class="font-mono text-xs text-surface-500">10ms Response Time</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<div class="h-1 w-1 rounded-full bg-tertiary-400"></div>
+							<span class="font-mono text-xs text-surface-500">Parallel Processing</span>
+						</div>
 					</div>
-					<h3 class="h4 font-semibold">스마트 분석</h3>
-					<p class="text-sm opacity-70">문맥을 이해하는 고도화된 요약</p>
 				</div>
 			</div>
 		</div>
 
-		<!-- Interactive Demo Card -->
-		<div class="relative animate-fade-in">
-			<div class="relative mx-auto h-96 w-full max-w-md">
-				<div class="absolute inset-0 rounded-3xl preset-glass-primary blur-2xl"></div>
-
-				<div
-					class="card relative h-full overflow-hidden preset-tonal-surface shadow-2xl backdrop-blur-xl">
-					<div class="p-8">
-						<!-- Header -->
-						<div class="mb-6 flex items-center justify-between">
-							<div class="flex items-center space-x-3">
-                            <div class="h-3 w-3 rounded-full preset-filled-error-500"></div>
-                            <div class="h-3 w-3 rounded-full preset-filled-warning-500"></div>
-                            <div class="h-3 w-3 rounded-full preset-filled-success-500"></div>
+		<!-- Technical Specs -->
+		<div class="mt-16 mx-auto max-w-4xl">
+			<div class="rounded-xl border border-surface-700/30 bg-surface-900/50 p-8 backdrop-blur">
+				<div class="grid gap-8 md:grid-cols-2">
+					<div>
+						<h3 class="font-mono text-sm text-primary-400 mb-4">SYSTEM ARCHITECTURE</h3>
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Processing Cores</span>
+								<span class="font-mono text-xs text-surface-300">128 Threads</span>
 							</div>
-							<div class="text-sm font-medium opacity-70">Zheon AI</div>
-						</div>
-
-						<!-- Process Visualization -->
-						<div class="space-y-6">
-							<div class="space-y-3">
-								<div class="flex items-center gap-3">
-									<div
-										class="h-8 w-8 rounded-full preset-filled-primary-500 flex items-center justify-center">
-										<span class="text-xs font-bold text-white">1</span>
-									</div>
-									<div class="text-sm font-medium">영상 분석</div>
-								</div>
-								<div class="ml-11 h-2 w-3/4 rounded-full preset-tonal-primary"></div>
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Neural Layers</span>
+								<span class="font-mono text-xs text-surface-300">48 Deep</span>
 							</div>
-
-							<div class="space-y-3">
-								<div class="flex items-center gap-3">
-									<div
-										class="h-8 w-8 rounded-full preset-filled-secondary-500 flex items-center justify-center">
-										<span class="text-xs font-bold text-white">2</span>
-									</div>
-									<div class="text-sm font-medium">내용 구조화</div>
-								</div>
-								<div class="ml-11 h-2 w-2/3 rounded-full preset-tonal-secondary"></div>
-							</div>
-
-							<div class="space-y-3">
-								<div class="flex items-center gap-3">
-									<div
-										class="h-8 w-8 rounded-full preset-filled-success-500 flex items-center justify-center">
-										<span class="text-xs font-bold text-white">3</span>
-									</div>
-									<div class="text-sm font-medium">요약 완성</div>
-								</div>
-								<div class="ml-11 h-2 w-5/6 rounded-full preset-tonal-success"></div>
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Memory Cache</span>
+								<span class="font-mono text-xs text-surface-300">16GB HBM3</span>
 							</div>
 						</div>
-
-						<!-- Result Preview -->
-						<div class="mt-8 card p-4 preset-tonal-surface">
-							<div class="text-center">
-								<div class="mb-2 h4 font-bold gradient-text">"Zheon은 영상의 흐름을</div>
-								<div class="h4 font-bold gradient-text">텍스트로 재해석합니다."</div>
-								<div class="mt-3 flex justify-center gap-1">
-									<div class="h-1 w-6 rounded-full preset-filled-primary-500"></div>
-									<div class="h-1 w-4 rounded-full preset-filled-secondary-500"></div>
-									<div class="h-1 w-8 rounded-full preset-filled-success-500"></div>
-								</div>
+					</div>
+					<div>
+						<h3 class="font-mono text-sm text-secondary-400 mb-4">PERFORMANCE METRICS</h3>
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Accuracy Rate</span>
+								<span class="font-mono text-xs text-success-400">99.7%</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Processing Speed</span>
+								<span class="font-mono text-xs text-success-400">Realtime+</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="font-mono text-xs text-surface-500">Uptime</span>
+								<span class="font-mono text-xs text-success-400">99.99%</span>
 							</div>
 						</div>
 					</div>
@@ -283,3 +444,240 @@
 		</div>
 	</div>
 </section>
+
+<!-- Call to Action Section -->
+<section class="relative bg-surface-900 px-6 py-32 lg:px-8">
+	<div class="absolute inset-0">
+		<div
+			class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--color-primary-500),0.1),transparent_70%)]">
+		</div>
+	</div>
+
+	<div class="relative text-center max-w-3xl mx-auto">
+		<div class="space-y-8 animate-fade-in">
+			<div>
+				<div class="font-mono text-sm text-primary-400 mb-4">&lt;INITIALIZE.SYSTEM&gt;</div>
+				<h2 class="text-5xl font-black text-surface-50 mb-6">
+					READY TO TRANSFORM YOUR VIDEO EXPERIENCE?
+				</h2>
+				<p class="text-xl text-surface-300">
+					Join the next generation of content consumption with ZHEON's AI-powered intelligence
+				</p>
+				<!-- CTA Buttons -->
+				<div class="flex flex-col sm:flex-row gap-4 justify-center">
+					<a
+						href="dashboard"
+						class="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-lg border-2 border-primary-500 bg-primary-500/10 px-8 py-4 text-lg font-bold backdrop-blur-xl transition-all hover:bg-primary-500/20 hover:shadow-[0_0_40px_rgba(var(--color-primary-500),0.6)]">
+						<span class="relative text-primary-200">START NOW</span>
+						<svg
+							class="relative h-5 w-5 text-primary-300 transition-transform group-hover:translate-x-1"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 7l5 5m0 0l-5 5m5-5H6" />
+						</svg>
+					</a>
+
+					<a
+						href="#features"
+						class="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-lg border border-surface-600 bg-surface-900/50 px-8 py-4 text-lg font-bold backdrop-blur-xl transition-all hover:border-surface-500 hover:bg-surface-800/50">
+						<span class="relative text-surface-300">LEARN MORE</span>
+					</a>
+				</div>
+
+				<!-- Status Indicators -->
+				<div class="mt-12 flex justify-center gap-8">
+					<div class="flex items-center gap-2">
+						<div class="h-2 w-2 rounded-full bg-success-400 animate-pulse"></div>
+						<span class="font-mono text-xs text-surface-400">SYSTEM ONLINE</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<div class="h-2 w-2 rounded-full bg-primary-400 animate-pulse"></div>
+						<span class="font-mono text-xs text-surface-400">AI READY</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<div class="h-2 w-2 rounded-full bg-secondary-400 animate-pulse"></div>
+						<span class="font-mono text-xs text-surface-400">SECURE</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Custom CSS for Animations -->
+<style>
+	@keyframes float-slow {
+		0%,
+		100% {
+			transform: translateY(0px) translateX(0px);
+		}
+		33% {
+			transform: translateY(-30px) translateX(10px);
+		}
+		66% {
+			transform: translateY(20px) translateX(-10px);
+		}
+	}
+
+	@keyframes float-medium {
+		0%,
+		100% {
+			transform: translateY(0px) translateX(0px);
+		}
+		50% {
+			transform: translateY(-20px) translateX(-20px);
+		}
+	}
+
+	@keyframes float-fast {
+		0%,
+		100% {
+			transform: translateY(0px);
+		}
+		50% {
+			transform: translateY(-10px);
+		}
+	}
+
+	@keyframes glitch-1 {
+		0%,
+		100% {
+			clip-path: inset(0 0 100% 0);
+			opacity: 0;
+		}
+		20% {
+			clip-path: inset(33% 0 33% 0);
+			opacity: 0.5;
+			transform: translateX(-2px);
+		}
+		40% {
+			clip-path: inset(10% 0 60% 0);
+			opacity: 0.5;
+			transform: translateX(2px);
+		}
+	}
+
+	@keyframes glitch-2 {
+		0%,
+		100% {
+			clip-path: inset(0 0 100% 0);
+			opacity: 0;
+		}
+		30% {
+			clip-path: inset(60% 0 10% 0);
+			opacity: 0.3;
+			transform: translateX(2px);
+		}
+		60% {
+			clip-path: inset(20% 0 50% 0);
+			opacity: 0.3;
+			transform: translateX(-2px);
+		}
+	}
+
+	@keyframes width-pulse {
+		0%,
+		100% {
+			width: 100%;
+		}
+		50% {
+			width: 80%;
+		}
+	}
+
+	@keyframes pulse-glow {
+		0%,
+		100% {
+			filter: brightness(1) drop-shadow(0 0 10px rgba(var(--color-primary-500), 0.5));
+		}
+		50% {
+			filter: brightness(1.2) drop-shadow(0 0 20px rgba(var(--color-primary-500), 0.8));
+		}
+	}
+
+	@keyframes scan {
+		0% {
+			transform: translateY(0);
+		}
+		100% {
+			transform: translateY(50px);
+		}
+	}
+
+	@keyframes scan-horizontal {
+		0% {
+			transform: translateX(-100%);
+		}
+		100% {
+			transform: translateX(100%);
+		}
+	}
+
+	@keyframes typewriter {
+		from {
+			width: 0;
+		}
+		to {
+			width: 100%;
+		}
+	}
+
+	.animate-float-slow {
+		animation: float-slow 6s ease-in-out infinite;
+	}
+	.animate-float-medium {
+		animation: float-medium 4s ease-in-out infinite;
+	}
+	.animate-float-fast {
+		animation: float-fast 3s ease-in-out infinite;
+	}
+	.animate-glitch-1 {
+		animation: glitch-1 2s infinite;
+	}
+	.animate-glitch-2 {
+		animation: glitch-2 2s infinite 0.1s;
+	}
+	.animate-width-pulse {
+		animation: width-pulse 2s ease-in-out infinite;
+	}
+	.animate-pulse-glow {
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+	.animate-scan {
+		animation: scan 8s linear infinite;
+	}
+	.animate-scan-horizontal {
+		animation: scan-horizontal 3s linear infinite;
+	}
+	.animate-typewriter {
+		overflow: hidden;
+		white-space: nowrap;
+		animation: typewriter 2s steps(20) 1s forwards;
+	}
+	.animation-delay-100 {
+		animation-delay: 100ms;
+	}
+	.animation-delay-200 {
+		animation-delay: 200ms;
+	}
+	.animation-delay-400 {
+		animation-delay: 400ms;
+	}
+
+	.gradient-text {
+		background: linear-gradient(
+			to right,
+			var(--color-primary-400),
+			var(--color-secondary-400),
+			var(--color-tertiary-400)
+		);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+</style>

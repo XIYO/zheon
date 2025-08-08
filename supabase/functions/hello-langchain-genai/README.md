@@ -1,19 +1,14 @@
 # Hello LangChain GenAI Edge Function
 
-A production-ready Supabase Edge Function that integrates Google's Gemini AI
-through LangChain for natural language processing.
+A production-ready Supabase Edge Function that integrates Google's Gemini AI through LangChain for natural language processing.
 
 ## Features
 
-- 🤖 **LangChain Integration**: Uses `@langchain/google-genai` for structured AI
-  interactions
-- 🚀 **Gemini 1.5 Flash**: Latest Google AI model for fast, high-quality
-  responses
-- 🛡️ **Production Ready**: Comprehensive error handling, input validation, and
-  CORS support
+- 🤖 **LangChain Integration**: Uses `@langchain/google-genai` for structured AI interactions
+- 🚀 **Gemini 1.5 Flash**: Latest Google AI model for fast, high-quality responses
+- 🛡️ **Production Ready**: Comprehensive error handling, input validation, and CORS support
 - 📝 **TypeScript**: Fully typed with proper interfaces and error handling
-- 🎯 **Prompt Engineering**: Uses LangChain's ChatPromptTemplate for better
-  responses
+- 🎯 **Prompt Engineering**: Uses LangChain's ChatPromptTemplate for better responses
 - 🔒 **Security**: Input sanitization and rate limiting considerations
 
 ## API Specification
@@ -83,25 +78,22 @@ curl -i --location --request POST 'https://iefgdhwmgljjacafqomd.supabase.co/func
 ### JavaScript/TypeScript
 
 ```typescript
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const { data, error } = await supabase.functions.invoke(
-  "hello-langchain-genai",
-  {
-    body: {
-      prompt: "What are the benefits of using LangChain with Gemini?",
-    },
-  },
-);
+const { data, error } = await supabase.functions.invoke('hello-langchain-genai', {
+	body: {
+		prompt: 'What are the benefits of using LangChain with Gemini?'
+	}
+});
 
 if (error) {
-  console.error("Error:", error);
+	console.error('Error:', error);
 } else {
-  console.log("AI Response:", data.response);
-  console.log("Model:", data.model);
-  console.log("Framework:", data.framework);
+	console.log('AI Response:', data.response);
+	console.log('Model:', data.model);
+	console.log('Framework:', data.framework);
 }
 ```
 
@@ -185,8 +177,7 @@ pnpm edge:deploy hello-langchain-genai
 This function demonstrates several LangChain capabilities:
 
 1. **ChatGoogleGenerativeAI**: Structured interface to Gemini API
-2. **ChatPromptTemplate**: Consistent prompt formatting with system/human
-   messages
+2. **ChatPromptTemplate**: Consistent prompt formatting with system/human messages
 3. **Message Types**: SystemMessage and HumanMessage for conversation structure
 4. **Error Handling**: LangChain-specific error handling and retries
 5. **Configuration**: Model parameters like temperature and maxOutputTokens
@@ -218,5 +209,4 @@ Comprehensive test suite covers:
 - ✅ Edge cases (long prompts, special characters)
 - ✅ LangChain framework verification
 
-Run tests with:
-`deno test --allow-all --env-file=.env supabase/tests/hello-langchain-genai-test.ts`
+Run tests with: `deno test --allow-all --env-file=.env supabase/tests/hello-langchain-genai-test.ts`
