@@ -51,11 +51,11 @@
 				<div
 					class="relative h-full overflow-hidden rounded-3xl preset-tonal-surface backdrop-blur-xl">
 					<div class="flex items-center justify-between p-4">
-						<div class="flex items-center space-x-2">
-							<div class="h-3 w-3 rounded-full bg-red-400"></div>
-							<div class="h-3 w-3 rounded-full bg-yellow-400"></div>
-							<div class="h-3 w-3 rounded-full bg-green-400"></div>
-						</div>
+                        <div class="flex items-center space-x-2">
+                            <div class="h-3 w-3 rounded-full preset-filled-error-500"></div>
+                            <div class="h-3 w-3 rounded-full preset-filled-warning-500"></div>
+                            <div class="h-3 w-3 rounded-full preset-filled-success-500"></div>
+                        </div>
 						<div class="text-sm font-medium opacity-80">Zheon Demo</div>
 					</div>
 
@@ -222,9 +222,9 @@
 						<!-- Header -->
 						<div class="mb-6 flex items-center justify-between">
 							<div class="flex items-center space-x-3">
-								<div class="h-3 w-3 rounded-full bg-red-400"></div>
-								<div class="h-3 w-3 rounded-full bg-yellow-400"></div>
-								<div class="h-3 w-3 rounded-full bg-green-400"></div>
+                            <div class="h-3 w-3 rounded-full preset-filled-error-500"></div>
+                            <div class="h-3 w-3 rounded-full preset-filled-warning-500"></div>
+                            <div class="h-3 w-3 rounded-full preset-filled-success-500"></div>
 							</div>
 							<div class="text-sm font-medium opacity-70">Zheon AI</div>
 						</div>

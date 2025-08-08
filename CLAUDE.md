@@ -1,89 +1,230 @@
-## Design Memories
+# CLAUDE.md
 
-- Comprehensive color scheme and styling example with preset button styles including filled, tonal, outlined, glass, elevated, ghost, icon, and gradient variations
-- Demonstrates flexible grid layout with responsive design for different button types
-- Uses custom CSS classes for preset color schemes across neutral, primary, secondary, tertiary, success, warning, error, and surface colors
-- Includes custom gradient and glass effect implementations using CSS variables and color mixing
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# Skeleton UI Styling Guidelines
+## Project Overview
 
-Use ONLY these Skeleton presets. Keep basic design minimal. Apply varied styles only to hero sections and key emphasis areas. Use consistent presets for everything else.
+Zheon is a YouTube video summarization application built with SvelteKit, Supabase, and deployed on Cloudflare Workers. It processes YouTube videos to extract subtitles and generate AI-powered summaries in multiple languages.
 
-## Available Presets
+## Development Commands
 
-**Filled:** `preset-filled-{color}-{lightShade}-{darkShade}`
-
-- `preset-filled-primary-500` - main CTA
-- `preset-filled-primary-700-300` - high priority
-- `preset-filled-secondary-600-400` - secondary actions
-
-**Tonal:** `preset-tonal-{color}`
-
-- `preset-tonal-primary` - emphasis cards/alerts
-- `preset-tonal-success/warning/error` - status messages
-- `preset-tonal-surface` - neutral content
-
-**Outlined:** `preset-outlined-{color}-{shade}-{shade}`
-
-- `preset-outlined-primary-500` - secondary buttons
-- `preset-outlined-surface-200-800` - inputs
-
-## Usage Strategy
-
-**Hero/Key Areas (varied styles):**
-
-- Main CTA: `preset-filled-primary-500`
-- Secondary CTA: `preset-outlined-primary-500`
-- Background: `preset-tonal-primary`
-- Special effects: `preset-glass-primary`, `preset-gradient`
-
-**General Content (consistent):**
-
-- Default buttons: `btn preset-tonal`
-- Links: `preset-outlined-primary-500`
-- Cards: `preset-tonal-surface`
-- Inputs: `preset-outlined-surface-200-800`
-
-**Interactions:**
-
-- Hover: `hover:preset-tonal-primary`
-- Ghost: `btn hover:preset-tonal`
-- Elevated: `preset-filled-surface-100-900 shadow-xl`
-
-**Status:**
-
-- Success: `preset-tonal-success`
-- Warning: `preset-tonal-warning`
-- Error: `preset-tonal-error`
-
-## Rules
-
-- Hero sections: creative preset combinations allowed
-- General areas: stick to neutral/surface presets
-- No custom colors outside these presets
-- Maintain consistency across similar elements
-
-# Supabase Development
-
-Supabase 관련 개발 지침은 `supabase/CLAUDE.md`를 참조하세요.
-
-- Edge Functions 개발 가이드
-- 테스트 및 배포 방법
-- 환경 변수 설정
-- Realtime/Broadcast 사용법
-- 디버깅 및 문제 해결
-
-## Supabase CLI 사용법
-
-시스템에 Supabase CLI가 직접 설치되어 있으므로 `pnpm` 없이 직접 명령어를 사용합니다:
-
+### Core Development
 ```bash
-# 타입 생성 (pnpm 없이)
-supabase gen types typescript --linked
+# Development server (http://localhost:5173)
+pnpm dev
 
-# 마이그레이션 실행
-supabase migration up
+# Build for production
+pnpm build
 
-# Edge Functions 배포
-supabase functions deploy
+# Preview production build (http://localhost:4173)
+pnpm preview
+
+# Type checking and validation
+pnpm check
+pnpm check:watch
+
+# Code formatting and linting
+pnpm format          # Write prettier formatting
+pnpm lint           # Check formatting and ESLint
+
+# Testing
+pnpm test           # Run all tests (unit + E2E)
+pnpm test:unit      # Run Vitest unit tests
+pnpm test:e2e       # Run Playwright E2E tests
 ```
+
+### Supabase Edge Functions
+```bash
+# Test Edge Functions
+pnpm edge:test:all  # Run all Deno tests
+
+# Deploy Edge Functions
+pnpm edge:deploy    # Deploy functions only
+pnpm edge:deploy:with-secrets  # Deploy with environment variables
+
+# Code quality
+pnpm edge:format    # Format Deno code
+pnpm edge:lint      # Lint Deno code
+pnpm edge:check     # Type check Deno code
+
+# Secrets management
+pnpm edge:secrets:set   # Set environment variables
+pnpm edge:secrets:list  # List configured secrets
+```
+
+### Deployment
+```bash
+# Deploy to Cloudflare Workers
+pnpm deploy
+```
+
+## Architecture Overview
+
+### Tech Stack
+- **Frontend**: SvelteKit 2.x with Svelte 5
+- **Styling**: TailwindCSS 4 + Skeleton UI (presets only)
+- **Backend**: Supabase (PostgreSQL + Edge Functions)
+- **Deployment**: Cloudflare Workers
+- **Testing**: Vitest + Playwright + Deno Test
+- **Language**: JavaScript (not TypeScript)
+
+### Project Structure
+```
+src/
+├── routes/          # SvelteKit pages and API routes
+│   ├── (main)/     # Routes with header layout
+│   │   ├── dashboard/
+│   │   └── summary/[id]/
+│   └── (non-header)/  # Routes without header
+│       └── auth/
+├── lib/
+│   ├── components/  # Reusable Svelte components (PascalCase)
+│   ├── server/      # Server-side utilities (kebab-case)
+│   └── paraglide/   # i18n runtime (auto-generated)
+├── app.css         # Global styles with Skeleton UI theme
+└── hooks.server.js # Authentication middleware
+
+supabase/
+├── functions/      # Deno Edge Functions
+│   ├── _shared/    # Shared utilities (underscore prefix)
+│   └── [function]/ # Individual function directories
+├── migrations/     # Database migrations
+└── tests/         # Deno test files
+```
+
+### Key Architectural Patterns
+
+#### 1. Authentication Flow
+- Supabase Auth with email/password
+- Session management via cookies (using @supabase/ssr)
+- Protected routes check authentication in hooks.server.js
+- Sign in/out flows in auth routes
+
+#### 2. Data Flow for Video Processing
+1. User submits YouTube URL → dashboard/+page.server.js
+2. Server validates URL and checks for existing summary
+3. If no summary exists:
+   - Call Supabase Edge Function `summary`
+   - Edge Function extracts subtitles and generates AI summary
+   - Store in database with user association
+4. Return summary to client
+
+#### 3. Database Schema
+- `video_summaries` table stores processed videos
+- Fields: id, user_id, youtube_url, title, summary, content, language, created_at
+- Normalized YouTube URLs for deduplication
+- User-specific summaries with same video support
+
+#### 4. Server-Side Utilities Pattern
+All server utilities follow consistent patterns:
+- `*-utils.js`: Pure utility functions
+- `*-service.js`: Business logic with external dependencies
+- Error handling via custom error classes
+- Validation utilities for form data
+
+## Critical Implementation Details
+
+### Supabase Integration
+- Project ID: `iefgdhwmgljjacafqomd`
+- Use `supabase.functions.invoke()` for Edge Function calls (not fetch)
+- Environment variables set via Dashboard → Settings → Edge Functions → Secrets
+- Direct production database usage (no local Supabase instance)
+
+### Skeleton UI Styling
+- Use ONLY Skeleton preset classes (defined in existing CLAUDE.md design section)
+- Available presets: filled, tonal, outlined, glass, elevated, ghost, gradient
+- Pattern: `preset-{type}-{color}-{shade}`
+- Keep basic design minimal, apply varied styles only to hero sections
+
+### Testing Strategy
+- Unit tests: Adjacent to source files as `*.test.js`
+- Component tests: Use Testing Library + Vitest
+- E2E tests: In `e2e/` directory using Playwright
+- Edge Functions: Deno tests in `supabase/tests/`
+- Mock utilities available in `src/lib/test-utils.js`
+
+### Form Handling
+- All forms use native FormData with progressive enhancement
+- Server-side validation in `+page.server.js` actions
+- Client-side enhancements optional via `use:enhance`
+
+### Error Handling
+- Custom error utilities in `lib/server/error-utils.js`
+- Consistent error page via `+error.svelte`
+- User-friendly error messages with fallback to generic messages
+
+### Internationalization
+- Paraglide.js for i18n (messages in `messages/` directory)
+- Runtime generated in `src/lib/paraglide/`
+- Language detection based on user preferences
+
+## Development Guidelines
+
+### Code Style
+- **Components**: PascalCase (`Header.svelte`)
+- **Utilities**: kebab-case (`auth-utils.js`)
+- **Prettier**: Tabs, single quotes, no trailing commas
+- **ESLint**: Svelte plugin + custom Skeleton UI rules
+
+### Commit Messages
+Use emoji prefixes:
+- ✨ Feature additions
+- 🔧 Bug fixes
+- ♻️ Refactoring
+- 🧪 Test additions
+- 📝 Documentation
+- 🚀 Performance/deployment
+
+### Security
+- Never commit secrets (use .env locally)
+- Set production secrets via Supabase Dashboard
+- Validate all user inputs server-side
+- Use Supabase RLS for data access control
+
+## Common Development Tasks
+
+### Adding a New Page
+1. Create route in `src/routes/` with appropriate layout group
+2. Add `+page.svelte` for UI
+3. Add `+page.server.js` for data loading/actions
+4. Use Skeleton UI presets for styling
+
+### Creating an Edge Function
+```bash
+# Create new function
+supabase functions new [function-name]
+
+# Test locally
+supabase functions serve [function-name] --no-verify-jwt
+
+# Deploy
+pnpm edge:deploy
+```
+
+### Running Tests for Specific Features
+```bash
+# Test specific file
+pnpm test:unit -- auth-utils.test.js
+
+# Test with pattern matching
+pnpm test:unit -- --testNamePattern="validation"
+
+# Run E2E test for specific feature
+pnpm test:e2e dashboard.test.js
+```
+
+### Debugging Edge Functions
+```bash
+# Check logs in Dashboard
+# Or use Chrome DevTools
+supabase functions serve --inspect-mode brk
+# Navigate to chrome://inspect
+```
+
+## Important Notes
+
+- The project uses JavaScript with JSDoc types, not TypeScript
+- Cloudflare Workers deployment via wrangler (see wrangler.toml)
+- Production URL: zheon.xiyo.dev
+- Always run `pnpm format` and `pnpm lint` before committing
+- Test changes with both unit and E2E tests when applicable
