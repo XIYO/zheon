@@ -5,7 +5,7 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import svelteConfig from './svelte.config.js';
-import skeletonColorPairs from './eslint-rules/skeleton-color-pairs.js';
+import skeletonUIPlugin from './eslint-rules/index.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
