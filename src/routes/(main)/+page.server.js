@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { validateYouTubeUrlFromForm } from '$lib/server/validation-utils.js';
+import { urlSchema } from '$lib/schemas/url.js';
 
 export const actions = {
 	default: async ({ request, locals: { supabase }, url }) => {
@@ -20,13 +20,13 @@ export const actions = {
 
 		// 1. 폼 데이터 검증
 		const formData = await request.formData();
-		let youtubeUrl;
+		const youtubeUrl = formData.get('youtubeUrl')?.toString().trim();
 
-		try {
-			youtubeUrl = validateYouTubeUrlFromForm(formData);
-		} catch (error) {
+		// URL 스키마로 검증
+		const validation = urlSchema.safeParse(youtubeUrl);
+		if (!validation.success) {
 			return fail(400, {
-				message: error?.message || 'YouTube URL 검증에 실패했습니다.',
+				message: validation.error.errors[0].message,
 				type: 'validation_error'
 			});
 		}

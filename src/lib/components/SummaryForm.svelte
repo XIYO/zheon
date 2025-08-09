@@ -3,12 +3,27 @@
 	import { enhance } from '$app/forms';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/state';
+	import { urlSchema } from '$lib/schemas/url.js';
 
 	let loading = $state(false);
+	let errorMessage = $state('');
 
 	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	function handleEnhance() {
+	function handleEnhance({ formData, cancel }) {
+		// URL 검증
+		const url = formData.get('youtubeUrl');
+		const validation = urlSchema.safeParse(url);
+		
+		if (!validation.success) {
+			errorMessage = validation.error.issues[0].message;
+			cancel();
+			return;
+		}
+		
+		// 검증 성공 시 에러 메시지 초기화 및 로딩 시작
+		errorMessage = '';
 		loading = true;
+		
 		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
 				// 로그인이 필요한 경우 리다이렉트 처리됨
@@ -30,7 +45,7 @@
 	}
 </script>
 
-<div class="mb-12 w-full max-w-xl mx-auto">
+<div class="card preset-filled-surface-200-800 w-full mx-auto">
 	{#if page.form?.message}
 		{@const isRateLimit = page.form?.type === 'rate_limit'}
 		<div
@@ -59,16 +74,20 @@
 		</div>
 	{/if}
 
-	<div class="card preset-tonal-surface p-6">
+	<div class="p-6">
 		<form method="POST" use:enhance={handleEnhance} class="space-y-4">
 			<div class="space-y-2">
 				<input
 					name="youtubeUrl"
 					placeholder="영상 URL을 입력하세요"
-					required
 					type="text"
 					class="input preset-tonal-surface w-full"
 					disabled={loading} />
+				{#if errorMessage}
+					<p class="text-xs text-error-500" in:slide>
+						{errorMessage}
+					</p>
+				{/if}
 				<p class="text-xs text-surface-600 dark:text-surface-400">
 					지원 서비스: YouTube
 				</p>
