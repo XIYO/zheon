@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { slide } from 'svelte/transition';
-	import { handleSignIn } from '$lib/components/Header.svelte';
 
 	let { data } = $props();
 	let summaries = $derived(data.summaries);
@@ -14,7 +13,7 @@
 		loading = true;
 		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
-				handleSignIn();
+				// 로그인이 필요한 경우 리다이렉트 처리됨
 			} else if (result.type === 'success' && result.data?.success) {
 				// Edge Function 성공 처리
 				if (result.data?.fromCache) {
