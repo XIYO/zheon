@@ -64,10 +64,10 @@
 	{#snippet lead()}
 		{#if isRootPage}
 			<a href="/" class="flex items-center space-x-3">
-				<span class="text-3xl font-black tracking-tight gradient-text">{m.header_logo_text()}</span>
+				<span class="preset-typo-headline font-black tracking-tight">{m.header_logo_text()}</span>
 			</a>
 		{:else}
-			<button onclick={handleNavigation} class="btn-icon hover:preset-tonal" aria-label="Go back">
+			<button onclick={handleNavigation} class="btn-icon" aria-label="Go back">
 				<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
@@ -78,26 +78,26 @@
 	{#snippet trail()}
 		{#if !page.data.user}
 			<nav>
-				<button onclick={handleSignIn} class="btn variant-filled-primary btn-sm" type="button">
+				<button onclick={handleSignIn} class="btn preset-filled btn-sm" type="button">
 					<span>{m.header_start_login()}</span>
 				</button>
 			</nav>
 		{:else}
 			<div class="flex items-center space-x-4">
 				<div class="hidden sm:flex sm:items-center sm:space-x-3">
-					<div class="text-sm">
-						<span class="font-semibold">{m.header_welcome({ name: page.data.user.user_metadata.name })}</span>
-						<span class="opacity-70 ml-2">{m.header_welcome_message()}</span>
+					<div>
+						<span class="preset-typo-caption font-semibold">{m.header_welcome({ name: page.data.user.user_metadata.name })}</span>
+						<span class="preset-typo-caption ml-2">{m.header_welcome_message()}</span>
 					</div>
 				</div>
-				<button onclick={handleSignOut} class="btn variant-ghost-surface btn-base" type="button">
+				<button onclick={handleSignOut} class="btn preset-ghost btn-base" type="button">
 					{m.header_logout()}
 				</button>
 			</div>
 		{/if}
 	{/snippet}
 
-	<span class="text-lg font-semibold">{page.data?.meta?.title}</span>
+	<span class="preset-typo-subtitle">{page.data?.meta?.title}</span>
 </AppBar>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->

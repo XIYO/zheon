@@ -46,13 +46,23 @@
 			<p class="mt-2 text-surface-500">첫 번째 유튜브 영상을 입력해 보세요!</p>
 		</div>
 	{:else}
-		<h2 id="summaries-title" class="text-3xl font-bold text-center">
-			인사이트 목록
-		</h2>
+		<div class="flex items-center justify-between mb-6 max-w-6xl mx-auto">
+			<h2 id="summaries-title" class="text-3xl font-bold">
+				인사이트 목록
+			</h2>
+			{#if limit !== 0}
+				<a href="/summaries" class="btn btn-sm variant-ghost-primary">
+					전체 보기
+					<svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+					</svg>
+				</a>
+			{/if}
+		</div>
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
 			{#each summaries as summary (summary.id)}
 				<article class="card-modern rounded-2xl p-6 hover-lift">
-					<a href="/summary/{summary.id}/" class="space-y-3">
+					<a href="/summaries/{summary.id}/" class="space-y-3">
 						<!-- 썸네일 -->
 						<img
 							src={extractThumbnail(summary.url)}
