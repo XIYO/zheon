@@ -47,7 +47,7 @@
 			<div class="mb-8">
 				<div class="flex items-center justify-between">
 					<a
-						href="/dashboard/"
+						href="/"
 						class="group inline-flex items-center gap-3 rounded-2xl border border-surface-200-800/40 preset-glass-surface px-6 py-3 font-medium text-surface-700-300 shadow-lg backdrop-blur-sm transition-all hover:preset-tonal-primary hover:shadow-xl hover:scale-[1.02]">
 						<svg
 							class="h-5 w-5 transition-transform group-hover:-translate-x-1"
@@ -61,7 +61,7 @@
 								d="M15 19l-7-7 7-7">
 							</path>
 						</svg>
-						<span>대시보드로 돌아가기</span>
+						<span>홈으로 돌아가기</span>
 					</a>
 
 					<!-- 브랜드 로고 -->

@@ -1,16 +1,22 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { validateYouTubeUrlFromForm } from '$lib/server/validation-utils.js';
 
 export const actions = {
-	default: async ({ request, locals: { supabase } }) => {
+	default: async ({ request, locals: { supabase }, url }) => {
 		const requestStartTime = Date.now();
-		console.log(`🚀 Dashboard request started:`, {
+		console.log(`🚀 Main page request started:`, {
 			timestamp: new Date().toISOString(),
 			userAgent: request.headers.get('user-agent'),
 			referer: request.headers.get('referer')
 		});
 
-		// 공개 캐시 시스템 - 인증 불필요
+		// 인증 체크 - 요약 요청은 로그인한 사용자만 가능
+		const { data: { user } } = await supabase.auth.getUser();
+		
+		if (!user) {
+			// 로그인 페이지로 리디렉트 (현재 페이지를 redirectTo 파라미터로 전달)
+			redirect(303, `/auth/sign-in?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
 
 		// 1. 폼 데이터 검증
 		const formData = await request.formData();

@@ -2,12 +2,13 @@
 <script>
 	import SignInForm from '$lib/components/SignInForm.svelte';
 	import SignOutForm from '$lib/components/SignOutForm.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import { page } from '$app/state';
 	import * as m from '$lib/paraglide/messages';
 
-	/** @type {HTMLDialogElement} */
+	/** @type {import('$lib/components/Dialog.svelte').default} */
 	let signInDialog;
-	/** @type {HTMLDialogElement} */
+	/** @type {import('$lib/components/Dialog.svelte').default} */
 	let signOutDialog;
 
 	/**
@@ -16,7 +17,7 @@
 	 */
 	const handleSignIn = (e) => {
 		e?.preventDefault();
-		signInDialog.showModal();
+		signInDialog.open();
 	};
 
 	/**
@@ -25,7 +26,7 @@
 	 */
 	const handleSignOut = (e) => {
 		e?.preventDefault();
-		signOutDialog.showModal();
+		signOutDialog.open();
 	};
 
 	/**
@@ -107,39 +108,11 @@
 </header>
 
 <!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
-<dialog
-	bind:this={signInDialog}
-	class="m-auto max-w-md backdrop:bg-black/80 backdrop:backdrop-blur-md">
-		<!-- Close Button -->
-		<form method="dialog" class="absolute top-4 right-4">
-			<button 
-				type="submit" 
-				class="btn preset-ghost-surface-500 btn-sm rounded-full"
-				aria-label={m.auth_close()}>
-				<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
-		</form>
-		
-		<SignInForm onsuccess={onsuccessSignIn} />
-</dialog>
+<Dialog bind:this={signInDialog} ariaLabel={m.auth_close()}>
+	<SignInForm onsuccess={onsuccessSignIn} />
+</Dialog>
 
 <!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
-<dialog
-	bind:this={signOutDialog}
-	class="m-auto max-w-md backdrop:bg-black/80 backdrop:backdrop-blur-md">
-	<!-- Close Button -->
-	<form method="dialog" class="absolute top-4 right-4">
-		<button 
-			type="submit" 
-			class="btn preset-ghost-surface-500 btn-sm rounded-full"
-			aria-label={m.auth_close()}>
-			<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-			</svg>
-		</button>
-	</form>
-	
+<Dialog bind:this={signOutDialog} ariaLabel={m.auth_close()}>
 	<SignOutForm onsuccess={onSubmitSignOut} />
-</dialog>
+</Dialog>

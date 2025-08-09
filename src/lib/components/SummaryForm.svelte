@@ -1,0 +1,89 @@
+<!-- 유튜브 URL 입력 폼 컴포넌트 -->
+<script>
+	import { enhance } from '$app/forms';
+	import { slide } from 'svelte/transition';
+	import { page } from '$app/state';
+
+	let loading = $state(false);
+
+	/** @type {import('@sveltejs/kit').SubmitFunction} */
+	function handleEnhance() {
+		loading = true;
+		return async ({ result, update }) => {
+			if (result.type === 'redirect') {
+				// 로그인이 필요한 경우 리다이렉트 처리됨
+				loading = false;
+				// 리다이렉트는 자동으로 처리됨
+			} else if (result.type === 'success' && result.data?.success) {
+				// Edge Function 성공 처리
+				if (result.data?.fromCache) {
+					console.log('Existing summary found, displaying immediately');
+				} else {
+					console.log('New summary created successfully');
+				}
+				update({ invalidateAll: true });
+			} else {
+				update({ invalidateAll: true });
+			}
+			loading = false;
+		};
+	}
+</script>
+
+<div class="mb-12 w-full max-w-xl mx-auto">
+	{#if page.form?.message}
+		{@const isRateLimit = page.form?.type === 'rate_limit'}
+		<div
+			in:slide
+			class="mb-6 card {isRateLimit
+				? 'preset-tonal-warning'
+				: 'preset-tonal-error'}">
+			<div class="flex items-start gap-4 p-6">
+				<div class="flex-shrink-0">
+					<span class="badge {isRateLimit ? 'preset-filled-warning-500' : 'preset-filled-error-500'}">
+						{isRateLimit ? '⚠️' : '❌'}
+					</span>
+				</div>
+				<div class="flex-1">
+					<p class="text-sm font-medium">{page.form.message}</p>
+					{#if isRateLimit}
+						<p class="mt-2 text-xs opacity-80">
+							현재 많은 사용자가 이용 중입니다. 5분 후에 다시 시도해주세요.
+						</p>
+						<p class="mt-1 text-xs opacity-70">
+							💡 팁: 이미 요약된 영상은 아래 목록에서 바로 확인할 수 있습니다.
+						</p>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<div class="card preset-tonal-surface p-6">
+		<form method="POST" use:enhance={handleEnhance} class="space-y-4">
+			<div class="space-y-2">
+				<input
+					name="youtubeUrl"
+					placeholder="영상 URL을 입력하세요"
+					required
+					type="text"
+					class="input preset-tonal-surface w-full"
+					disabled={loading} />
+				<p class="text-xs text-surface-600 dark:text-surface-400">
+					지원 서비스: YouTube
+				</p>
+			</div>
+
+			<button
+				class="btn preset-filled-primary-500 w-full"
+				type="submit"
+				disabled={loading}>
+				{#if loading}
+					영상 분석 중...
+				{:else}
+					인사이트 추출 시작 →
+				{/if}
+			</button>
+		</form>
+	</div>
+</div>

@@ -25,7 +25,7 @@
 	action="/auth/sign-out/" 
 	method="POST" 
 	use:enhance={handleEnhance} 
-	class="card preset-outlined-error-500 flex flex-col">
+	class="card preset-filled-surface-500 flex flex-col">
 	
 	<!-- Header Section -->
 	<header class="p-6 text-center">

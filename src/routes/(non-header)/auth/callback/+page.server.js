@@ -4,7 +4,7 @@ export async function load({ url, locals: { supabase } }) {
 	const code = url.searchParams.get('code');
 	const error_code = url.searchParams.get('error');
 	const error_description = url.searchParams.get('error_description');
-	const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
+	const redirectTo = url.searchParams.get('redirectTo') || '/';
 
 	if (error_code) {
 		throw redirect(
