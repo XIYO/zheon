@@ -5,7 +5,7 @@
 	import SummaryList from '$lib/components/SummaryList.svelte';
 </script>
 
-<main class="container mx-auto px-4 py-12 md:py-20">
+<main class="container mx-auto space-y-8">
 	<!-- 히어로 섹션 -->
 	<SummaryHero />
 

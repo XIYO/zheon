@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="card preset-filled-surface-200-800 w-full mx-auto">
+<div class="card-modern rounded-2xl w-full mx-auto overflow-hidden">
 	{#if page.form?.message}
 		{@const isRateLimit = page.form?.type === 'rate_limit'}
 		<div
@@ -81,7 +81,7 @@
 					name="youtubeUrl"
 					placeholder="영상 URL을 입력하세요"
 					type="text"
-					class="input preset-tonal-surface w-full"
+					class="input glass-effect rounded-xl w-full px-4 py-3 placeholder:text-surface-400 focus:ring-2 focus:ring-primary-500/50 transition-all"
 					disabled={loading} />
 				{#if errorMessage}
 					<p class="text-xs text-error-500" in:slide>
@@ -94,7 +94,7 @@
 			</div>
 
 			<button
-				class="btn preset-filled-primary-500 w-full"
+				class="btn-premium rounded-xl w-full py-3"
 				type="submit"
 				disabled={loading}>
 				{#if loading}

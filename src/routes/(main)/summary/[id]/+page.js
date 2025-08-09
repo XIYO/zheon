@@ -12,14 +12,17 @@ export const load = async ({ parent, params }) => {
 
 	if (fetchError) {
 		console.error('Fetch error:', fetchError);
-		throw error(404, 'Summary not found');
+		error(404, 'Summary not found');
 	}
 
 	if (!summary) {
-		throw error(404, 'Summary not found');
+		error(404, 'Summary not found');
 	}
 
 	return {
+		meta: {
+			title: summary.title
+		},
 		summary
 	};
 };

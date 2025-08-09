@@ -9,6 +9,7 @@
     "jsr:@supabase/functions-js@*": "2.4.5",
     "jsr:@supabase/functions-js@2.4.5": "2.4.5",
     "jsr:@supabase/supabase-js@2": "2.53.0",
+    "jsr:@supabase/supabase-js@2.54.0": "2.54.0",
     "jsr:@supabase/supabase-js@^2.53.0": "2.53.0",
     "npm:@google/generative-ai@*": "0.24.1",
     "npm:@langchain/core@0.3.66": "0.3.66_openai@4.104.0__zod@3.25.76_zod@3.25.76",
@@ -18,6 +19,7 @@
     "npm:@supabase/node-fetch@2.6.15": "2.6.15",
     "npm:@supabase/postgrest-js@1.19.4": "1.19.4",
     "npm:@supabase/realtime-js@2.11.15": "2.11.15_ws@8.18.3",
+    "npm:@supabase/realtime-js@2.15.0": "2.15.0",
     "npm:@supabase/storage-js@^2.10.4": "2.10.4",
     "npm:openai@^4.52.5": "4.104.0_zod@3.25.76"
   },
@@ -50,7 +52,18 @@
         "npm:@supabase/functions-js@2.4.5",
         "npm:@supabase/node-fetch",
         "npm:@supabase/postgrest-js",
-        "npm:@supabase/realtime-js",
+        "npm:@supabase/realtime-js@2.11.15",
+        "npm:@supabase/storage-js"
+      ]
+    },
+    "@supabase/supabase-js@2.54.0": {
+      "integrity": "d8583059915115a6a3e5589b1133fb62b24f58021e0954fee96a98963fcb206f",
+      "dependencies": [
+        "npm:@supabase/auth-js",
+        "npm:@supabase/functions-js@2.4.5",
+        "npm:@supabase/node-fetch",
+        "npm:@supabase/postgrest-js",
+        "npm:@supabase/realtime-js@2.15.0",
         "npm:@supabase/storage-js"
       ]
     }
@@ -118,6 +131,15 @@
         "@types/phoenix",
         "@types/ws",
         "isows",
+        "ws"
+      ]
+    },
+    "@supabase/realtime-js@2.15.0": {
+      "integrity": "sha512-SEIWApsxyoAe68WU2/5PCCuBwa11LL4Bb8K3r2FHCt3ROpaTthmDiWEhnLMGayP05N4QeYrMk0kyTZOwid/Hjw==",
+      "dependencies": [
+        "@supabase/node-fetch",
+        "@types/phoenix",
+        "@types/ws",
         "ws"
       ]
     },

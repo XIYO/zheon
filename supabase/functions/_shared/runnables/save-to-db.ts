@@ -12,6 +12,7 @@ export const saveToDB = RunnableLambda.from(
 		url: string;
 		transcript: string;
 		summary: string;
+		insights?: string;
 		summary_method: string;
 		title?: string;
 		_skip_save?: boolean;
@@ -59,7 +60,7 @@ export const saveToDB = RunnableLambda.from(
 				url: input.url,
 				title: input.title || 'YouTube Video Summary',
 				summary: input.summary,
-				content: input.transcript, // 전체 자막 내용도 저장
+				content: input.insights || input.summary, // 인사이트가 있으면 인사이트, 없으면 요약 저장
 				lang: 'ko', // 기본 언어 설정
 				created_at: new Date().toISOString()
 			})

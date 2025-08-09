@@ -7,6 +7,7 @@
 import { RunnableLambda } from 'npm:@langchain/core/runnables';
 import { ChatGoogleGenerativeAI } from 'npm:@langchain/google-genai@^0.1.0';
 import { ChatPromptTemplate } from 'npm:@langchain/core@0.3.66/prompts';
+import { z } from 'npm:zod@3.23.8';
 
 export const generateSummary = RunnableLambda.from(
 	async (input: {
@@ -37,72 +38,98 @@ export const generateSummary = RunnableLambda.from(
 				throw new Error('GEMINI_API_KEY is not set');
 			}
 
-			// Gemini 모델 설정
-			const model = new ChatGoogleGenerativeAI({
-				modelName: 'gemini-1.5-flash',
-				apiKey: geminiApiKey,
-				temperature: 0.3, // 낮은 temperature로 일관성 있는 정리
-				maxOutputTokens: 2000 // 충분한 길이의 정리 허용
+			// 출력 스키마 정의
+			const outputSchema = z.object({
+				title: z.string().describe('영상의 핵심 주제를 명확히 표현하는 한글 제목'),
+				summary: z.string().describe('영상의 핵심을 1-2문장으로 압축한 한글 초간단 요약'),
+				insights: z.string().describe('영상 내용을 분석한 전문 보고서 수준의 상세한 한글 분석 문서')
 			});
+
+			// Gemini 모델 설정 - 구조화된 출력 사용
+			const model = new ChatGoogleGenerativeAI({
+				modelName: 'gemini-1.5-flash', // 무료 티어에서 사용 가능한 모델
+				apiKey: geminiApiKey,
+				temperature: 0.4, // 약간 높여서 창의적 분석 허용
+				maxOutputTokens: 8192 // Flash 모델의 최대 출력 토큰
+			}).withStructuredOutput(outputSchema);
 
 			// 프롬프트 템플릿
 			const summaryPrompt = ChatPromptTemplate.fromTemplate(`
-당신은 YouTube 영상 콘텐츠를 분석하고 정리하는 전문가입니다.
+당신은 YouTube 영상 콘텐츠를 분석하고 전문 보고서를 작성하는 수석 분석가입니다.
+모든 응답은 반드시 한글로 작성하세요.
 
-다음 YouTube 영상 자막을 분석하여, 시청자가 영상을 보지 않고도 
-핵심 내용을 완전히 이해할 수 있도록 정리해주세요.
+다음 YouTube 영상 자막을 심층 분석하여 보고서를 작성해주세요.
 
 자막:
 {transcript}
 
-다음 지침에 따라 정리해주세요:
+제거해야 할 불필요한 요소들:
+- 인사말, 구독/좋아요 요청, 종료 멘트
+- 광고, 스폰서 언급, 프로모션
+- 말더듬, 반복, 침묵, "어...", "음..." 같은 추임새
+- 주제와 무관한 잡담이나 농담
 
-1. 무의미한 내용 제거:
-   - 인사말, 구독 요청, 좋아요 요청
-   - 반복되는 내용, 말더듬, 침묵
-   - 주제와 관련 없는 잡담
+작성 지침:
 
-2. 핵심 내용 추출:
-   - 영상의 주요 주제와 논점
-   - 중요한 정보, 데이터, 팁
-   - 실용적인 조언이나 인사이트
-   - 구체적인 예시나 사례
+1. title (한글 제목):
+   - 영상의 핵심 주제를 명확히 표현하는 전문적인 한글 제목
 
-3. 체계적인 구성:
-   - 논리적인 흐름으로 재구성
-   - 중요도에 따라 내용 배열
-   - 관련 내용끼리 그룹화
+2. summary (한글 초간단 요약):
+   - 1-2문장으로 극도로 압축
+   - "이 영상은 [주제]를 다루며, [핵심 내용]을 설명한다" 형식
+   - 반드시 한글로 작성
 
-응답 형식:
+3. insights (전문 분석 보고서):
+   보고서 수준의 심층 분석을 작성하세요. 다음 구조를 포함해야 합니다:
+   
+   ## 1. 개요
+   - 영상의 주제와 목적
+   - 핵심 메시지와 논지
+   
+   ## 2. 상세 내용 분석
+   - 영상에서 다룬 모든 주요 포인트를 체계적으로 정리
+   - 각 포인트별 상세한 설명과 근거
+   - 제시된 데이터, 통계, 사례 분석
+   
+   ## 3. 핵심 인사이트
+   - 영상의 핵심 통찰과 교훈
+   - 실무 적용 가능한 구체적 방법론
+   - 도구, 기술, 프레임워크 상세 설명
+   
+   ## 4. 비판적 분석
+   - 영상에서 다루지 못한 중요한 측면
+   - 보완이 필요한 부분
+   - 추가로 고려해야 할 관점
+   
+   ## 5. 확장된 시사점
+   - 업계 트렌드와의 연관성
+   - 미래 전망과 발전 방향
+   - 관련 분야에 미치는 영향
+   
+   ## 6. 실행 가능한 제언
+   - 구체적인 실행 계획
+   - 단계별 적용 방법
+   - 예상되는 효과와 주의사항
+   
+   ## 7. 결론
+   - 핵심 요약과 최종 평가
+   - 후속 학습 추천 사항
 
-제목: [영상의 핵심 주제를 명확히 표현하는 제목]
-
-핵심 정리:
-[체계적으로 정리된 내용 - 최소 5문단 이상, 각 문단은 특정 주제나 포인트를 다룸]
-
-주요 포인트:
-• [핵심 포인트 1]
-• [핵심 포인트 2]
-• [핵심 포인트 3]
-(필요한 만큼 추가)
-
-실용적 정보:
-[영상에서 언급된 구체적인 팁, 도구, 방법론 등]
+   보고서는 전문적이고 학술적인 톤을 유지하며, 영상 내용을 넘어서는 
+   부가가치 있는 분석을 제공해야 합니다. 최소 3000자 이상으로 작성하세요.
       `);
 
 			// 체인 생성 및 실행
 			const chain = summaryPrompt.pipe(model);
 			const response = await chain.invoke({ transcript: input.transcript });
 
-			// 응답 파싱
-			const content = response.content.toString();
-
-			// 제목 추출
-			const titleMatch = content.match(/제목:\s*(.+?)\n/);
-			const title = titleMatch ? titleMatch[1].trim() : 'YouTube 영상 핵심 정리';
-
-			// 전체 정리 내용 (제목 포함)
-			const summary = content;
+			// withStructuredOutput 사용시 응답이 이미 구조화된 객체로 반환됨
+			const { title, summary, insights } = response;
+			
+			// 필수 필드 검증
+			if (!title || !summary) {
+				throw new Error(`Missing required fields in AI response. Title: ${!!title}, Summary: ${!!summary}`);
+			}
 
 			console.log(`[Summary] ✅ Successfully generated summary with title: ${title}`);
 
@@ -110,20 +137,12 @@ export const generateSummary = RunnableLambda.from(
 				...input,
 				title: title,
 				summary: summary,
-				summary_method: 'gemini-1.5-flash'
+				insights: insights || '',
+				summary_method: 'gemini-1.5-flash-structured'
 			};
 		} catch (error) {
 			console.error(`[Summary] ❌ Error generating summary:`, error);
-
-			// Fallback 요약
-			const fallbackSummary = `[자동 요약] 이 영상은 ${input.transcript.substring(0, 200)}... 에 대한 내용입니다.`;
-
-			return {
-				...input,
-				title: 'YouTube 영상 요약',
-				summary: fallbackSummary,
-				summary_method: 'fallback'
-			};
+			throw error; // 에러를 그대로 전파
 		}
 	}
 );
