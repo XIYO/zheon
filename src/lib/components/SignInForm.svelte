@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { dev } from '$app/environment';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
 	import * as m from '$lib/paraglide/messages';
 	
@@ -30,59 +31,60 @@
 
 	<!-- Content Section -->
 	<section class="p-4 space-y-4">
-		<!-- Email/Password Login Form -->
-		<form
-			action={`/auth/sign-in/?/email${redirectToQuery}`}
-			method="POST"
-			class="space-y-4"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					if (result.type === 'redirect') {
-						onsuccess?.();
-						goto(result.location);
-					}
-					await update();
-				};
-			}}>
+		{#if dev}
+			<!-- Email/Password Login Form (Dev only) -->
+			<form
+				action={`/auth/sign-in/?/email${redirectToQuery}`}
+				method="POST"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'redirect') {
+							onsuccess?.();
+							goto(result.location);
+						}
+						await update();
+					};
+				}}>
+				<div>
+					<label for="email" class="preset-typo-label block mb-2">
+						이메일
+					</label>
+					<input
+						id="email"
+						name="email"
+						type="email"
+						required
+						placeholder="your@email.com"
+						class="input preset-tonal-surface-500 w-full" />
+				</div>
+				
+				<div>
+					<label for="password" class="preset-typo-label block mb-2">
+						비밀번호
+					</label>
+					<input
+						id="password"
+						name="password"
+						type="password"
+						required
+						placeholder="비밀번호를 입력하세요"
+						class="input preset-tonal-surface-500 w-full" />
+				</div>
+				
+				<button
+					type="submit"
+					class="btn preset-filled-primary-500 w-full preset-typo-button">
+					로그인
+				</button>
+			</form>
 			
-			<div>
-				<label for="email" class="preset-typo-label block mb-2">
-					이메일
-				</label>
-				<input
-					id="email"
-					name="email"
-					type="email"
-					required
-					placeholder="your@email.com"
-					class="input preset-tonal-surface-500 w-full" />
+			<div class="flex items-center gap-4">
+				<hr class="flex-1 border-surface-400/30" />
+				<span class="preset-typo-caption text-surface-300">또는</span>
+				<hr class="flex-1 border-surface-400/30" />
 			</div>
-			
-			<div>
-				<label for="password" class="preset-typo-label block mb-2">
-					비밀번호
-				</label>
-				<input
-					id="password"
-					name="password"
-					type="password"
-					required
-					placeholder="비밀번호를 입력하세요"
-					class="input preset-tonal-surface-500 w-full" />
-			</div>
-			
-			<button
-				type="submit"
-				class="btn preset-filled-primary-500 w-full preset-typo-button">
-				로그인
-			</button>
-		</form>
-		
-		<div class="flex items-center gap-4">
-			<hr class="flex-1 border-surface-400/30" />
-			<span class="preset-typo-caption text-surface-300">또는</span>
-			<hr class="flex-1 border-surface-400/30" />
-		</div>
+		{/if}
 		
 		<!-- Google Login Form -->
 		<form
