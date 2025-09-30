@@ -17,8 +17,8 @@ directory = ".svelte-kit/cloudflare"  # 빌드된 client 파일 위치
 
 # 환경 변수 설정
 [vars]
-PUBLIC_SUPABASE_URL = "https://iefgdhwmgljjacafqomd.supabase.co"
-PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZmdkaHdtZ2xqamFjYWZxb21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4Mzc5NTcsImV4cCI6MjA2MzQxMzk1N30.VxInMB0yHya_AAGifZXmVWFkGDgxGFZx94F_GBURzsQ"
+GOOGLE_CLIENT_ID = ""
+GOOGLE_CLIENT_SECRET = ""
 
 # GitHub 연동 빌드 설정
 [build]
@@ -26,4 +26,9 @@ command = "pnpm build"
 
 [observability.logs]
 enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zheon-db"
+database_id = "00000000-0000-0000-0000-000000000000"
 

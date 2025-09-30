@@ -35,14 +35,19 @@
 		signInDialog.open();
 	};
 
-	/**
-	 * Handles the sign-out dialog opening.
-	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
-	 */
-	const handleSignOut = (e) => {
-		e?.preventDefault();
-		signOutDialog.open();
-	};
+        /**
+         * Handles the sign-out dialog opening.
+         * @param {MouseEvent} [e] - The mouse event that triggered the function.
+         */
+        const handleSignOut = (e) => {
+                e?.preventDefault();
+                signOutDialog.open();
+        };
+
+        const userName = $derived(() => {
+                const user = page.data.user;
+                return user?.displayName ?? user?.email ?? m.header_default_user_name?.() ?? '사용자';
+        });
 
 	/**
 	 * Handles the sign-in form submission success.
@@ -84,12 +89,12 @@
 			</nav>
 		{:else}
 			<div class="flex items-center space-x-4">
-				<div class="hidden sm:flex sm:items-center sm:space-x-3">
-					<div>
-						<span class="preset-typo-caption font-semibold">{m.header_welcome({ name: page.data.user.user_metadata.name })}</span>
-						<span class="preset-typo-caption ml-2">{m.header_welcome_message()}</span>
-					</div>
-				</div>
+                                <div class="hidden sm:flex sm:items-center sm:space-x-3">
+                                        <div>
+                                                <span class="preset-typo-caption font-semibold">{m.header_welcome({ name: userName })}</span>
+                                                <span class="preset-typo-caption ml-2">{m.header_welcome_message()}</span>
+                                        </div>
+                                </div>
 				<button onclick={handleSignOut} class="btn preset-ghost btn-base" type="button">
 					{m.header_logout()}
 				</button>

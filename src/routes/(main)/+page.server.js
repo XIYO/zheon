@@ -1,145 +1,90 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { urlSchema } from '$lib/schemas/url.js';
 
+const SELECT_BY_URL = `
+        SELECT id
+        FROM summaries
+        WHERE url = ?
+`;
+
+const INSERT_SUMMARY = `
+        INSERT INTO summaries (user_id, url, title, summary, content, lang)
+        VALUES (?, ?, ?, ?, ?, ?)
+`;
+
+const selectByUrl = async (db, url) => {
+        if (db.type === 'd1') {
+                const row = await db.client.prepare(SELECT_BY_URL).bind(url).first();
+                return row ?? null;
+        }
+
+        return db.client.prepare(SELECT_BY_URL).get(url) ?? null;
+};
+
+const insertSummary = async (db, values) => {
+        if (db.type === 'd1') {
+                const result = await db.client.prepare(INSERT_SUMMARY).bind(...values).run();
+                return result.meta?.last_row_id ?? null;
+        }
+
+        const statement = db.client.prepare(INSERT_SUMMARY);
+        const result = statement.run(...values);
+        return result.lastInsertRowid ?? null;
+};
+
 export const actions = {
-	default: async ({ request, locals: { supabase }, url }) => {
-		const requestStartTime = Date.now();
-		console.log(`🚀 Main page request started:`, {
-			timestamp: new Date().toISOString(),
-			userAgent: request.headers.get('user-agent'),
-			referer: request.headers.get('referer')
-		});
+        default: async (event) => {
+                const { request, url, locals } = event;
+                const session = locals.session ?? (await locals.auth.validate());
 
-		// 인증 체크 - 요약 요청은 로그인한 사용자만 가능
-		const { data: { user } } = await supabase.auth.getUser();
-		
-		if (!user) {
-			// 로그인 페이지로 리디렉트 (현재 페이지를 redirectTo 파라미터로 전달)
-			redirect(303, `/auth/sign-in?redirectTo=${encodeURIComponent(url.pathname)}`);
-		}
+                if (!session) {
+                        const redirectTo = url.pathname;
+                        throw redirect(303, `/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`);
+                }
 
-		// 1. 폼 데이터 검증
-		const formData = await request.formData();
-		const youtubeUrl = formData.get('youtubeUrl')?.toString().trim();
+                const formData = await request.formData();
+                const youtubeUrl = formData.get('youtubeUrl')?.toString().trim();
 
-		// URL 스키마로 검증
-		const validation = urlSchema.safeParse(youtubeUrl);
-		if (!validation.success) {
-			return fail(400, {
-				message: validation.error.errors[0].message,
-				type: 'validation_error'
-			});
-		}
+                const validation = urlSchema.safeParse(youtubeUrl);
+                if (!validation.success) {
+                        const issue = validation.error.issues?.[0];
+                        return fail(400, {
+                                message: issue?.message ?? 'URL을 확인해주세요.',
+                                type: 'validation_error'
+                        });
+                }
 
-		// 2. Edge Function 호출 (공개 시스템)
-		console.log(`📡 Calling Edge Function for: ${youtubeUrl}`);
-		const edgeStartTime = Date.now();
+                try {
+                        const existing = await selectByUrl(locals.db, validation.data);
+                        if (existing) {
+                                return {
+                                        success: true,
+                                        fromCache: true,
+                                        recordId: existing.id
+                                };
+                        }
 
-		try {
-			const { data, error } = await supabase.functions.invoke('summary', {
-				body: { url: youtubeUrl }
-			});
+                        const placeholderSummary = '요약이 준비 중입니다. 잠시 후 다시 확인해주세요.';
+                        const recordId = await insertSummary(locals.db, [
+                                session.user.userId,
+                                validation.data,
+                                '요약 생성 대기 중',
+                                placeholderSummary,
+                                placeholderSummary,
+                                'ko'
+                        ]);
 
-			const edgeTime = Date.now() - edgeStartTime;
-			const totalTime = Date.now() - requestStartTime;
-
-			if (error) {
-				// 에러 상세 정보 추출
-				let errorDetails = { message: error.message, code: 'UNKNOWN' };
-
-				if (error.context) {
-					try {
-						const errorBody = await error.context.text();
-						const parsedError = JSON.parse(errorBody);
-						errorDetails = {
-							message: parsedError.error || error.message,
-							code: parsedError.code || 'UNKNOWN'
-						};
-					} catch {
-						// JSON 파싱 실패 시 기본 에러 메시지 사용
-					}
-				}
-
-				console.error(`❌ Edge Function error:`, {
-					error: errorDetails,
-					edgeTime: `${edgeTime}ms`,
-					totalTime: `${totalTime}ms`,
-					timestamp: new Date().toISOString()
-				});
-
-				// 구체적인 에러 타입별 처리
-				if (errorDetails.message?.includes('Rate limit')) {
-					return fail(429, {
-						message: '서버가 바쁩니다. 잠시 후 다시 시도해주세요.',
-						type: 'rate_limit',
-						retryAfter: 300
-					});
-				}
-
-				if (errorDetails.message?.includes('Failed to extract video data')) {
-					return fail(400, {
-						message:
-							'이 영상의 자막을 추출할 수 없습니다. 영어 자막이 있는 다른 영상을 시도해보세요.',
-						type: 'subtitle_extraction_error'
-					});
-				}
-
-				if (errorDetails.code === 'PIPELINE_ERROR') {
-					return fail(400, {
-						message: '영상 처리 중 오류가 발생했습니다. 다른 영상을 시도해보세요.',
-						type: 'pipeline_error'
-					});
-				}
-
-				// 기타 에러
-				return fail(400, {
-					message: errorDetails.message || 'AI 처리 중 오류가 발생했습니다.',
-					type: 'edge_function_error'
-				});
-			}
-
-			// 성공적인 응답 처리
-			if (data?.status === 'success') {
-				const recordId = data.debug?.record_id || data.record_id;
-				const wasDuplicate = data.debug?.was_duplicate || data.was_duplicate || false;
-
-				console.log(`✅ Edge Function completed successfully:`, {
-					edgeTime: `${edgeTime}ms`,
-					totalTime: `${totalTime}ms`,
-					recordId,
-					wasDuplicate,
-					timestamp: new Date().toISOString()
-				});
-
-				// 중복 처리된 경우와 새로 생성된 경우 구분
-				return {
-					success: true,
-					fromCache: wasDuplicate,
-					recordId
-				};
-			}
-
-			// 예상치 못한 응답 형태
-			console.error(`❌ Unexpected Edge Function response:`, data);
-			return fail(500, {
-				message: '예상치 못한 응답 형태입니다.',
-				type: 'unexpected_response'
-			});
-		} catch (fetchError) {
-			const edgeTime = Date.now() - edgeStartTime;
-			const totalTime = Date.now() - requestStartTime;
-
-			console.error(`❌ Edge Function call failed:`, {
-				error: fetchError.message,
-				edgeTime: `${edgeTime}ms`,
-				totalTime: `${totalTime}ms`,
-				timestamp: new Date().toISOString()
-			});
-
-			return fail(500, {
-				message: 'AI 서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.',
-				type: 'network_error'
-			});
-		}
-	}
+                        return {
+                                success: true,
+                                fromCache: false,
+                                recordId
+                        };
+                } catch (fetchError) {
+                        console.error('Failed to create summary:', fetchError);
+                        return fail(500, {
+                                message: '요약을 생성하는 중 문제가 발생했습니다.',
+                                type: 'database_error'
+                        });
+                }
+        }
 };

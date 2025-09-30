@@ -1,9 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 
-/** @type {import('../../../../../.svelte-kit/types/src/routes').Actions} */
 export const actions = {
-	default: async ({ locals: { supabase } }) => {
-		await supabase.auth.signOut();
-		redirect(303, '/auth/sign-out/done');
-	}
+        default: async ({ locals }) => {
+                const session = locals.session ?? (await locals.auth.validate());
+                if (session) {
+                        await locals.lucia.invalidateSession(session.sessionId);
+                        locals.auth.setSession(null);
+                }
+
+                throw redirect(303, '/');
+        }
 };

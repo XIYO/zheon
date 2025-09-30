@@ -1,91 +1,75 @@
 import { paraglideMiddleware } from '$lib/paraglide/server';
-import { createServerClient } from '@supabase/ssr';
-import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-
-import { env } from '$env/dynamic/public';
+import { dev } from '$app/environment';
+import { createAuth, OAUTH_STATE_COOKIE } from '$lib/server/auth/lucia';
 
 const handleParaglide = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
+        paraglideMiddleware(event.request, ({ request, locale }) => {
+                event.request = request;
 
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
-		});
-	});
+                return resolve(event, {
+                        transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
+                });
+        });
 
-const supabase = async ({ event, resolve }) => {
-	/**
-	 * Creates a Supabase client specific to this server request.
-	 *
-	 * The Supabase client gets the Auth token from the request cookies.
-	 */
-	event.locals.supabase = createServerClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
-		cookies: {
-			getAll: () => event.cookies.getAll(),
-			/**
-			 * SvelteKit's cookies API requires `path` to be explicitly set in
-			 * the cookie options. Setting `path` to `/` replicates previous/
-			 * standard behavior.
-			 */
-			setAll: (cookiesToSet) => {
-				cookiesToSet.forEach(({ name, value, options }) => {
-					event.cookies.set(name, value, { ...options, path: '/' });
-				});
-			}
-		}
-	});
+const createOAuthStateManager = (event) => {
+        const cookieAttributes = {
+                path: '/',
+                httpOnly: true,
+                secure: !dev,
+                sameSite: 'lax',
+                maxAge: 60 * 10 // 10 minutes
+        };
 
-	/**
-	 * Unlike `supabase.auth.getSession()`, which returns the session _without_
-	 * validating the JWT, this function also calls `getUser()` to validate the
-	 * JWT before returning the session.
-	 */
-	event.locals.safeGetSession = async () => {
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-		if (!session) {
-			return { session: null, user: null };
-		}
+        return {
+                issue: ({ redirectTo = null } = {}) => {
+                        const state = crypto.randomUUID().replace(/-/g, '');
+                        const payload = JSON.stringify({ state, redirectTo });
+                        event.cookies.set(OAUTH_STATE_COOKIE, payload, cookieAttributes);
+                        return state;
+                },
+                validate: (state) => {
+                        const stored = event.cookies.get(OAUTH_STATE_COOKIE);
+                        event.cookies.delete(OAUTH_STATE_COOKIE, { path: '/' });
 
-		const {
-			data: { user },
-			error
-		} = await event.locals.supabase.auth.getUser();
-		if (error) {
-			// JWT validation has failed
-			return { session: null, user: null };
-		}
+                        if (!stored || !state) {
+                                return null;
+                        }
 
-		return { session, user };
-	};
+                        try {
+                                const parsed = JSON.parse(stored);
+                                if (parsed?.state !== state) {
+                                        return null;
+                                }
 
-	return resolve(event, {
-		filterSerializedResponseHeaders(name) {
-			/**
-			 * Supabase libraries use the `content-range` and `x-supabase-api-version`
-			 * headers, so we need to tell SvelteKit to pass it through.
-			 */
-			return name === 'content-range' || name === 'x-supabase-api-version';
-		}
-	});
+                                return {
+                                        redirectTo: parsed?.redirectTo ?? null
+                                };
+                        } catch (error) {
+                                console.error('OAuth state 파싱 실패:', error);
+                                return null;
+                        }
+                }
+        };
 };
 
-const authGuard = async ({ event, resolve }) => {
-	const { session, user } = await event.locals.safeGetSession();
-	event.locals.session = session;
-	event.locals.user = user;
+const luciaHandle = async ({ event, resolve }) => {
+        const { auth, db, getGoogleProvider } = await createAuth(event.platform?.env ?? null);
+        const authRequest = auth.handleRequest(event);
+        const stateManager = createOAuthStateManager(event);
 
-	if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-		redirect(303, '/auth');
-	}
+        event.locals.auth = authRequest;
+        event.locals.lucia = auth;
+        event.locals.db = db;
+        event.locals.getGoogleProvider = getGoogleProvider;
+        event.locals.issueOAuthState = stateManager.issue;
+        event.locals.validateOAuthState = stateManager.validate;
 
-	if (event.locals.session && event.url.pathname === '/auth') {
-		redirect(303, '/private');
-	}
+        const session = await authRequest.validate();
+        event.locals.session = session;
+        event.locals.user = session?.user ?? null;
 
-	return resolve(event);
+        return resolve(event);
 };
 
-export const handle = sequence(handleParaglide, supabase, authGuard);
+export const handle = sequence(handleParaglide, luciaHandle);

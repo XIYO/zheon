@@ -1,17 +1,19 @@
-export const load = async ({ parent }) => {
-	const { supabase } = await parent();
+export const load = async ({ fetch, depends }) => {
+        depends('summaries:list');
 
-	// 모든 사용자가 summary 테이블 조회 가능 (RLS에서 anon 허용 필요)
-	const { data: summaries, error } = await supabase
-		.from('summary')
-		.select('id, url, title, summary, lang, last_modified_at')
-		.order('last_modified_at', { ascending: false });
+        try {
+                const response = await fetch('/api/summaries');
+                if (!response.ok) {
+                        console.error('요약 목록을 불러오지 못했습니다:', await response.text());
+                        return { summaries: [] };
+                }
 
-	if (error) {
-		console.error('Load error:', error);
-	}
-
-	return {
-		summaries: summaries || []
-	};
+                const payload = await response.json();
+                return {
+                        summaries: payload.summaries ?? []
+                };
+        } catch (error) {
+                console.error('요약 목록을 불러오지 못했습니다:', error);
+                return { summaries: [] };
+        }
 };

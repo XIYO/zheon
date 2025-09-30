@@ -1,9 +1,0 @@
-<!-- 콜백 처리 중 로딩 페이지 -->
-<div class="flex min-h-screen items-center justify-center preset-tonal-surface">
-	<div
-		class="card preset-tonal-surface max-w-sm w-full p-6 rounded-2xl shadow-xl text-center space-y-3">
-		<div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary-700-300">
-		</div>
-		<p class="text-surface-700-300">로그인 처리 중...</p>
-	</div>
-</div>

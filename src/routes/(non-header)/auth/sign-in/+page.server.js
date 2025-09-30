@@ -1,77 +1,75 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { LuciaError } from 'lucia';
 import { signInSchema } from '$lib/schemas/auth.js';
 
+const oauthRedirect = (url, defaultRedirect) => {
+	const redirectTo = url.searchParams.get('redirectTo') ?? defaultRedirect;
+	return {
+		redirectTo,
+		callbackUrl: new URL('/auth/sign-in/google/callback', url.origin).toString()
+	};
+};
+
 export const actions = {
-	// 구글 OAuth 로그인
-	google: async ({ url, locals: { supabase } }) => {
-		const baseUrl = url.origin;
-		const redirectTo = url.searchParams.get('redirectTo') || '/';
-		const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+	google: async ({ locals, url }) => {
+		const { redirectTo, callbackUrl } = oauthRedirect(url, '/');
+		const googleAuth = locals.getGoogleProvider(callbackUrl);
+		const state = locals.issueOAuthState({ redirectTo });
+		const [authorizationUrl] = await googleAuth.getAuthorizationUrl();
 
-		const { data, error } = await supabase.auth.signInWithOAuth({
-			provider: 'google',
-			options: {
-				redirectTo: callbackUrl
-			}
-		});
-
-		if (error) {
-			return fail(400, {
-				message: error.message
-			});
-		}
-
-		if (data?.url) {
-			throw redirect(303, data.url);
-		} else {
-			return fail(400, {
-				message: 'OAuth 인증 URL을 가져올 수 없습니다.'
-			});
-		}
+		authorizationUrl.searchParams.set('state', state);
+		throw redirect(303, authorizationUrl.toString());
 	},
-	
-	// 이메일/패스워드 로그인
-	email: async ({ request, url, locals: { supabase } }) => {
+	email: async ({ locals, request, url }) => {
 		const formData = await request.formData();
 		const email = formData.get('email');
 		const password = formData.get('password');
-		
-		// Zod 유효성 검사
-		const validation = signInSchema.safeParse({
-			email,
-			password
-		});
-		
+
+		const validation = signInSchema.safeParse({ email, password });
 		if (!validation.success) {
 			const errors = validation.error.format();
 			return fail(400, {
-				message: errors.email?._errors[0] || errors.password?._errors[0] || '입력 정보를 확인해주세요.',
+				message:
+					errors.email?._errors?.[0] ||
+					errors.password?._errors?.[0] ||
+					'이메일과 비밀번호를 확인해주세요.',
 				errors: {
-					email: errors.email?._errors,
-					password: errors.password?._errors
+					email: errors.email?._errors ?? [],
+					password: errors.password?._errors ?? []
 				}
 			});
 		}
-		
-		const redirectTo = url.searchParams.get('redirectTo') || '/';
-		
-		// Supabase 이메일/패스워드 로그인
-		const { data, error } = await supabase.auth.signInWithPassword({
-			email: validation.data.email,
-			password: validation.data.password
-		});
-		
-		if (error) {
-			return fail(400, {
-				message: error.message
+
+		try {
+			const key = await locals.lucia.useKey(
+				'email',
+				validation.data.email,
+				validation.data.password
+			);
+			const session = await locals.lucia.createSession({
+				userId: key.userId,
+				attributes: {}
 			});
-		}
-		
-		if (data?.user) {
-			redirect(303, redirectTo);
-		} else {
-			return fail(400, {
-				message: '로그인에 실패했습니다.'
+			locals.auth.setSession(session);
+
+			const redirectTo = url.searchParams.get('redirectTo') ?? '/';
+			throw redirect(303, redirectTo);
+		} catch (error) {
+			if (error && typeof error === 'object' && 'location' in error && 'status' in error) {
+				throw error;
+			}
+
+			if (error instanceof LuciaError) {
+				if (error.message === 'AUTH_INVALID_KEY_ID' || error.message === 'AUTH_INVALID_PASSWORD') {
+					return fail(400, {
+						message: '이메일 또는 비밀번호가 올바르지 않습니다.'
+					});
+				}
+			}
+
+			console.error('Email 로그인 실패:', error);
+			return fail(500, {
+				message: '로그인 중 문제가 발생했습니다.'
 			});
 		}
 	}
