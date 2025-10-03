@@ -1,16 +1,8 @@
 <!-- 🙈 Header component with Skeleton UI design -->
 <script>
 	import { page } from '$app/state';
-	import Dialog from '$lib/components/Dialog.svelte';
-	import SignInForm from '$lib/components/SignInForm.svelte';
-	import SignOutForm from '$lib/components/SignOutForm.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { AppBar } from '@skeletonlabs/skeleton-svelte';
-
-	/** @type {import('$lib/components/Dialog.svelte').default} */
-	let signInDialog;
-	/** @type {import('$lib/components/Dialog.svelte').default} */
-	let signOutDialog;
 
 	/**
 	 * Check if current page is home/root
@@ -24,38 +16,6 @@
 		if (!isRootPage) {
 			history.back();
 		}
-	};
-
-	/**
-	 * Handles the sign-in dialog opening.
-	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
-	 */
-	const handleSignIn = (e) => {
-		e?.preventDefault();
-		signInDialog.open();
-	};
-
-	/**
-	 * Handles the sign-out dialog opening.
-	 * @param {MouseEvent} [e] - The mouse event that triggered the function.
-	 */
-	const handleSignOut = (e) => {
-		e?.preventDefault();
-		signOutDialog.open();
-	};
-
-	/**
-	 * Handles the sign-in form submission success.
-	 */
-	const onsuccessSignIn = () => {
-		signInDialog.close();
-	};
-
-	/**
-	 * Handles the sign-out form submission success.
-	 */
-	const onSubmitSignOut = () => {
-		signOutDialog.close();
 	};
 </script>
 
@@ -76,36 +36,43 @@
 	{/snippet}
 
 	{#snippet trail()}
+		<!--
+		═══════════════════════════════════════════════════════════════
+		인증 기능 (Authentication)
+		═══════════════════════════════════════════════════════════════
+
+		현재 인증 기능은 숨김 처리되어 있습니다.
+		필요시 아래 주석을 해제하여 로그인/로그아웃 링크를 활성화할 수 있습니다.
+
+		로그인/회원가입 페이지: /auth/sign-in, /auth/sign-up
+		로그아웃 페이지: /auth/sign-out
+
 		{#if !page.data.user}
 			<nav>
-				<button onclick={handleSignIn} class="btn preset-filled btn-sm" type="button">
+				<a href="/auth/sign-in" class="btn preset-filled btn-sm">
 					<span>{m.header_start_login()}</span>
-				</button>
+				</a>
 			</nav>
 		{:else}
 			<div class="flex items-center space-x-4">
 				<div class="hidden sm:flex sm:items-center sm:space-x-3">
 					<div>
-						<span class="preset-typo-caption font-semibold">{m.header_welcome({ name: page.data.user.user_metadata.name })}</span>
-						<span class="preset-typo-caption ml-2">{m.header_welcome_message()}</span>
+						<span class="preset-typo-caption font-semibold">
+							{m.header_welcome({ name: page.data.user.user_metadata.name })}
+						</span>
+						<span class="preset-typo-caption ml-2">
+							{m.header_welcome_message()}
+						</span>
 					</div>
 				</div>
-				<button onclick={handleSignOut} class="btn preset-ghost btn-base" type="button">
+				<a href="/auth/sign-out" class="btn preset-ghost btn-base">
 					{m.header_logout()}
-				</button>
+				</a>
 			</div>
 		{/if}
+		═══════════════════════════════════════════════════════════════
+		-->
 	{/snippet}
 
 	<span class="preset-typo-subtitle">{page.data?.meta?.title}</span>
 </AppBar>
-
-<!-- ─────────────────────────── SIGN‑IN DIALOG ─────────────────────────── -->
-<Dialog bind:this={signInDialog} ariaLabel={m.auth_close()}>
-	<SignInForm onsuccess={onsuccessSignIn} />
-</Dialog>
-
-<!-- ─────────────────────────── SIGN‑OUT DIALOG ─────────────────────────── -->
-<Dialog bind:this={signOutDialog} ariaLabel={m.auth_close()}>
-	<SignOutForm onsuccess={onSubmitSignOut} />
-</Dialog>
