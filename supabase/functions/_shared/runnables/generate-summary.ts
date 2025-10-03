@@ -47,7 +47,7 @@ export const generateSummary = RunnableLambda.from(
 
 			// Gemini 모델 설정 - 구조화된 출력 사용
 			const model = new ChatGoogleGenerativeAI({
-				modelName: 'gemini-1.5-flash', // 무료 티어에서 사용 가능한 모델
+				modelName: 'gemini-2.5-flash-lite-preview-09-2025', // 무료 티어에서 사용 가능한 최신 모델
 				apiKey: geminiApiKey,
 				temperature: 0.4, // 약간 높여서 창의적 분석 허용
 				maxOutputTokens: 8192 // Flash 모델의 최대 출력 토큰
@@ -147,7 +147,7 @@ export const generateSummary = RunnableLambda.from(
 				title: title,
 				summary: summary,
 				insights: insights || '',
-				summary_method: 'gemini-1.5-flash-structured'
+				summary_method: 'gemini-2.5-flash-lite-structured'
 			};
 		} catch (error) {
 			console.error(`[Summary] ❌ Error generating summary:`, error);
