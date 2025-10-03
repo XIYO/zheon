@@ -13,6 +13,9 @@ export default defineConfig({
 			outdir: './src/lib/paraglide'
 		})
 	],
+	server: {
+		port: 5170
+	},
 	test: {
 		projects: [
 			{
