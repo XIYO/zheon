@@ -10,14 +10,6 @@ export const actions = {
 			referer: request.headers.get('referer')
 		});
 
-		// 인증 체크 - 요약 요청은 로그인한 사용자만 가능
-		const { data: { user } } = await supabase.auth.getUser();
-		
-		if (!user) {
-			// 로그인 페이지로 리디렉트 (현재 페이지를 redirectTo 파라미터로 전달)
-			redirect(303, `/auth/sign-in?redirectTo=${encodeURIComponent(url.pathname)}`);
-		}
-
 		// 1. 폼 데이터 검증
 		const formData = await request.formData();
 		const youtubeUrl = formData.get('youtubeUrl')?.toString().trim();

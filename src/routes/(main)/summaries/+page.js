@@ -7,11 +7,12 @@ export const load = async ({ parent }) => {
 		error(401, 'Unauthorized');
 	}
 
-	// 사용자의 모든 요약 가져오기 (제한 없음)
+	// 사용자의 최근 50개 요약 가져오기
 	const { data: summaries, error: fetchError } = await supabase
 		.from('summary')
 		.select('id, url, title, summary, created_at')
-		.order('created_at', { ascending: false });
+		.order('created_at', { ascending: false })
+		.limit(50);
 
 	if (fetchError) {
 		console.error('Error fetching summaries:', fetchError);

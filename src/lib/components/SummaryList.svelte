@@ -59,22 +59,27 @@
 				</a>
 			{/if}
 		</div>
-		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+		<div class="flex flex-col gap-4 max-w-6xl mx-auto">
 			{#each summaries as summary (summary.id)}
-				<article class="card-modern rounded-2xl p-6 hover-lift">
-					<a href="/summaries/{summary.id}/" class="space-y-3">
-						<!-- 썸네일 -->
-						<img
-							src={extractThumbnail(summary.url)}
-							alt="썸네일"
-							class="card aspect-video w-full object-cover" />
-						
-						<h3 class="text-xl font-semibold line-clamp-2">
-							{summary.title}
-						</h3>
-						<p class="text-surface-600 dark:text-surface-400 line-clamp-3">
-							{summary.summary}
-						</p>
+				<article class="card-modern rounded-xl hover-lift overflow-hidden">
+					<a href="/summaries/{summary.id}/" class="flex">
+						<!-- 썸네일 (25%) -->
+						<div class="w-1/4 flex-shrink-0">
+							<img
+								src={extractThumbnail(summary.url)}
+								alt="썸네일"
+								class="w-full h-full object-cover" />
+						</div>
+
+						<!-- 내용 (75%) -->
+						<div class="w-3/4 p-6 flex flex-col justify-center">
+							<h3 class="text-2xl font-bold mb-3 line-clamp-2">
+								{summary.title}
+							</h3>
+							<p class="text-surface-600 dark:text-surface-400 text-base line-clamp-3 leading-relaxed">
+								{summary.summary}
+							</p>
+						</div>
 					</a>
 				</article>
 			{/each}
