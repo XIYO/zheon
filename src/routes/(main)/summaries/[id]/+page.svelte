@@ -43,8 +43,10 @@
 		<img
 			src={extractThumbnail(summary.url).replace('hqdefault', 'maxresdefault')}
 			alt={summary.title}
+			width="1280"
+			height="720"
 			class="w-full rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
-			style="view-transition-name: summary-image-{summary.id}" />
+			style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
 	</a>
 
 	<!-- 제목과 날짜 -->

@@ -70,8 +70,10 @@
 							<img
 								src={extractThumbnail(summary.url)}
 								alt="썸네일"
+								width="480"
+								height="360"
 								class="w-full h-full object-cover"
-								style="view-transition-name: summary-image-{summary.id}" />
+								style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 4/3" />
 						</div>
 
 						<!-- 내용 (75%) -->
