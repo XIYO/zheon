@@ -45,7 +45,7 @@
 			alt={summary.title}
 			width="1280"
 			height="720"
-			class="w-full rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+			class="w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-700 opacity-100 starting:opacity-0"
 			style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
 	</a>
 
