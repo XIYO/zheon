@@ -1,17 +1,13 @@
 import { error } from '@sveltejs/kit';
 
 export const load = async ({ parent }) => {
-	const { supabase, session } = await parent();
+	const { supabase } = await parent();
 
-	if (!session) {
-		error(401, 'Unauthorized');
-	}
-
-	// 사용자의 최근 50개 요약 가져오기
+	// 최근 50개 요약 가져오기
 	const { data: summaries, error: fetchError } = await supabase
 		.from('summary')
-		.select('id, url, title, summary, created_at')
-		.order('created_at', { ascending: false })
+		.select('id, url, title, summary, lang, last_modified_at')
+		.order('last_modified_at', { ascending: false })
 		.limit(50);
 
 	if (fetchError) {
