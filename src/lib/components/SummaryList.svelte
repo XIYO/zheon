@@ -33,7 +33,7 @@
 	/** @param {string} url */
 	function extractThumbnail(url) {
 		const id = extractYoutubeId(url);
-		return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+		return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : '';
 	}
 </script>
 
@@ -70,10 +70,10 @@
 							<img
 								src={extractThumbnail(summary.url)}
 								alt="썸네일"
-								width="480"
-								height="360"
+								width="1280"
+								height="720"
 								class="w-full h-full object-cover transition-opacity duration-700 opacity-100 starting:opacity-0"
-								style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 4/3" />
+								style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
 						</div>
 
 						<!-- 내용 (75%) -->

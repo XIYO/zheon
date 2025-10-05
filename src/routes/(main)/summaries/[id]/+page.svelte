@@ -23,7 +23,7 @@
 
 	function extractThumbnail(url) {
 		const id = extractYoutubeId(url);
-		return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+		return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : '';
 	}
 
 	function formatDate(dateString) {
@@ -41,7 +41,7 @@
 	<!-- 썸네일 -->
 	<a href={summary.url} target="_blank" rel="noopener noreferrer">
 		<img
-			src={extractThumbnail(summary.url).replace('hqdefault', 'maxresdefault')}
+			src={extractThumbnail(summary.url)}
 			alt={summary.title}
 			width="1280"
 			height="720"
