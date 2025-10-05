@@ -72,6 +72,7 @@
 								alt="썸네일"
 								width="1280"
 								height="720"
+								loading="lazy"
 								class="w-full h-full object-cover transition-opacity duration-700 opacity-100 starting:opacity-0"
 								style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
 						</div>
