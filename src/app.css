@@ -12,9 +12,12 @@
 @layer base {
 	:root {
 		/* Tailwind CSS 4 폰트 시스템 */
-		--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+		--font-sans:
+			'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+			'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic',
+			'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
 	}
-	
+
 	/* 기본 폰트 적용 */
 	body {
 		font-family: var(--font-sans);
@@ -29,44 +32,44 @@
 	.card-modern {
 		@apply backdrop-blur-xl bg-white/80 dark:bg-surface-900/80 shadow-xl shadow-surface-500/10 dark:shadow-black/20 hover:shadow-2xl hover:shadow-surface-500/20 dark:hover:shadow-black/30 transition-all duration-300 border border-surface-200/50 dark:border-surface-800/50;
 	}
-	
+
 	/* 프리미엄 버튼 스타일 */
 	.btn-premium {
 		@apply relative overflow-hidden bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5;
 	}
-	
+
 	.btn-premium::before {
 		content: '';
 		@apply absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full;
 		animation: shimmer 3s infinite;
 	}
-	
+
 	@keyframes shimmer {
 		100% {
 			transform: translateX(200%) skewX(-12deg);
 		}
 	}
-	
+
 	/* 글래스모피즘 효과 */
 	.glass-effect {
 		@apply backdrop-blur-md bg-white/30 dark:bg-surface-900/30 border border-white/20 dark:border-surface-700/20 shadow-2xl;
 	}
-	
+
 	/* 그라데이션 텍스트 */
 	.gradient-text {
 		@apply bg-gradient-to-r from-primary-600 via-secondary-600 to-tertiary-600 dark:from-primary-400 dark:via-secondary-400 dark:to-tertiary-400 bg-clip-text text-transparent font-bold;
 	}
-	
+
 	/* 호버 카드 효과 */
 	.hover-lift {
 		@apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl;
 	}
-	
+
 	/* 네온 글로우 효과 */
 	.neon-glow {
 		@apply shadow-[0_0_30px_rgba(var(--color-primary-500),0.5)] hover:shadow-[0_0_40px_rgba(var(--color-primary-500),0.7)];
 	}
-	
+
 	/* 부드러운 애니메이션 */
 	* {
 		@apply transition-colors duration-200;

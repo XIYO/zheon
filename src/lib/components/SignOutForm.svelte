@@ -21,12 +21,11 @@
 </script>
 
 <!-- Sign-out Form as root element -->
-<form 
-	action="/auth/sign-out/" 
-	method="POST" 
-	use:enhance={handleEnhance} 
+<form
+	action="/auth/sign-out/"
+	method="POST"
+	use:enhance={handleEnhance}
 	class="card preset-filled-surface-500 flex flex-col">
-	
 	<!-- Header Section -->
 	<header class="p-6 text-center">
 		<h2 class="preset-typo-headline text-error-400">{m.auth_sign_out_title()}</h2>
@@ -40,8 +39,15 @@
 		<!-- Warning Message -->
 		<div class="preset-tonal-warning-500 p-4 rounded-lg">
 			<div class="flex items-start gap-3">
-				<svg class="h-5 w-5 text-warning-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+				<svg
+					class="h-5 w-5 text-warning-400 mt-0.5"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
 						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 				</svg>
 				<div>
@@ -66,18 +72,22 @@
 			onclick={() => document.querySelector('dialog[open]')?.close()}
 			class="btn preset-ghost-surface-500 btn-base flex-1 preset-typo-button">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
 					d="M6 18L18 6M6 6l12 12" />
 			</svg>
 			<span>{m.auth_sign_out_cancel()}</span>
 		</button>
 
 		<!-- Sign Out Button -->
-		<button
-			type="submit"
-			class="btn preset-filled-error-500 btn-base flex-1 preset-typo-button">
+		<button type="submit" class="btn preset-filled-error-500 btn-base flex-1 preset-typo-button">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
 					d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
 			</svg>
 			<span>{m.auth_sign_out_logout_button()}</span>

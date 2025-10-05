@@ -29,44 +29,45 @@ export const actions = {
 			});
 		}
 	},
-	
+
 	// 이메일/패스워드 로그인
 	email: async ({ request, url, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = formData.get('email');
 		const password = formData.get('password');
-		
+
 		// Zod 유효성 검사
 		const validation = signInSchema.safeParse({
 			email,
 			password
 		});
-		
+
 		if (!validation.success) {
 			const errors = validation.error.format();
 			return fail(400, {
-				message: errors.email?._errors[0] || errors.password?._errors[0] || '입력 정보를 확인해주세요.',
+				message:
+					errors.email?._errors[0] || errors.password?._errors[0] || '입력 정보를 확인해주세요.',
 				errors: {
 					email: errors.email?._errors,
 					password: errors.password?._errors
 				}
 			});
 		}
-		
+
 		const redirectTo = url.searchParams.get('redirectTo') || '/';
-		
+
 		// Supabase 이메일/패스워드 로그인
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email: validation.data.email,
 			password: validation.data.password
 		});
-		
+
 		if (error) {
 			return fail(400, {
 				message: error.message
 			});
 		}
-		
+
 		if (data?.user) {
 			redirect(303, redirectTo);
 		} else {

@@ -134,10 +134,12 @@ export const generateSummary = RunnableLambda.from(
 
 			// withStructuredOutput 사용시 응답이 이미 구조화된 객체로 반환됨
 			const { title, summary, insights } = response;
-			
+
 			// 필수 필드 검증
 			if (!title || !summary) {
-				throw new Error(`Missing required fields in AI response. Title: ${!!title}, Summary: ${!!summary}`);
+				throw new Error(
+					`Missing required fields in AI response. Title: ${!!title}, Summary: ${!!summary}`
+				);
 			}
 
 			console.log(`[Summary] ✅ Successfully generated summary with title: ${title}`);

@@ -14,7 +14,9 @@
 				<h4 class="text-sm font-semibold text-white mb-3 uppercase tracking-wider">빠른 링크</h4>
 				<ul class="space-y-2">
 					<li>
-						<a href="/summaries" class="text-sm hover:text-white transition-colors">전체 인사이트</a>
+						<a href="/summaries" class="text-sm hover:text-white transition-colors">
+							전체 인사이트
+						</a>
 					</li>
 				</ul>
 			</div>

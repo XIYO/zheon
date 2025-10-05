@@ -1,6 +1,6 @@
 <script>
 	import SummaryList from '$lib/components/SummaryList.svelte';
-	
+
 	let { data } = $props();
 </script>
 

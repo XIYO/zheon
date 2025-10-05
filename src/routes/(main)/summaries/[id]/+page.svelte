@@ -61,10 +61,11 @@
 			{summary.summary}
 		</p>
 	</div>
-	
+
 	<!-- 핵심 인사이트 (content 필드에 인사이트가 있는 경우) -->
 	{#if summary.content && summary.content !== summary.summary}
-		<div class="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6">
+		<div
+			class="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6">
 			<h2 class="text-xl font-semibold mb-4">핵심 인사이트</h2>
 			<div class="text-surface-700 dark:text-surface-300 leading-relaxed whitespace-pre-wrap">
 				{summary.content}

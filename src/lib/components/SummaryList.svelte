@@ -7,9 +7,7 @@
 
 	// limit에 따라 표시할 요약 개수 결정
 	let summaries = $derived(
-		limit === 0 
-			? page.data.summaries 
-			: page.data.summaries?.slice(0, limit)
+		limit === 0 ? page.data.summaries : page.data.summaries?.slice(0, limit)
 	);
 
 	/** @param {string} url */
@@ -42,19 +40,23 @@
 <section aria-labelledby="summaries-title" class="space-y-8">
 	{#if summaries?.length === 0}
 		<div class="text-center py-12">
-			<p class="text-xl font-semibold text-surface-600 dark:text-surface-400">아직 정리된 인사이트가 없습니다</p>
+			<p class="text-xl font-semibold text-surface-600 dark:text-surface-400">
+				아직 정리된 인사이트가 없습니다
+			</p>
 			<p class="mt-2 text-surface-500">첫 번째 유튜브 영상을 입력해 보세요!</p>
 		</div>
 	{:else}
 		<div class="flex items-center justify-between mb-6 max-w-6xl mx-auto">
-			<h2 id="summaries-title" class="text-3xl font-bold">
-				인사이트 목록
-			</h2>
+			<h2 id="summaries-title" class="text-3xl font-bold">인사이트 목록</h2>
 			{#if limit !== 0}
 				<a href="/summaries" class="btn btn-sm variant-ghost-primary">
 					전체 보기
 					<svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 5l7 7-7 7" />
 					</svg>
 				</a>
 			{/if}
@@ -76,7 +78,8 @@
 							<h3 class="text-2xl font-bold mb-3 line-clamp-2">
 								{summary.title}
 							</h3>
-							<p class="text-surface-600 dark:text-surface-400 text-base line-clamp-3 leading-relaxed">
+							<p
+								class="text-surface-600 dark:text-surface-400 text-base line-clamp-3 leading-relaxed">
 								{summary.summary}
 							</p>
 						</div>
