@@ -70,7 +70,8 @@
 							<img
 								src={extractThumbnail(summary.url)}
 								alt="썸네일"
-								class="w-full h-full object-cover" />
+								class="w-full h-full object-cover"
+								style="view-transition-name: summary-image-{summary.id}" />
 						</div>
 
 						<!-- 내용 (75%) -->

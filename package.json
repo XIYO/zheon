@@ -4,12 +4,10 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev 2>&1 | tee dev.log",
-		"dev:clean": "rm -f dev.log && vite dev 2>&1 | tee dev.log",
-		"dev:no-log": "vite dev",
+		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
 		"format": "prettier --write .",
@@ -26,7 +24,9 @@
 		"edge:secrets:list": "supabase secrets list --project-ref iefgdhwmgljjacafqomd",
 		"edge:format": "deno fmt supabase/functions/",
 		"edge:lint": "deno lint supabase/functions/",
-		"edge:check": "cd supabase/functions && for dir in */; do [ -f \"$dir/index.ts\" ] && deno check \"$dir/index.ts\"; done"
+		"edge:check": "cd supabase/functions && for dir in */; do [ -f \"$dir/index.ts\" ] && deno check \"$dir/index.ts\"; done",
+		"edge:debug": "supabase functions serve --inspect-mode --project-ref iefgdhwmgljjacafqomd",
+		"edge:debug:brk": "supabase functions serve --inspect-mode brk --project-ref iefgdhwmgljjacafqomd"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.3.2",
