@@ -13,17 +13,17 @@
 		// URL 검증
 		const url = formData.get('youtubeUrl');
 		const validation = urlSchema.safeParse(url);
-		
+
 		if (!validation.success) {
 			errorMessage = validation.error.issues[0].message;
 			cancel();
 			return;
 		}
-		
+
 		// 검증 성공 시 에러 메시지 초기화 및 로딩 시작
 		errorMessage = '';
 		loading = true;
-		
+
 		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
 				// 로그인이 필요한 경우 리다이렉트 처리됨
@@ -48,14 +48,11 @@
 <div class="card-modern rounded-2xl w-full mx-auto overflow-hidden">
 	{#if page.form?.message}
 		{@const isRateLimit = page.form?.type === 'rate_limit'}
-		<div
-			in:slide
-			class="mb-6 card {isRateLimit
-				? 'preset-tonal-warning'
-				: 'preset-tonal-error'}">
+		<div in:slide class="mb-6 card {isRateLimit ? 'preset-tonal-warning' : 'preset-tonal-error'}">
 			<div class="flex items-start gap-4 p-6">
 				<div class="flex-shrink-0">
-					<span class="badge {isRateLimit ? 'preset-filled-warning-500' : 'preset-filled-error-500'}">
+					<span
+						class="badge {isRateLimit ? 'preset-filled-warning-500' : 'preset-filled-error-500'}">
 						{isRateLimit ? '⚠️' : '❌'}
 					</span>
 				</div>
@@ -88,15 +85,10 @@
 						{errorMessage}
 					</p>
 				{/if}
-				<p class="text-xs text-surface-600 dark:text-surface-400">
-					지원 서비스: YouTube
-				</p>
+				<p class="text-xs text-surface-600 dark:text-surface-400">지원 서비스: YouTube</p>
 			</div>
 
-			<button
-				class="btn-premium rounded-xl w-full py-3"
-				type="submit"
-				disabled={loading}>
+			<button class="btn-premium rounded-xl w-full py-3" type="submit" disabled={loading}>
 				{#if loading}
 					영상 분석 중...
 				{:else}

@@ -6,21 +6,18 @@
 	import { dev } from '$app/environment';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
 	import * as m from '$lib/paraglide/messages';
-	
+
 	/** @type {{ onsuccess?: () => void }} */
 	const { onsuccess } = $props();
-	
+
 	const redirectToQuery = $derived.by(() => {
 		const redirectTo = page.url.searchParams.get('redirectTo');
-		return redirectTo
-			? `&redirectTo=${encodeURIComponent(redirectTo)}`
-			: '';
+		return redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : '';
 	});
 </script>
 
 <!-- Sign-in Form Container -->
 <div class="card preset-filled-surface-500 max-w-md w-full">
-	
 	<!-- Header Section -->
 	<header class="p-4 text-center">
 		<h2 class="preset-typo-headline">{m.auth_sign_in_title()}</h2>
@@ -47,9 +44,7 @@
 					};
 				}}>
 				<div>
-					<label for="email" class="preset-typo-label block mb-2">
-						이메일
-					</label>
+					<label for="email" class="preset-typo-label block mb-2">이메일</label>
 					<input
 						id="email"
 						name="email"
@@ -58,11 +53,9 @@
 						placeholder="your@email.com"
 						class="input preset-tonal-surface-500 w-full" />
 				</div>
-				
+
 				<div>
-					<label for="password" class="preset-typo-label block mb-2">
-						비밀번호
-					</label>
+					<label for="password" class="preset-typo-label block mb-2">비밀번호</label>
 					<input
 						id="password"
 						name="password"
@@ -71,21 +64,19 @@
 						placeholder="비밀번호를 입력하세요"
 						class="input preset-tonal-surface-500 w-full" />
 				</div>
-				
-				<button
-					type="submit"
-					class="btn preset-filled-primary-500 w-full preset-typo-button">
+
+				<button type="submit" class="btn preset-filled-primary-500 w-full preset-typo-button">
 					로그인
 				</button>
 			</form>
-			
+
 			<div class="flex items-center gap-4">
 				<hr class="flex-1 border-surface-400/30" />
 				<span class="preset-typo-caption text-surface-300">또는</span>
 				<hr class="flex-1 border-surface-400/30" />
 			</div>
 		{/if}
-		
+
 		<!-- Google Login Form -->
 		<form
 			action={`/auth/sign-in/?/google${redirectToQuery}`}
@@ -98,9 +89,7 @@
 					await update();
 				};
 			}}>
-			<button
-				type="submit"
-				class="btn preset-tonal-surface-500 w-full preset-typo-button">
+			<button type="submit" class="btn preset-tonal-surface-500 w-full preset-typo-button">
 				<GoogleIcon size={20} class="h-5 w-5" />
 				<span>{m.auth_sign_in_google_button()}</span>
 			</button>
@@ -113,16 +102,22 @@
 	<footer class="p-4 text-center space-y-3">
 		<p class="preset-typo-caption">
 			{m.auth_sign_in_terms_notice()}
-			<a href="/terms" class="text-primary-400 hover:text-primary-300 underline">{m.auth_sign_in_terms_link()}</a>
+			<a href="/terms" class="text-primary-400 hover:text-primary-300 underline">
+				{m.auth_sign_in_terms_link()}
+			</a>
 			{m.auth_sign_in_and()}
-			<a href="/privacy" class="text-primary-400 hover:text-primary-300 underline">{m.auth_sign_in_privacy_link()}</a>
+			<a href="/privacy" class="text-primary-400 hover:text-primary-300 underline">
+				{m.auth_sign_in_privacy_link()}
+			</a>
 			{m.auth_sign_in_terms_agree()}
 		</p>
-		
+
 		<div class="pt-2">
 			<p class="preset-typo-body">
 				아직 회원이 아니신가요?
-				<a href="/auth/sign-up" class="text-primary-400 hover:text-primary-300 underline font-medium">
+				<a
+					href="/auth/sign-up"
+					class="text-primary-400 hover:text-primary-300 underline font-medium">
 					회원가입
 				</a>
 			</p>
