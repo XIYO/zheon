@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { urlSchema } from '$lib/schemas/url.js';
 
 export const actions = {
-	default: async ({ request, locals: { supabase }, url }) => {
+	summarize: async ({ request, locals: { supabase }, url }) => {
 		const requestStartTime = Date.now();
 		console.log(`🚀 Main page request started:`, {
 			timestamp: new Date().toISOString(),

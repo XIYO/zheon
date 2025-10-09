@@ -11,7 +11,8 @@ export const actions = {
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: callbackUrl
+				redirectTo: callbackUrl,
+				scopes: 'https://www.googleapis.com/auth/youtube.readonly'
 			}
 		});
 

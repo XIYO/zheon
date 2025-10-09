@@ -72,7 +72,7 @@
 	{/if}
 
 	<div class="p-6">
-		<form method="POST" use:enhance={handleEnhance} class="space-y-4">
+		<form method="POST" action="/?/summarize" use:enhance={handleEnhance} class="space-y-4">
 			<div class="space-y-2">
 				<input
 					name="youtubeUrl"
