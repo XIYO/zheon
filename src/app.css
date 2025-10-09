@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+@variant md (width >= 768px);
+@variant lg (width >= 1024px);
+@variant xl (width >= 1280px);
+
 @import '@skeletonlabs/skeleton';
 @import '@skeletonlabs/skeleton/optional/presets';
 @import '@skeletonlabs/skeleton/themes/cerberus';
