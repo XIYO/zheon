@@ -354,7 +354,7 @@ Deno.serve(async (req) => {
 		console.log('[TTS] File uploaded successfully');
 
 		// DB 업데이트 - URL과 status를 'completed'로
-		const { error: updateError } = await supabase
+		const { error: dbUpdateError } = await supabase
 			.from('summary')
 			.update({
 				[audioUrlColumn]: fileName,
@@ -362,15 +362,15 @@ Deno.serve(async (req) => {
 			})
 			.eq('id', summaryId);
 
-		if (updateError) {
-			console.error('[TTS] DB update error:', updateError);
+		if (dbUpdateError) {
+			console.error('[TTS] DB update error:', dbUpdateError);
 			// 실패 시 status를 'failed'로 업데이트
 			await supabase
 				.from('summary')
 				.update({ [statusColumn]: 'failed' })
 				.eq('id', summaryId);
 
-			return new Response(JSON.stringify({ error: 'DB 업데이트 실패', details: updateError }), {
+			return new Response(JSON.stringify({ error: 'DB 업데이트 실패', details: dbUpdateError }), {
 				status: 500,
 				headers: {
 					'Content-Type': 'application/json',
