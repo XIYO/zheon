@@ -8,6 +8,7 @@ import { RunnableLambda } from 'npm:@langchain/core/runnables';
 import { ChatGoogleGenerativeAI } from 'npm:@langchain/google-genai@^0.1.0';
 import { ChatPromptTemplate } from 'npm:@langchain/core@0.3.66/prompts';
 import { z } from 'npm:zod@3.23.8';
+import { HarmBlockThreshold, HarmCategory } from 'npm:@google/generative-ai';
 
 export const generateSummary = RunnableLambda.from(
 	async (input: {
@@ -56,7 +57,26 @@ export const generateSummary = RunnableLambda.from(
 				modelName: 'gemini-2.5-flash-lite-preview-09-2025', // 무료 티어에서 사용 가능한 최신 모델
 				apiKey: geminiApiKey,
 				temperature: 0.3, // 정확성과 일관성을 위해 낮은 온도 사용
-				maxOutputTokens: 8192 // Flash 모델의 최대 출력 토큰
+				maxOutputTokens: 8192, // Flash 모델의 최대 출력 토큰
+				// Safety settings - 콘텐츠 필터 완전 해제 (Gemini 지원 4개 카테고리)
+				safetySettings: [
+					{
+						category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+						threshold: HarmBlockThreshold.BLOCK_NONE
+					},
+					{
+						category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+						threshold: HarmBlockThreshold.BLOCK_NONE
+					},
+					{
+						category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+						threshold: HarmBlockThreshold.BLOCK_NONE
+					},
+					{
+						category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+						threshold: HarmBlockThreshold.BLOCK_NONE
+					}
+				]
 			}).withStructuredOutput(outputSchema);
 
 			// 프롬프트 템플릿

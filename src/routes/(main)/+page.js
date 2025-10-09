@@ -4,7 +4,7 @@ export const load = async ({ parent }) => {
 	// 최근 50개 요약 조회
 	const { data: summaries, error } = await supabase
 		.from('summary')
-		.select('id, url, title, summary, lang, last_modified_at')
+		.select('id, url, title, summary, lang, last_modified_at, processing_status')
 		.order('last_modified_at', { ascending: false })
 		.limit(50);
 

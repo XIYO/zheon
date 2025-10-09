@@ -79,9 +79,27 @@
 
 						<!-- 내용 (75%) -->
 						<div class="w-3/4 p-6 flex flex-col justify-center">
-							<h3 class="text-2xl font-bold mb-3 line-clamp-2">
-								{summary.title}
-							</h3>
+							<div class="flex items-center gap-2 mb-3">
+								<h3 class="text-2xl font-bold line-clamp-2 flex-1">
+									{summary.title}
+								</h3>
+								{#if summary.processing_status === 'pending'}
+									<span
+										class="preset-filled-warning-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
+										대기 중
+									</span>
+								{:else if summary.processing_status === 'processing'}
+									<span
+										class="preset-filled-primary-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
+										정리 중...
+									</span>
+								{:else if summary.processing_status === 'failed'}
+									<span
+										class="preset-filled-error-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
+										실패
+									</span>
+								{/if}
+							</div>
 							<p
 								class="text-surface-600 dark:text-surface-400 text-base line-clamp-3 leading-relaxed">
 								{summary.summary}

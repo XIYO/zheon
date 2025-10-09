@@ -29,9 +29,9 @@ export const extractSubtitles = RunnableLambda.from(
 			throw new Error(result.error || 'Subtitle extraction failed');
 		}
 
-		// 다음 파이프라인으로 전달할 데이터
+		// 다음 파이프라인으로 전달할 데이터 (입력 데이터 보존)
 		return {
-			url: input.url,
+			...input, // record_id 등 입력 데이터 모두 보존
 			transcript: result.transcript!,
 			transcript_length: result.transcript?.length || 0,
 			cached: result.cached || false

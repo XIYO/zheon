@@ -3,10 +3,10 @@ import { error } from '@sveltejs/kit';
 export const load = async ({ parent }) => {
 	const { supabase } = await parent();
 
-	// 최근 50개 요약 가져오기
+	// 최근 50개 요약 가져오기 (processing_status 포함)
 	const { data: summaries, error: fetchError } = await supabase
 		.from('summary')
-		.select('id, url, title, summary, lang, last_modified_at')
+		.select('id, url, title, summary, lang, last_modified_at, processing_status')
 		.order('last_modified_at', { ascending: false })
 		.limit(50);
 
