@@ -13,8 +13,8 @@
 		id: summary.id,
 		summary_audio_status: summary.summary_audio_status,
 		summary_audio_url: summary.summary_audio_url,
-		content_audio_status: summary.content_audio_status,
-		content_audio_url: summary.content_audio_url
+		insights_audio_status: summary.insights_audio_status,
+		insights_audio_url: summary.insights_audio_url
 	});
 
 	// TTS 상태 관리
@@ -59,7 +59,7 @@
 	//     filter: `id=eq.${summary.id}`
 	//   }, (payload) => {
 	//     summary.summary_audio_status = payload.new.summary_audio_status;
-	//     summary.content_audio_status = payload.new.content_audio_status;
+	//     summary.insights_audio_status = payload.new.content_audio_status;
 	//   })
 	//   .subscribe();
 
@@ -105,8 +105,8 @@
 		);
 
 		if (koVoices.length === 0) {
-			console.warn('한국어 음성을 찾을 수 없습니다.');
-			return null;
+			console.log('[TTS] 한국어 음성을 찾을 수 없습니다. 영어 음성으로 대체합니다.');
+			return voices[0] || null; // 첫 번째 사용 가능한 음성 반환
 		}
 
 		// 우선순위: Google > Apple (Neural) > Microsoft
@@ -198,11 +198,11 @@
 	}
 
 	function readContent() {
-		speak(summary.content, 'content');
+		speak(summary.insights, 'insights');
 	}
 
 	function readAll() {
-		const allText = `AI 요약. ${summary.summary}. 핵심 인사이트. ${summary.content}`;
+		const allText = `AI 요약. ${summary.summary}. 핵심 인사이트. ${summary.insights}`;
 		speak(allText, 'all');
 	}
 
@@ -257,8 +257,8 @@
 			// 캐시가 없으면 실시간 스트리밍 생성
 			if (section === 'summary') {
 				text = summary.summary;
-			} else if (section === 'content') {
-				text = summary.content;
+			} else if (section === 'insights') {
+				text = summary.insights;
 			}
 
 			// 처리 시작 상태로 변경
@@ -401,25 +401,25 @@
 	</div>
 
 	<!-- 핵심 인사이트 (content 필드에 인사이트가 있는 경우) -->
-	{#if summary.content && summary.content !== summary.summary}
+	{#if summary.insights && summary.insights !== summary.summary}
 		<div
 			class="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6">
 			<div class="flex items-center justify-between mb-4">
 				<h2 class="text-xl font-semibold">핵심 인사이트</h2>
 				<div class="flex gap-2">
 					<button class="chip preset-tonal-secondary-500" onclick={readContent}>
-						{currentSection === 'content' ? '중지' : '읽기'}
+						{currentSection === 'insights' ? '중지' : '읽기'}
 					</button>
 					<button
-						class="chip {getGeminiButtonState('content').processing ? 'preset-tonal-surface-500' : 'preset-tonal-primary-500'}"
-						onclick={() => readGemini('content')}
-						disabled={getGeminiButtonState('content').disabled}>
-						{getGeminiButtonState('content').text}
+						class="chip {getGeminiButtonState('insights').processing ? 'preset-tonal-surface-500' : 'preset-tonal-primary-500'}"
+						onclick={() => readGemini('insights')}
+						disabled={getGeminiButtonState('insights').disabled}>
+						{getGeminiButtonState('insights').text}
 					</button>
 				</div>
 			</div>
 			<div class="text-surface-700 dark:text-surface-300 leading-relaxed whitespace-pre-wrap">
-				{summary.content}
+				{summary.insights}
 			</div>
 		</div>
 	{/if}

@@ -1,11 +1,11 @@
--- RPC 함수 파라미터 타입 수정: UUID -> BIGINT
-DROP FUNCTION IF EXISTS update_processing_status(UUID, TEXT);
+-- Fix update_processing_status function to use UUID instead of bigint
+DROP FUNCTION IF EXISTS update_processing_status(bigint, text);
 
 CREATE OR REPLACE FUNCTION update_processing_status(
-    p_summary_id BIGINT,
-    p_section TEXT
+  p_summary_id uuid,
+  p_section text
 )
-RETURNS BOOLEAN
+RETURNS boolean
 LANGUAGE plpgsql
 AS $$
 DECLARE
@@ -32,4 +32,5 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION update_processing_status IS 'Atomically update status to processing if available (BIGINT id)';
+-- Add comment
+COMMENT ON FUNCTION update_processing_status IS 'Atomically acquire lock for TTS audio processing by updating status to processing';
