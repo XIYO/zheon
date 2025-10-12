@@ -1,5 +1,18 @@
 import adapter from '@sveltejs/adapter-cloudflare';
 
-const config = { kit: { adapter: adapter() } };
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter(),
+		experimental: {
+			remoteFunctions: true
+		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
+	}
+};
 
 export default config;

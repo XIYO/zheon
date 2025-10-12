@@ -1,14 +1,68 @@
 <!-- 요약 결과 리스트 컴포넌트 -->
 <script>
 	import { page } from '$app/state';
+	import { getRecentSummaries } from '$lib/remote/summary.remote.js';
 
-	// limit prop - 0은 무제한, 기본값 3
-	let { limit = 3 } = $props();
+	// ⭐ Query 구독 (자동 반응형)
+	const query = getRecentSummaries();
+	let summaries = $derived(query.current || []);
 
-	// limit에 따라 표시할 요약 개수 결정
-	let summaries = $derived(
-		limit === 0 ? page.data.summaries : page.data.summaries?.slice(0, limit)
-	);
+	// ⭐ Realtime 구독 (pending → completed 전환)
+	$effect.pre(() => {
+		const { supabase } = page.data;
+
+		if (!supabase || !summaries) {
+			console.log('⏸️ Realtime skip: supabase or summaries not ready');
+			return;
+		}
+
+		const hasPending = summaries.some(
+			(s) => s.processing_status === 'pending' || s.processing_status === 'processing'
+		);
+
+		if (!hasPending) {
+			console.log('⏸️ Realtime skip: no pending summaries');
+			return;
+		}
+
+		console.log('📡 Starting Realtime subscription...', {
+			pendingCount: summaries.filter(s => s.processing_status === 'pending' || s.processing_status === 'processing').length
+		});
+
+		const channel = supabase
+			.channel('summary-updates')
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'summary'
+				},
+				async (payload) => {
+					console.log('📥 Realtime UPDATE received:', {
+						id: payload.new.id,
+						status: payload.new.processing_status,
+						title: payload.new.title
+					});
+
+					// Query 다시 fetch
+					await query.refresh();
+					console.log('✅ Query refreshed after Realtime update');
+				}
+			)
+			.subscribe((status, err) => {
+				if (status === 'SUBSCRIBED') {
+					console.log('✅ Realtime subscribed successfully');
+				} else if (err) {
+					console.error('❌ Realtime subscription error:', err);
+				}
+			});
+
+		return () => {
+			console.log('🔌 Unsubscribing from Realtime...');
+			channel.unsubscribe();
+		};
+	});
 
 	/** @param {string} url */
 	function extractYoutubeId(url) {
@@ -48,18 +102,6 @@
 	{:else}
 		<div class="flex items-center justify-between mb-6 max-w-6xl mx-auto">
 			<h2 id="summaries-title" class="text-3xl font-bold">인사이트 목록</h2>
-			{#if limit !== 0}
-				<a href="/summaries" class="btn btn-sm variant-ghost-primary">
-					전체 보기
-					<svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M9 5l7 7-7 7" />
-					</svg>
-				</a>
-			{/if}
 		</div>
 		<div class="flex flex-col gap-4 max-w-6xl mx-auto">
 			{#each summaries as summary (summary.id)}

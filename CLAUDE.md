@@ -11,7 +11,7 @@ Zheon is a YouTube video summarization application built with SvelteKit, Supabas
 ### Core Development
 
 ```bash
-# Development server (http://localhost:5173)
+# Development server (http://localhost:5170)
 pnpm dev
 
 # Build for production
@@ -35,6 +35,8 @@ pnpm test:e2e       # Run Playwright E2E tests
 ```
 
 ### Supabase Edge Functions
+
+> **📖 Supabase CLI 완벽 가이드**: [docs/supabase_help.md](docs/supabase_help.md)를 참조하세요.
 
 ```bash
 # Test Edge Functions
@@ -136,6 +138,8 @@ All server utilities follow consistent patterns:
 
 ### Supabase Integration
 
+> **📖 Supabase CLI 완벽 가이드**: 모든 Supabase CLI 명령어와 사용법은 [docs/supabase_help.md](docs/supabase_help.md)를 참조하세요.
+
 - Project ID: `iefgdhwmgljjacafqomd`
 - Use `supabase.functions.invoke()` for Edge Function calls (not fetch)
 - Environment variables set via Dashboard → Settings → Edge Functions → Secrets
@@ -211,6 +215,8 @@ Use emoji prefixes:
 4. Use Skeleton UI presets for styling
 
 ### Creating an Edge Function
+
+> **📖 상세 가이드**: Edge Function 개발 워크플로우는 [docs/supabase_help.md](docs/supabase_help.md#edge-functions)를 참조하세요.
 
 ```bash
 # Create new function

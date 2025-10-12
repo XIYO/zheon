@@ -4,32 +4,40 @@
  * 출력: { record_id: string, failed_at: string, error_message: string }
  */
 
-import { RunnableLambda } from 'npm:@langchain/core/runnables';
-import { createSupabaseClient } from '../supabase-client.ts';
+import { RunnableLambda } from "npm:@langchain/core/runnables";
+import { createSupabaseClient } from "../supabase-client.ts";
 
-export const updateToFailed = async (recordId: string, error: Error): Promise<void> => {
-	console.log(`[UpdateFailed] Marking record ${recordId} as failed...`);
+export const updateToFailed = async (
+  recordId: string,
+  error: Error,
+): Promise<void> => {
+  console.log(`[UpdateFailed] Marking record ${recordId} as failed...`);
 
-	const supabase = createSupabaseClient();
+  const supabase = createSupabaseClient();
 
-	try {
-		const { error: updateError } = await supabase
-			.from('summary')
-			.update({
-				processing_status: 'failed',
-				summary: `Processing failed: ${error.message}`,
-				content: `Error: ${error.message}\n\nStack: ${error.stack || 'No stack trace'}`,
-				last_modified_at: new Date().toISOString()
-			})
-			.eq('id', recordId);
+  try {
+    const { error: updateError } = await supabase
+      .from("summary")
+      .update({
+        processing_status: "failed",
+        summary: `Processing failed: ${error.message}`,
+        transcript: `Error: ${error.message}\n\nStack: ${
+          error.stack || "No stack trace"
+        }`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", recordId);
 
-		if (updateError) {
-			console.error(`[UpdateFailed] ⚠️  Failed to update record status:`, updateError);
-			return;
-		}
+    if (updateError) {
+      console.error(
+        `[UpdateFailed] ⚠️  Failed to update record status:`,
+        updateError,
+      );
+      return;
+    }
 
-		console.log(`[UpdateFailed] ✅ Record ${recordId} marked as failed`);
-	} catch (err) {
-		console.error(`[UpdateFailed] ❌ Unexpected error:`, err);
-	}
+    console.log(`[UpdateFailed] ✅ Record ${recordId} marked as failed`);
+  } catch (err) {
+    console.error(`[UpdateFailed] ❌ Unexpected error:`, err);
+  }
 };

@@ -14,54 +14,159 @@ export type Database = {
 					id: number;
 					lang: string;
 					subtitle: string;
-					youtube_url: string;
+					url: string;
 				};
 				Insert: {
 					created_at?: string | null;
 					id?: number;
 					lang?: string;
 					subtitle: string;
-					youtube_url: string;
+					url: string;
 				};
 				Update: {
 					created_at?: string | null;
 					id?: number;
 					lang?: string;
 					subtitle?: string;
-					youtube_url?: string;
+					url?: string;
 				};
 				Relationships: [];
 			};
 			summary: {
 				Row: {
-					content: string;
-					created_at: string | null;
-					id: number;
-					lang: string;
-					summary: string | null;
+					id: string;
+					url: string;
 					title: string | null;
-					user_id: string;
-					youtube_url: string;
+					channel_id: string | null;
+					channel_name: string | null;
+					duration: number | null;
+					transcript: string | null;
+					summary: string | null;
+					insights: string | null;
+					language: string;
+					processing_status: string;
+					created_at: string;
+					updated_at: string;
 				};
 				Insert: {
-					content: string;
-					created_at?: string | null;
-					id?: number;
-					lang: string;
-					summary?: string | null;
+					id?: string;
+					url: string;
 					title?: string | null;
-					user_id: string;
-					youtube_url: string;
+					channel_id?: string | null;
+					channel_name?: string | null;
+					duration?: number | null;
+					transcript?: string | null;
+					summary?: string | null;
+					insights?: string | null;
+					language?: string;
+					processing_status?: string;
+					created_at?: string;
+					updated_at?: string;
 				};
 				Update: {
-					content?: string;
-					created_at?: string | null;
-					id?: number;
-					lang?: string;
-					summary?: string | null;
+					id?: string;
+					url?: string;
 					title?: string | null;
+					channel_id?: string | null;
+					channel_name?: string | null;
+					duration?: number | null;
+					transcript?: string | null;
+					summary?: string | null;
+					insights?: string | null;
+					language?: string;
+					processing_status?: string;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			channels: {
+				Row: {
+					channel_id: string;
+					channel_name: string;
+					channel_avatar: string | null;
+					subscriber_count: number | null;
+					video_count: number | null;
+					description: string | null;
+					channel_data: any | null;
+					is_recommended: boolean;
+					created_at: string;
+					updated_at: string;
+					expires_at: string;
+				};
+				Insert: {
+					channel_id: string;
+					channel_name: string;
+					channel_avatar?: string | null;
+					subscriber_count?: number | null;
+					video_count?: number | null;
+					description?: string | null;
+					channel_data?: any | null;
+					is_recommended?: boolean;
+					created_at?: string;
+					updated_at?: string;
+					expires_at?: string;
+				};
+				Update: {
+					channel_id?: string;
+					channel_name?: string;
+					channel_avatar?: string | null;
+					subscriber_count?: number | null;
+					video_count?: number | null;
+					description?: string | null;
+					channel_data?: any | null;
+					is_recommended?: boolean;
+					created_at?: string;
+					updated_at?: string;
+					expires_at?: string;
+				};
+				Relationships: [];
+			};
+			channel_videos: {
+				Row: {
+					channel_id: string;
+					video_id: string;
+					video_data: any;
+					created_at: string;
+					updated_at: string;
+					expires_at: string;
+				};
+				Insert: {
+					channel_id: string;
+					video_id: string;
+					video_data: any;
+					created_at?: string;
+					updated_at?: string;
+					expires_at?: string;
+				};
+				Update: {
+					channel_id?: string;
+					video_id?: string;
+					video_data?: any;
+					created_at?: string;
+					updated_at?: string;
+					expires_at?: string;
+				};
+				Relationships: [];
+			};
+			user_subscriptions: {
+				Row: {
+					id: string;
+					user_id: string;
+					channel_id: string;
+					subscribed_at: string;
+				};
+				Insert: {
+					id?: string;
+					user_id: string;
+					channel_id: string;
+					subscribed_at?: string;
+				};
+				Update: {
+					id?: string;
 					user_id?: string;
-					youtube_url?: string;
+					channel_id?: string;
+					subscribed_at?: string;
 				};
 				Relationships: [];
 			};
@@ -75,6 +180,14 @@ export type Database = {
 				Returns: unknown;
 			};
 			cleanup_expired_cache: {
+				Args: Record<PropertyKey, never>;
+				Returns: undefined;
+			};
+			check_existing_summary: {
+				Args: { p_url: string };
+				Returns: string | null;
+			};
+			cleanup_expired_data: {
 				Args: Record<PropertyKey, never>;
 				Returns: undefined;
 			};

@@ -1,7 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 
-export const trailingSlash = 'always';
-
 export async function load({ locals: { safeGetSession }, url, cookies }) {
 	// OAuth 콜백 처리: 메인 페이지에 code 파라미터가 있다면 콜백 페이지로 리디렉트
 	const code = url.searchParams.get('code');

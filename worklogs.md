@@ -51,3 +51,48 @@
 - Edge Function 배포 완료
   - tts-stream: 702kB
   - Dashboard: https://supabase.com/dashboard/project/iefgdhwmgljjacafqomd/functions
+
+## 2025-10-10: Edge Function 리팩토링 - LangChain에서 Vercel AI SDK로 마이그레이션
+
+### 작업 내용
+- **insight-generator 독립 Edge Function 생성**
+  - Vercel AI SDK 5.0의 `generateObject()` 사용
+  - Zod 스키마 기반 구조화된 출력 (Valibot 호환성 이슈로 변경)
+  - Gemini 2.5 Flash Lite 모델 활용
+  - 번들 크기: 884KB (독립 실행 가능)
+  - 응답 필드: title, summary, insights + 통계 정보
+
+- **youtube-extractor.ts 복원**
+  - YouTubei.js 직접 사용 제거 (WORKER_LIMIT 문제 발생)
+  - 외부 Extractor API (https://extractor.xiyo.dev/extract) 호출 방식으로 복원
+  - 환경변수: EXTRACT_API_URL 추가
+  - 번들 크기 감소: 8.076MB → 6.237MB
+
+- **generate-summary.ts 리팩토링**
+  - 인라인 Gemini API 호출 → insight-generator Edge Function 호출
+  - LangChain Runnable 구조는 유지 (검증된 파이프라인 아키텍처 보존)
+  - summary_method: "vercel-ai-sdk-edge-function"
+
+- **update-to-completed.ts 버그 수정**
+  - insights 필드가 DB에 저장되지 않던 문제 해결
+  - .update() 호출 시 insights 필드 추가
+
+### 최종 아키텍처
+```
+summary Function (LangChain Runnables orchestrator, 6.237MB)
+  ├─ extractSubtitles → Extractor API (https://extractor.xiyo.dev)
+  └─ generateSummary → insight-generator Edge Function (Vercel AI SDK)
+```
+
+### 배포 결과
+- Edge Functions 배포 완료
+  - insight-generator: 884KB
+  - summary: 6.237MB (이전 8.076MB에서 감소)
+- 전체 파이프라인 테스트 성공 (처리 시간: 35초, insights 2855자 정상 생성)
+- Dashboard: https://supabase.com/dashboard/project/iefgdhwmgljjacafqomd/functions
+
+### 목표 달성
+1. ✅ LangChain → Vercel AI SDK 5.0 마이그레이션
+2. ✅ LangChain Runnable 구조 유지 (검증된 아키텍처 보존)
+3. ✅ YouTubei.js 제거 및 WORKER_LIMIT 문제 해결
+4. ✅ AI 요약 기능 독립 Edge Function으로 분리

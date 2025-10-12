@@ -1,99 +1,64 @@
 <!-- 유튜브 URL 입력 폼 컴포넌트 -->
 <script>
-	import { enhance } from '$app/forms';
-	import { slide } from 'svelte/transition';
-	import { page } from '$app/state';
-	import { urlSchema } from '$lib/schemas/url.js';
+	import { createSummary, getRecentSummaries } from '$lib/remote/summary.remote.js';
+	import { SummarySchema } from '$lib/schemas/summary-schema.js';
+	import { extractThumbnail } from '$lib/youtube-utils.js';
 
-	let loading = $state(false);
-	let errorMessage = $state('');
+	const { url } = createSummary.fields;
 
-	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	function handleEnhance({ formData, cancel }) {
-		// URL 검증
-		const url = formData.get('youtubeUrl');
-		const validation = urlSchema.safeParse(url);
+	// preflight와 enhance 설정
+	const enhancedForm = createSummary
+		.preflight(SummarySchema)
+		.enhance(async ({ form, submit, data }) => {
+		try {
+			// 낙관적 업데이트 데이터
+			const optimisticEntry = {
+				id: crypto.randomUUID(),
+				url: data.url,
+				title: '처리 중...',
+				summary: '',
+				processing_status: 'pending',
+				thumbnail_url: extractThumbnail(data.url),
+				created_at: new Date().toISOString(),
+				updated_at: new Date().toISOString()
+			};
 
-		if (!validation.success) {
-			errorMessage = validation.error.issues[0].message;
-			cancel();
-			return;
+			// Edge Function 호출 + 낙관적 업데이트
+			await submit().updates(
+				getRecentSummaries().withOverride((summaries = []) => {
+					form.reset();
+					return [optimisticEntry, ...summaries];
+				})
+			);
+		} catch (error) {
+			console.error('[SummaryForm] 요약 제출 실패:', error);
 		}
+	});
 
-		// 검증 성공 시 에러 메시지 초기화 및 로딩 시작
-		errorMessage = '';
-		loading = true;
-
-		return async ({ result, update }) => {
-			if (result.type === 'redirect') {
-				// 로그인이 필요한 경우 리다이렉트 처리됨
-				loading = false;
-				// 리다이렉트는 자동으로 처리됨
-			} else if (result.type === 'success' && result.data?.success) {
-				// Edge Function 성공 처리
-				if (result.data?.fromCache) {
-					console.log('Existing summary found, displaying immediately');
-				} else {
-					console.log('New summary created successfully');
-				}
-				update({ invalidateAll: true });
-			} else {
-				update({ invalidateAll: true });
-			}
-			loading = false;
-		};
-	}
 </script>
 
 <div class="card-modern rounded-2xl w-full mx-auto overflow-hidden">
-	{#if page.form?.message}
-		{@const isRateLimit = page.form?.type === 'rate_limit'}
-		<div in:slide class="mb-6 card {isRateLimit ? 'preset-tonal-warning' : 'preset-tonal-error'}">
-			<div class="flex items-start gap-4 p-6">
-				<div class="flex-shrink-0">
-					<span
-						class="badge {isRateLimit ? 'preset-filled-warning-500' : 'preset-filled-error-500'}">
-						{isRateLimit ? '⚠️' : '❌'}
-					</span>
-				</div>
-				<div class="flex-1">
-					<p class="text-sm font-medium">{page.form.message}</p>
-					{#if isRateLimit}
-						<p class="mt-2 text-xs opacity-80">
-							현재 많은 사용자가 이용 중입니다. 5분 후에 다시 시도해주세요.
-						</p>
-						<p class="mt-1 text-xs opacity-70">
-							💡 팁: 이미 요약된 영상은 아래 목록에서 바로 확인할 수 있습니다.
-						</p>
-					{/if}
-				</div>
-			</div>
-		</div>
-	{/if}
-
 	<div class="p-6">
-		<form method="POST" action="/?/summarize" use:enhance={handleEnhance} class="space-y-4">
+		<!-- ✅ enhance된 폼 속성 사용 -->
+		<form {...enhancedForm} novalidate class="space-y-4">
 			<div class="space-y-2">
 				<input
-					name="youtubeUrl"
+					{...url.as('text')}
 					placeholder="영상 URL을 입력하세요"
-					type="text"
-					class="input glass-effect rounded-xl w-full px-4 py-3 placeholder:text-surface-400 focus:ring-2 focus:ring-primary-500/50 transition-all"
-					disabled={loading} />
-				{#if errorMessage}
-					<p class="text-xs text-error-500" in:slide>
-						{errorMessage}
+					class="input glass-effect rounded-xl w-full px-4 py-3 placeholder:text-surface-400 focus:ring-2 focus:ring-primary-500/50 transition-all" />
+
+				<!-- 에러 메시지 표시 -->
+				{#each url.issues() as issue}
+					<p class="text-xs text-error-500">
+						{issue.message}
 					</p>
-				{/if}
+				{/each}
+
 				<p class="text-xs text-surface-600 dark:text-surface-400">지원 서비스: YouTube</p>
 			</div>
 
-			<button class="btn-premium rounded-xl w-full py-3" type="submit" disabled={loading}>
-				{#if loading}
-					영상 분석 중...
-				{:else}
-					인사이트 추출 시작 →
-				{/if}
+			<button class="btn-premium rounded-xl w-full py-3" type="submit">
+				인사이트 추출 시작 →
 			</button>
 		</form>
 	</div>

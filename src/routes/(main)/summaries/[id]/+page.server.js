@@ -1,8 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-export const load = async ({ parent, params }) => {
-	const { supabase } = await parent();
-
+export const load = async ({ locals: { supabase }, params }) => {
 	// RLS 정책이 인증된 사용자의 데이터만 반환하도록 처리
 	const { data: summary, error: fetchError } = await supabase
 		.from('summary')

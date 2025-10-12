@@ -1,5 +1,4 @@
 <script>
-	import { page } from '$app/state';
 	import SummaryForm from '$lib/components/SummaryForm.svelte';
 	import SummaryList from '$lib/components/SummaryList.svelte';
 </script>
@@ -9,5 +8,5 @@
 	<SummaryForm />
 
 	<!-- 결과 리스트 섹션 -->
-	<SummaryList limit={50} />
+	<SummaryList />
 </main>

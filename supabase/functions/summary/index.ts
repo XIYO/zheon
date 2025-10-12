@@ -17,6 +17,17 @@ Deno.serve(async (req) => {
 	let recordId: string | undefined;
 
 	try {
+		// JWT에서 사용자 정보 가져오기
+		const supabase = createSupabaseClient();
+		const {
+			data: { user },
+			error: authError
+		} = await supabase.auth.getUser();
+
+		if (authError || !user) {
+			return corsError('Unauthorized', 'AUTH_REQUIRED', 401);
+		}
+
 		let url: string | undefined;
 
 		// Content-Type에 따라 다르게 처리
@@ -41,11 +52,11 @@ Deno.serve(async (req) => {
 			return corsError('URL is required', 'MISSING_URL', 400);
 		}
 
-		console.log(`🚀 Processing: ${url}`);
+		console.log(`🚀 Processing: ${url} for user: ${user.id}`);
 
 		// Step 1: URL 검증 및 Pending 레코드 생성 (중복 체크 포함)
 		const recordPipeline = validateUrl.pipe(createPendingRecord);
-		const recordResult = await recordPipeline.invoke({ url });
+		const recordResult = await recordPipeline.invoke({ url, user_id: user.id });
 
 		// record_id 저장 (이후 에러 발생 시 failed 상태로 업데이트하기 위함)
 		recordId = recordResult.record_id;
@@ -54,33 +65,19 @@ Deno.serve(async (req) => {
 		// 중복된 완료 레코드인 경우 파이프라인 스킵
 		if (recordResult._skip_processing) {
 			console.log('⏭️ Skipping processing - using existing completed record');
-			return corsResponse({
-				status: 'success',
-				message: 'Using cached summary',
-				debug: {
-					record_id: recordId,
-					saved_at: recordResult._existing_record?.created_at,
-					was_duplicate: true
-				}
-			});
+			return new Response(null, { status: 204 });
 		}
 
-		// Step 2: 자막 추출 → AI 요약 → Completed 업데이트
+		// Step 2: 자막 추출 → AI 요약 → Completed 업데이트 (비동기 처리)
 		const processingPipeline = extractSubtitles.pipe(generateSummary).pipe(updateToCompleted);
-		const result = await processingPipeline.invoke(recordResult);
-
-		console.log('🎯 Pipeline result:', result);
-
-		// 간단한 성공 응답
-		return corsResponse({
-			status: 'success',
-			message: result?.was_duplicate ? 'Using cached summary' : 'Video processed successfully',
-			debug: {
-				record_id: result?.record_id,
-				saved_at: result?.saved_at,
-				was_duplicate: result?.was_duplicate || false
-			}
+		processingPipeline.invoke(recordResult).catch((error) => {
+			console.error('Background processing failed:', error);
 		});
+
+		console.log('🎯 Processing started in background');
+
+		// 요청 수락 응답 (No Content)
+		return new Response(null, { status: 204 });
 	} catch (error) {
 		console.error('❌ Pipeline error:', error);
 
