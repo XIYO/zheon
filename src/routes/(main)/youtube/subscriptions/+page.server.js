@@ -15,7 +15,7 @@ export async function load({ locals: { supabase, safeGetSession } }) {
 
 		// 캐시 확인
 		const { data: cachedData } = await supabase
-			.from('youtube_subscriptions_cache')
+			.from('youtube_subscriptions')
 			.select('subscriptions_data, expires_at')
 			.eq('user_id', userId)
 			.single();
@@ -71,7 +71,7 @@ export async function load({ locals: { supabase, safeGetSession } }) {
 		expiresAt.setHours(expiresAt.getHours() + 1);
 
 		await supabase
-			.from('youtube_subscriptions_cache')
+			.from('youtube_subscriptions')
 			.upsert({
 				user_id: userId,
 				subscriptions_data: subscriptions,

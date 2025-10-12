@@ -2,7 +2,7 @@
 <script>
 	import { page } from '$app/state';
 	import * as m from '$lib/paraglide/messages';
-	import { AppBar } from '@skeletonlabs/skeleton-svelte';
+	import { AppBar, Avatar } from '@skeletonlabs/skeleton-svelte';
 
 	/**
 	 * Check if current page is home/root
@@ -47,21 +47,16 @@
 				</a>
 			</nav>
 		{:else}
-			<div class="flex items-center space-x-4">
-				<div class="hidden sm:flex sm:items-center sm:space-x-3">
-					<div>
-						<span class="preset-typo-caption font-semibold">
-							{m.header_welcome({ name: page.data.user.user_metadata.name })}
-						</span>
-						<span class="preset-typo-caption ml-2">
-							{m.header_welcome_message()}
-						</span>
-					</div>
-				</div>
-				<a href="/auth/sign-out" class="btn preset-ghost btn-base">
-					{m.header_logout()}
-				</a>
-			</div>
+			<a
+				href="/profile"
+				class="transition-transform hover:scale-105 active:scale-95"
+				aria-label="프로필"
+			>
+				<Avatar
+					src={page.data.user.user_metadata?.avatar_url}
+					name={page.data.user.user_metadata?.display_name || page.data.user.email || 'User'}
+				/>
+			</a>
 		{/if}
 	{/snippet}
 

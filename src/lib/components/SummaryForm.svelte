@@ -1,35 +1,18 @@
 <!-- 유튜브 URL 입력 폼 컴포넌트 -->
 <script>
-	import { createSummary, getRecentSummaries } from '$lib/remote/summary.remote.js';
+	import { createSummary } from '$lib/remote/summary.remote.js';
 	import { SummarySchema } from '$lib/schemas/summary-schema.js';
-	import { extractThumbnail } from '$lib/youtube-utils.js';
 
 	const { url } = createSummary.fields;
 
 	// preflight와 enhance 설정
 	const enhancedForm = createSummary
 		.preflight(SummarySchema)
-		.enhance(async ({ form, submit, data }) => {
+		.enhance(async ({ form, submit }) => {
 		try {
-			// 낙관적 업데이트 데이터
-			const optimisticEntry = {
-				id: crypto.randomUUID(),
-				url: data.url,
-				title: '처리 중...',
-				summary: '',
-				processing_status: 'pending',
-				thumbnail_url: extractThumbnail(data.url),
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString()
-			};
-
-			// Edge Function 호출 + 낙관적 업데이트
-			await submit().updates(
-				getRecentSummaries().withOverride((summaries = []) => {
-					form.reset();
-					return [optimisticEntry, ...summaries];
-				})
-			);
+			// Edge Function 호출 및 자동 갱신
+			await submit();
+			form.reset();
 		} catch (error) {
 			console.error('[SummaryForm] 요약 제출 실패:', error);
 		}

@@ -45,3 +45,35 @@
 
 - Do not commit secrets. Use `.env` and `supabase/.env.local` locally; set Edge secrets via `pnpm edge:secrets:set`.
 - Cloudflare: review `wrangler.toml` routes and `adapter-cloudflare` output before deploy.
+
+## Supabase Integration
+
+- Project ID: `iefgdhwmgljjacafqomd`
+- Call Edge Functions with `supabase.functions.invoke()` (avoid raw `fetch`)
+- Set production secrets in Supabase Dashboard → Edge Functions → Secrets
+- Primary data path is production DB; avoid accidental local writes
+
+## Skeleton UI Styling
+
+- Use Skeleton preset classes only where it adds value
+- Presets: filled, tonal, outlined, glass, elevated, ghost, gradient
+- Class pattern: `preset-{type}-{color}-{shade}`
+- Keep base UI minimal; vary styles on hero/CTA sections
+
+## Internationalization
+
+- Paraglide runtime under `src/lib/paraglide/` (generated)
+- Message sources in `messages/`
+
+## Error & Form Handling
+
+- Forms use native `FormData` with progressive enhancement (`use:enhance` optional)
+- Validate on server in `+page.server.js` actions
+- Centralize error utilities in `lib/server/*-utils.js`; display via `+error.svelte`
+
+## Testing Strategy
+
+- Unit tests adjacent as `*.test.js`
+- Component tests with Testing Library + Vitest
+- E2E tests in `e2e/` with Playwright
+- Edge Functions tested under `supabase/tests/` (Deno)
