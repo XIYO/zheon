@@ -6,91 +6,80 @@ export async function load({ locals: { supabase, safeGetSession } }) {
 	if (!session) {
 		return {
 			subscriptions: [],
-			cached: false
+			channels: [],
+			lastSync: null,
+			totalChannels: 0
 		};
 	}
 
 	try {
 		const userId = session.user.id;
 
-		// 캐시 확인
-		const { data: cachedData } = await supabase
+		// 구독 채널 목록 조회 (정규화된 테이블에서)
+		const { data: subscriptions, error: subError } = await supabase
 			.from('youtube_subscriptions')
-			.select('subscriptions_data, expires_at')
+			.select(`
+				id,
+				subscribed_at,
+				channel:channels (
+					channel_id,
+					channel_name,
+					channel_handle,
+					channel_avatar,
+					subscriber_count,
+					video_count,
+					description,
+					updated_at
+				)
+			`)
 			.eq('user_id', userId)
+			.order('subscribed_at', { ascending: false });
+
+		if (subError) {
+			console.error('Error fetching subscriptions:', subError);
+			return {
+				subscriptions: [],
+				channels: [],
+				lastSync: null,
+				totalChannels: 0
+			};
+		}
+
+		// 마지막 동기화 시간 조회
+		const { data: lastSyncLog } = await supabase
+			.from('sync_logs')
+			.select('created_at, channels_synced, api_units_used')
+			.eq('user_id', userId)
+			.eq('sync_type', 'subscriptions')
+			.eq('success', true)
+			.order('created_at', { ascending: false })
+			.limit(1)
 			.single();
 
-		// 캐시가 유효한지 확인
-		const now = new Date();
-		const isValid = cachedData && new Date(cachedData.expires_at) > now;
-
-		if (isValid) {
-			console.log('✅ Cache hit: subscriptions');
-			return {
-				subscriptions: cachedData.subscriptions_data || [],
-				cached: true
-			};
-		}
-
-		console.log('❌ Cache miss: subscriptions');
-
-		// Supabase session에서 provider token 가져오기
-		const providerToken = session.provider_token;
-
-		if (!providerToken) {
-			console.warn('No Google OAuth token found for user');
-			return {
-				subscriptions: [],
-				cached: false
-			};
-		}
-
-		// YouTube API 호출
-		const response = await fetch(
-			'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&maxResults=50',
-			{
-				headers: {
-					Authorization: `Bearer ${providerToken}`
-				}
-			}
-		);
-
-		if (!response.ok) {
-			console.error('YouTube API error:', response.status, await response.text());
-			return {
-				subscriptions: [],
-				cached: false
-			};
-		}
-
-		const data = await response.json();
-		const subscriptions = data.items || [];
-
-		// 캐시 저장 (1시간 TTL)
-		const expiresAt = new Date();
-		expiresAt.setHours(expiresAt.getHours() + 1);
-
-		await supabase
-			.from('youtube_subscriptions')
-			.upsert({
-				user_id: userId,
-				subscriptions_data: subscriptions,
-				cached_at: now.toISOString(),
-				expires_at: expiresAt.toISOString(),
-				updated_at: now.toISOString()
-			});
-
-		console.log('💾 Cached subscriptions for user:', userId);
+		// 채널 데이터 추출 (null 체크)
+		const channels = subscriptions
+			?.filter(sub => sub.channel !== null)
+			.map(sub => ({
+				...sub.channel,
+				subscribed_at: sub.subscribed_at
+			})) || [];
 
 		return {
-			subscriptions,
-			cached: false
+			subscriptions: subscriptions || [],
+			channels,
+			lastSync: lastSyncLog?.created_at || null,
+			totalChannels: channels.length,
+			apiUnitsUsed: lastSyncLog?.api_units_used || 0
 		};
 	} catch (err) {
-		console.error('Error fetching YouTube subscriptions:', err);
+		console.error('Error loading subscriptions page:', err);
 		return {
 			subscriptions: [],
-			cached: false
+			channels: [],
+			lastSync: null,
+			totalChannels: 0
 		};
 	}
 }
+
+// 클라이언트 사이드로 이동 - +page.svelte에서 직접 처리

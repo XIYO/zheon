@@ -91,65 +91,46 @@
 	}
 </script>
 
-<section aria-labelledby="summaries-title" class="space-y-8">
+<section aria-labelledby="summaries-title" class="space-y-4">
 	{#if summaries?.length === 0}
-		<div class="text-center py-12">
-			<p class="text-xl font-semibold text-surface-600 dark:text-surface-400">
-				아직 정리된 인사이트가 없습니다
-			</p>
-			<p class="mt-2 text-surface-500">첫 번째 유튜브 영상을 입력해 보세요!</p>
+		<div class="text-center py-12 text-surface-500-400">
+			<p>아직 정리된 인사이트가 없습니다</p>
 		</div>
 	{:else}
-		<div class="flex items-center justify-between mb-6 max-w-6xl mx-auto">
-			<h2 id="summaries-title" class="text-3xl font-bold">인사이트 목록</h2>
-		</div>
-		<div class="flex flex-col gap-4 max-w-6xl mx-auto">
-			{#each summaries as summary (summary.id)}
-				<article class="card-modern rounded-xl hover-lift overflow-hidden">
-					<a href="/summaries/{summary.id}/" class="flex">
-						<!-- 썸네일 (25%) -->
-						<div class="w-1/4 flex-shrink-0">
-							<img
-								src={extractThumbnail(summary.url)}
-								alt="썸네일"
-								width="1280"
-								height="720"
-								loading="lazy"
-								class="w-full h-full object-cover transition-opacity duration-700 opacity-100 starting:opacity-0"
-								style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
-						</div>
-
-						<!-- 내용 (75%) -->
-						<div class="w-3/4 p-6 flex flex-col justify-center">
-							<div class="flex items-center gap-2 mb-3">
-								<h3 class="text-2xl font-bold line-clamp-2 flex-1">
+		<div class="overflow-x-auto">
+			<table class="w-full border border-surface-300-700 rounded-lg overflow-hidden">
+			<thead class="border-b border-surface-300-700">
+				<tr>
+					<th class="px-4 py-3 text-left font-medium text-surface-700-300">제목</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each summaries as summary (summary.id)}
+					<tr class={[
+						'border-b border-surface-200-800 hover:opacity-80',
+						summary.processing_status === 'pending' && 'bg-warning-50-900/20',
+						summary.processing_status === 'processing' && 'bg-primary-50-900/20',
+						summary.processing_status === 'failed' && 'bg-error-50-900/20'
+					]}>
+						<td class="px-4 py-3">
+							<a href="/summaries/{summary.id}/" class="flex items-center gap-3">
+								<img
+									src={extractThumbnail(summary.url)}
+									alt=""
+									width="80"
+									height="45"
+									loading="lazy"
+									class="rounded object-cover"
+									style="aspect-ratio: 16/9" />
+								<p class="font-medium text-surface-900-100 truncate">
 									{summary.title}
-								</h3>
-								{#if summary.processing_status === 'pending'}
-									<span
-										class="preset-filled-warning-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
-										대기 중
-									</span>
-								{:else if summary.processing_status === 'processing'}
-									<span
-										class="preset-filled-primary-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
-										정리 중...
-									</span>
-								{:else if summary.processing_status === 'failed'}
-									<span
-										class="preset-filled-error-500 text-xs px-2 py-1 rounded-full whitespace-nowrap">
-										실패
-									</span>
-								{/if}
-							</div>
-							<p
-								class="text-surface-600 dark:text-surface-400 text-base line-clamp-3 leading-relaxed">
-								{summary.summary}
-							</p>
-						</div>
-					</a>
-				</article>
-			{/each}
+								</p>
+							</a>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+			</table>
 		</div>
 	{/if}
 </section>

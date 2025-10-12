@@ -7,10 +7,10 @@
 <div class="container mx-auto px-4 py-12">
 	<!-- 페이지 헤더 -->
 	<div class="mb-12 text-center">
-		<h1 class="preset-typo-display-2 mb-4">
+		<h1 class="text-xl font-bold mb-4">
 			{data.meta.title}
 		</h1>
-		<p class="preset-typo-subtitle text-surface-400-600">
+		<p class="text-surface-400-600">
 			{data.meta.description}
 		</p>
 	</div>

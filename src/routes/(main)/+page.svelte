@@ -3,10 +3,7 @@
 	import SummaryList from '$lib/components/SummaryList.svelte';
 </script>
 
-<main class="container mx-auto space-y-8 py-8">
-	<!-- 폼 섹션 -->
+<main class="container mx-auto px-4 py-6 max-w-5xl space-y-6">
 	<SummaryForm />
-
-	<!-- 결과 리스트 섹션 -->
 	<SummaryList />
 </main>

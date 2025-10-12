@@ -6,8 +6,8 @@ export const load = async ({ parent }) => {
 	// 최근 50개 요약 가져오기 (processing_status 포함)
 	const { data: summaries, error: fetchError } = await supabase
 		.from('summary')
-		.select('id, url, title, summary, lang, last_modified_at, processing_status')
-		.order('last_modified_at', { ascending: false })
+		.select('id, url, title, summary, language, updated_at, processing_status')
+		.order('updated_at', { ascending: false })
 		.limit(50);
 
 	if (fetchError) {

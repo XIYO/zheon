@@ -350,7 +350,7 @@
 	});
 </script>
 
-<div class="container mx-auto px-4 py-12 max-w-4xl">
+<div class="container mx-auto px-4 py-12 max-w-4xl text-sm">
 	<!-- 썸네일 -->
 	<a href={summary.url} target="_blank" rel="noopener noreferrer">
 		<img
@@ -364,8 +364,8 @@
 
 	<!-- 제목과 날짜 -->
 	<div class="mt-8 mb-12">
-		<h1 class="text-3xl font-bold mb-2">{summary.title}</h1>
-		<p class="text-sm text-surface-600 dark:text-surface-400">
+		<h1 class="text-xl font-bold mb-2">{summary.title}</h1>
+		<p class="text-surface-400-600">
 			{formatDate(summary.created_at)}
 		</p>
 	</div>
@@ -373,7 +373,7 @@
 	<!-- 전체 읽기 버튼 -->
 	<div class="mb-6 flex justify-end">
 		<button
-			class="preset-filled-primary-500 px-6 py-3 rounded-full font-semibold"
+			class="btn preset-filled-primary"
 			onclick={readAll}>
 			{currentSection === 'all' ? '중지' : '전체 읽기'}
 		</button>
@@ -382,13 +382,14 @@
 	<!-- AI 요약 -->
 	<div class="bg-white dark:bg-surface-800 rounded-xl p-6 mb-8">
 		<div class="flex items-center justify-between mb-4">
-			<h2 class="text-xl font-semibold">AI 요약</h2>
+			<h2 class="text-xl font-bold">AI 요약</h2>
 			<div class="flex gap-2">
-				<button class="chip preset-tonal-secondary-500" onclick={readSummary}>
+				<button class="chip preset-tonal-secondary-500" size="sm" onclick={readSummary}>
 					{currentSection === 'summary' ? '중지' : '읽기'}
 				</button>
 				<button
 					class="chip {getGeminiButtonState('summary').processing ? 'preset-tonal-surface-500' : 'preset-tonal-primary-500'}"
+					size="sm"
 					onclick={() => readGemini('summary')}
 					disabled={getGeminiButtonState('summary').disabled}>
 					{getGeminiButtonState('summary').text}
@@ -405,13 +406,14 @@
 		<div
 			class="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-xl p-6">
 			<div class="flex items-center justify-between mb-4">
-				<h2 class="text-xl font-semibold">핵심 인사이트</h2>
+				<h2 class="text-xl font-bold">핵심 인사이트</h2>
 				<div class="flex gap-2">
-					<button class="chip preset-tonal-secondary-500" onclick={readContent}>
+					<button class="chip preset-tonal-secondary-500" size="sm" onclick={readContent}>
 						{currentSection === 'insights' ? '중지' : '읽기'}
 					</button>
 					<button
 						class="chip {getGeminiButtonState('insights').processing ? 'preset-tonal-surface-500' : 'preset-tonal-primary-500'}"
+						size="sm"
 						onclick={() => readGemini('insights')}
 						disabled={getGeminiButtonState('insights').disabled}>
 						{getGeminiButtonState('insights').text}

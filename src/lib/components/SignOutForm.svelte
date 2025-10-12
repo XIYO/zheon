@@ -25,11 +25,11 @@
 	action="/auth/sign-out/"
 	method="POST"
 	use:enhance={handleEnhance}
-	class="card preset-filled-surface-500 flex flex-col">
+	class="max-w-md w-full flex flex-col">
 	<!-- Header Section -->
 	<header class="p-6 text-center">
-		<h2 class="preset-typo-headline text-error-400">{m.auth_sign_out_title()}</h2>
-		<p class="preset-typo-subtitle">{m.auth_sign_out_confirm()}</p>
+		<h2 class="text-xl font-bold text-error-400">{m.auth_sign_out_title()}</h2>
+		<p>{m.auth_sign_out_confirm()}</p>
 	</header>
 
 	<hr class="border-surface-500/20" />
@@ -51,8 +51,8 @@
 						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 				</svg>
 				<div>
-					<p class="preset-typo-menu text-warning-400">{m.auth_sign_out_warning_title()}</p>
-					<ul class="mt-2 space-y-1 preset-typo-caption">
+					<p class="text-sm font-medium text-warning-400">{m.auth_sign_out_warning_title()}</p>
+					<ul class="mt-2 space-y-1 text-sm">
 						<li>• {m.auth_sign_out_warning_session()}</li>
 						<li>• {m.auth_sign_out_warning_unsaved()}</li>
 						<li>• {m.auth_sign_out_warning_relogin()}</li>
@@ -67,10 +67,9 @@
 	<!-- Footer Section -->
 	<footer class="p-6 flex gap-3">
 		<!-- Cancel Button -->
-		<button
-			type="button"
-			onclick={() => document.querySelector('dialog[open]')?.close()}
-			class="btn preset-ghost-surface-500 btn-base flex-1 preset-typo-button">
+		<a
+			href="/"
+			class="btn preset-ghost-surface-500 btn-base flex-1 ">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path
 					stroke-linecap="round"
@@ -79,10 +78,10 @@
 					d="M6 18L18 6M6 6l12 12" />
 			</svg>
 			<span>{m.auth_sign_out_cancel()}</span>
-		</button>
+		</a>
 
 		<!-- Sign Out Button -->
-		<button type="submit" class="btn preset-filled-error-500 btn-base flex-1 preset-typo-button">
+		<button type="submit" class="btn preset-filled-error-500 btn-base flex-1 ">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path
 					stroke-linecap="round"

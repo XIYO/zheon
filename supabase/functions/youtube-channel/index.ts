@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getChannelInfo } from "../_shared/youtube-channel.ts";
+import { getChannelInfo } from "../_shared/youtube-api.ts";
 
 serve(async (req) => {
   const corsHeaders = {
@@ -41,51 +41,53 @@ serve(async (req) => {
     // Check cache first (skip if forceRefresh is true)
     if (!forceRefresh) {
       const { data: cachedChannel, error: cacheError } = await supabase
-        .from("youtube_channel_cache")
-        .select("channel_data, expires_at")
+        .from("channels")
+        .select("*")
         .eq("channel_id", channelId)
         .single();
 
       if (cachedChannel && !cacheError) {
-        const expiresAt = new Date(cachedChannel.expires_at);
-        const now = new Date();
+        console.log(`[YouTube Channel API] Cache hit: ${channelId}`);
 
-        // If cache is still valid
-        if (expiresAt > now) {
-          console.log(`[YouTube Channel API] Cache hit: ${channelId}`);
+        // Get cached videos
+        const { data: cachedVideos } = await supabase
+          .from("channel_videos")
+          .select("*")
+          .eq("channel_id", channelId)
+          .order("published_at", { ascending: false });
 
-          // Get cached videos
-          const { data: cachedVideos } = await supabase
-            .from("youtube_channel_videos_cache")
-            .select("video_data")
-            .eq("channel_id", channelId);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              channel: cachedChannel.channel_data,
-              videos: cachedVideos?.map((v) => v.video_data) || [],
-              cached: true,
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
+        // Return cached data (without TTL check)
+        return new Response(
+          JSON.stringify({
+            success: true,
+            channel: {
+              id: cachedChannel.channel_id,
+              name: cachedChannel.channel_name,
+              description: cachedChannel.description,
+              thumbnail: cachedChannel.channel_avatar,
+              subscriberCount: cachedChannel.subscriber_count,
             },
-          );
-        } else {
-          console.log(`[YouTube Channel API] Cache expired: ${channelId}`);
-          // Delete expired cache
-          await supabase
-            .from("youtube_channel_cache")
-            .delete()
-            .eq("channel_id", channelId);
-        }
+            videos: cachedVideos?.map((v) => ({
+              id: v.video_id,
+              title: v.title,
+              thumbnail: v.thumbnail_url,
+              publishedAt: v.published_at,
+              url: `https://www.youtube.com/watch?v=${v.video_id}`,
+              ...v.video_data,
+            })) || [],
+            cached: true,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
     } else {
       console.log(`[YouTube Channel API] Force refresh: ${channelId}`);
     }
 
-    // Cache miss or expired - fetch from YouTube
-    console.log(`[YouTube Channel API] Cache miss: ${channelId}`);
+    // Cache miss or force refresh - fetch from YouTube
+    console.log(`[YouTube Channel API] Fetching from YouTube: ${channelId}`);
     const result = await getChannelInfo(channelId, 30);
 
     if (!result.success) {
@@ -94,60 +96,63 @@ serve(async (req) => {
       });
     }
 
-    // 빠른 응답: 기본 채널 정보만 먼저 리턴
-    const quickResponse = {
-      success: true,
-      channel: result.channel,
-      videos: [],
-      cached: false,
-      loading: true,
-    };
+    // Save to database
+    try {
+      // Update channel info
+      await supabase
+        .from("channels")
+        .upsert({
+          channel_id: result.channel.id || channelId,
+          channel_name: result.channel.name,
+          channel_avatar: result.channel.thumbnail,
+          subscriber_count: result.channel.subscriberCount,
+          description: result.channel.description,
+          video_count: result.videos?.length || 0,
+          channel_data: {
+            handle: channelId.startsWith('@') ? channelId : null,
+            ...result.channel,
+          },
+        });
 
-    // 백그라운드로 비디오 + 캐시 저장
-    (async () => {
-      try {
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour TTL
+      // Delete old videos and insert new ones
+      await supabase
+        .from("channel_videos")
+        .delete()
+        .eq("channel_id", result.channel.id || channelId);
+
+      if (result.videos && result.videos.length > 0) {
+        const videoInserts = result.videos.map((video) => ({
+          video_id: video.id,
+          channel_id: result.channel.id || channelId,
+          title: video.title,
+          thumbnail_url: video.thumbnail,
+          published_at: video.publishedAt,
+          video_data: video,
+        }));
 
         await supabase
-          .from("youtube_channel_cache")
-          .upsert({
-            channel_id: channelId,
-            channel_data: result.channel,
-            cached_at: new Date().toISOString(),
-            expires_at: expiresAt.toISOString(),
-          });
-
-        // Delete old videos and insert new ones
-        await supabase
-          .from("youtube_channel_videos_cache")
-          .delete()
-          .eq("channel_id", channelId);
-
-        if (result.videos && result.videos.length > 0) {
-          await supabase
-            .from("youtube_channel_videos_cache")
-            .insert(
-              result.videos.map((video) => ({
-                channel_id: channelId,
-                video_data: video,
-              })),
-            );
-        }
-
-        console.log(
-          `[YouTube Channel API] Background caching completed: ${channelId}`,
-        );
-      } catch (error) {
-        console.error(
-          `[YouTube Channel API] Background caching failed: ${channelId}`,
-          error,
-        );
+          .from("channel_videos")
+          .insert(videoInserts);
       }
-    })();
 
+      console.log(
+        `[YouTube Channel API] Saved to database: ${channelId} (${result.videos?.length} videos)`,
+      );
+    } catch (dbError) {
+      console.error(
+        `[YouTube Channel API] Database error: ${channelId}`,
+        dbError,
+      );
+    }
+
+    // Return the fetched data
     return new Response(
-      JSON.stringify(quickResponse),
+      JSON.stringify({
+        success: true,
+        channel: result.channel,
+        videos: result.videos || [],
+        cached: false,
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
