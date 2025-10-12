@@ -2,6 +2,6 @@
   "imports": {
     "ai": "npm:ai@5.0.65",
     "@ai-sdk/google": "npm:@ai-sdk/google@2.0.18",
-    "zod": "npm:zod@latest"
+    "valibot": "npm:valibot@latest"
   }
 }

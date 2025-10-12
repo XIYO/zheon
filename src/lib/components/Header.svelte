@@ -40,17 +40,6 @@
 	{/snippet}
 
 	{#snippet trail()}
-		<!--
-		═══════════════════════════════════════════════════════════════
-		인증 기능 (Authentication)
-		═══════════════════════════════════════════════════════════════
-
-		현재 인증 기능은 숨김 처리되어 있습니다.
-		필요시 아래 주석을 해제하여 로그인/로그아웃 링크를 활성화할 수 있습니다.
-
-		로그인/회원가입 페이지: /auth/sign-in, /auth/sign-up
-		로그아웃 페이지: /auth/sign-out
-
 		{#if !page.data.user}
 			<nav>
 				<a href="/auth/sign-in" class="btn preset-filled btn-sm">
@@ -74,8 +63,6 @@
 				</a>
 			</div>
 		{/if}
-		═══════════════════════════════════════════════════════════════
-		-->
 	{/snippet}
 
 	<span class="preset-typo-subtitle">{page.data?.meta?.title}</span>

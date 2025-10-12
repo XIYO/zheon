@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as v from 'valibot';
 
 // URL 유효성 검사
 /**
@@ -24,8 +24,9 @@ const isValidUrl = (str) => {
 };
 
 // URL 검증 스키마
-export const urlSchema = z
-	.string()
-	.trim()
-	.min(1, 'URL을 입력해주세요')
-	.refine(isValidUrl, '지원하지 않는 URL 입니다');
+export const urlSchema = v.pipe(
+	v.string('URL을 입력해주세요'),
+	v.transform((input) => input.trim()),
+	v.minLength(1, 'URL을 입력해주세요'),
+	v.check(isValidUrl, '지원하지 않는 URL 입니다')
+);

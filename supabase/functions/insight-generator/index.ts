@@ -1,16 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { z } from "zod";
+import * as v from "valibot";
 import { corsError, corsResponse, corsValidation } from "../_shared/cors.ts";
 
 console.log("🤖 Insight Generator Function Started");
 
-// Zod 스키마 정의 - 구조화된 인사이트 출력
-const InsightSchema = z.object({
-  title: z.string().min(10).max(100),
-  summary: z.string().min(200).max(1000),
-  insights: z.string().min(500).max(5000),
+// Valibot 스키마 정의 - 구조화된 인사이트 출력
+const InsightSchema = v.object({
+  title: v.pipe(v.string(), v.minLength(10), v.maxLength(100)),
+  summary: v.pipe(v.string(), v.minLength(200), v.maxLength(1000)),
+  insights: v.pipe(v.string(), v.minLength(500), v.maxLength(5000)),
 });
 
 // 프롬프트 템플릿
