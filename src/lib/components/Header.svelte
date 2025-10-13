@@ -21,11 +21,12 @@
 				</a>
 			{:else}
 				<a href="/profile" class="hover:opacity-80" aria-label="프로필">
-					<Avatar
-						src={page.data.user.user_metadata?.avatar_url}
-						name={page.data.user.user_metadata?.display_name || page.data.user.email || 'User'}
-						classes="w-8 h-8"
-					/>
+					<Avatar class="w-8 h-8">
+						<Avatar.Image src={page.data.user.user_metadata?.avatar_url} />
+						<Avatar.Fallback>
+							{(page.data.user.user_metadata?.display_name || page.data.user.email || 'User').substring(0, 2).toUpperCase()}
+						</Avatar.Fallback>
+					</Avatar>
 				</a>
 			{/if}
 		</div>
