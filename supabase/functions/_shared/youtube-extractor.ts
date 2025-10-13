@@ -18,7 +18,7 @@ export interface YouTubeExtractionResult {
 export async function extractYouTubeSubtitles(
 	youtubeUrl: string
 ): Promise<YouTubeExtractionResult> {
-	const extractorBaseUrl = Deno.env.get("EXTRACT_API_URL") || "https://extractor.xiyo.dev/extract";
+	const extractorBaseUrl = Deno.env.get("EXTRACT_API_URL");
 
 	try {
 		console.log(`[YouTube Extractor] Processing: ${youtubeUrl}`);
@@ -42,7 +42,7 @@ export async function extractYouTubeSubtitles(
 
 		const data = await response.json();
 
-		// extractor.xiyo.dev returns { transcript: string, detected_language: string }
+		// returns { transcript: string, detected_language: string }
 		if (!data.transcript || data.transcript.length === 0) {
 			return {
 				success: false,

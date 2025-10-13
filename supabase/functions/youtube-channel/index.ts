@@ -57,6 +57,21 @@ serve(async (req) => {
           .order("published_at", { ascending: false });
 
         // Return cached data (without TTL check)
+        if (!cachedVideos) {
+          console.warn(`[YouTube Channel API] No cached videos found for channel ${channelId}`);
+        }
+
+        const videos = cachedVideos
+          ? cachedVideos.map((v) => ({
+              id: v.video_id,
+              title: v.title,
+              thumbnail: v.thumbnail_url,
+              publishedAt: v.published_at,
+              url: `https://www.youtube.com/watch?v=${v.video_id}`,
+              ...v.video_data,
+            }))
+          : [];
+
         return new Response(
           JSON.stringify({
             success: true,
@@ -67,14 +82,7 @@ serve(async (req) => {
               thumbnail: cachedChannel.channel_avatar,
               subscriberCount: cachedChannel.subscriber_count,
             },
-            videos: cachedVideos?.map((v) => ({
-              id: v.video_id,
-              title: v.title,
-              thumbnail: v.thumbnail_url,
-              publishedAt: v.published_at,
-              url: `https://www.youtube.com/watch?v=${v.video_id}`,
-              ...v.video_data,
-            })) || [],
+            videos,
             cached: true,
           }),
           {
@@ -98,16 +106,31 @@ serve(async (req) => {
 
     // Save to database
     try {
+      // Validate required fields from API response
+      if (!result.channel.id) {
+        throw new Error(
+          `Missing channel.id in API response for ${channelId}. Cannot save to database.`,
+        );
+      }
+
+      if (result.videos === undefined) {
+        throw new Error(
+          `Missing videos field in API response for ${channelId}. API contract violated.`,
+        );
+      }
+
+      const videoCount = result.videos.length;
+
       // Update channel info
       await supabase
         .from("channels")
         .upsert({
-          channel_id: result.channel.id || channelId,
+          channel_id: result.channel.id,
           channel_name: result.channel.name,
           channel_avatar: result.channel.thumbnail,
           subscriber_count: result.channel.subscriberCount,
           description: result.channel.description,
-          video_count: result.videos?.length || 0,
+          video_count: videoCount,
           channel_data: {
             handle: channelId.startsWith('@') ? channelId : null,
             ...result.channel,
@@ -118,12 +141,12 @@ serve(async (req) => {
       await supabase
         .from("channel_videos")
         .delete()
-        .eq("channel_id", result.channel.id || channelId);
+        .eq("channel_id", result.channel.id);
 
-      if (result.videos && result.videos.length > 0) {
+      if (result.videos.length > 0) {
         const videoInserts = result.videos.map((video) => ({
           video_id: video.id,
-          channel_id: result.channel.id || channelId,
+          channel_id: result.channel.id,
           title: video.title,
           thumbnail_url: video.thumbnail,
           published_at: video.publishedAt,
@@ -136,7 +159,7 @@ serve(async (req) => {
       }
 
       console.log(
-        `[YouTube Channel API] Saved to database: ${channelId} (${result.videos?.length} videos)`,
+        `[YouTube Channel API] Saved to database: ${channelId} (${videoCount} videos)`,
       );
     } catch (dbError) {
       console.error(
@@ -146,11 +169,17 @@ serve(async (req) => {
     }
 
     // Return the fetched data
+    if (result.videos === undefined) {
+      throw new Error(
+        `Missing videos field in API response for ${channelId}. API contract violated.`,
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         channel: result.channel,
-        videos: result.videos || [],
+        videos: result.videos,
         cached: false,
       }),
       {

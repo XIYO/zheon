@@ -1,17 +1,20 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { valibotSchema } from "@ai-sdk/valibot";
 import * as v from "valibot";
 import { corsError, corsResponse, corsValidation } from "../_shared/cors.ts";
 
 console.log("🤖 Insight Generator Function Started");
 
 // Valibot 스키마 정의 - 구조화된 인사이트 출력
-const InsightSchema = v.object({
-  title: v.pipe(v.string(), v.minLength(10), v.maxLength(100)),
-  summary: v.pipe(v.string(), v.minLength(200), v.maxLength(1000)),
-  insights: v.pipe(v.string(), v.minLength(500), v.maxLength(5000)),
-});
+const InsightSchema = valibotSchema(
+  v.object({
+    title: v.pipe(v.string(), v.minLength(10), v.maxLength(100)),
+    summary: v.pipe(v.string(), v.minLength(200), v.maxLength(1000)),
+    insights: v.pipe(v.string(), v.minLength(500), v.maxLength(5000)),
+  })
+);
 
 // 프롬프트 템플릿
 const PROMPT_TEMPLATE = `

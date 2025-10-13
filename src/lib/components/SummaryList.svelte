@@ -106,22 +106,25 @@
 			</thead>
 			<tbody>
 				{#each summaries as summary (summary.id)}
-					<tr class={[
-						'border-b border-surface-200-800 hover:opacity-80',
-						summary.processing_status === 'pending' && 'bg-warning-50-900/20',
-						summary.processing_status === 'processing' && 'bg-primary-50-900/20',
-						summary.processing_status === 'failed' && 'bg-error-50-900/20'
-					]}>
+					<tr class="border-b border-surface-200-800 hover:opacity-80">
 						<td class="px-4 py-3">
 							<a href="/summaries/{summary.id}/" class="flex items-center gap-3">
+								{#if summary.processing_status === 'pending'}
+									<div class="w-2 h-2 rounded-full bg-warning-500 animate-pulse"></div>
+								{:else if summary.processing_status === 'processing'}
+									<div class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
+								{:else if summary.processing_status === 'failed'}
+									<div class="w-2 h-2 rounded-full bg-error-500"></div>
+								{:else}
+									<div class="w-2 h-2 rounded-full bg-success-500"></div>
+								{/if}
 								<img
 									src={extractThumbnail(summary.url)}
 									alt=""
 									width="80"
 									height="45"
 									loading="lazy"
-									class="rounded object-cover"
-									style="aspect-ratio: 16/9" />
+									class="rounded object-cover aspect-video" />
 								<p class="font-medium text-surface-900-100 truncate">
 									{summary.title}
 								</p>

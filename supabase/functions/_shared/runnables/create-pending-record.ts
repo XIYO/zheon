@@ -24,9 +24,15 @@ export const createPendingRecord = RunnableLambda.from(
       let channelName = null;
 
       if (metadata.success) {
-        title = metadata.title || "정리 중...";
-        thumbnailUrl = metadata.thumbnail_url || null;
-        channelName = metadata.channel_name || null;
+        title = metadata.title ?? "정리 중...";
+        thumbnailUrl = metadata.thumbnail_url ?? null;
+        channelName = metadata.channel_name ?? null;
+
+        if (!title || title.trim() === "") {
+          console.warn("[PendingRecord] ⚠️ Title is empty, using fallback");
+          title = "정리 중...";
+        }
+
         console.log(`[PendingRecord] ✅ Metadata extracted:`, {
           title,
           channel: channelName,

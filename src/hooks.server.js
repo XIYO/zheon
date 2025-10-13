@@ -22,7 +22,7 @@ const supabase = async ({ event, resolve }) => {
 	 */
 	event.locals.supabase = createServerClient(
 		env.PUBLIC_SUPABASE_URL,
-		env.PUBLIC_SUPABASE_ANON_KEY,
+		env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 		{
 			cookies: {
 				getAll: () => event.cookies.getAll(),

@@ -1,8 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { createWavFile } from "./audio-assembler.ts";
+import { experimental_generateSpeech as generateSpeech } from "npm:ai@4";
+import { elevenlabs } from "npm:@ai-sdk/elevenlabs@1";
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -26,7 +27,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // JWT에서 사용자 정보 추출
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -41,9 +41,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("[TTS] Request received");
+    console.log("[AI-TTS] Request received");
     const { text, summaryId, section }: RequestBody = await req.json();
-    console.log("[TTS] Parsed:", {
+    console.log("[AI-TTS] Parsed:", {
       textLength: text?.length,
       summaryId,
       section,
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     if (text.length > 5000) {
-      console.error(`[TTS] Text too long: ${text.length} characters`);
+      console.error(`[AI-TTS] Text too long: ${text.length} characters`);
       return new Response(
         JSON.stringify({ error: "Text exceeds maximum length of 5000 characters" }),
         {
@@ -76,9 +76,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!GEMINI_API_KEY) {
+    if (!ELEVENLABS_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
+        JSON.stringify({ error: "ELEVENLABS_API_KEY not configured" }),
         {
           status: 500,
           headers: {
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    console.log("[TTS] Attempting to acquire work...");
+    console.log("[AI-TTS] Attempting to acquire work...");
     const { data: workAcquired, error: rpcError } = await supabase.rpc(
       "update_processing_status",
       {
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     );
 
     if (rpcError) {
-      console.error("[TTS] RPC error:", rpcError);
+      console.error("[AI-TTS] RPC error:", rpcError);
       return new Response(
         JSON.stringify({ error: "Failed to acquire work", details: rpcError }),
         {
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     }
 
     if (!workAcquired) {
-      console.log("[TTS] Work already being processed by another request");
+      console.log("[AI-TTS] Work already being processed by another request");
       return new Response(null, {
         status: 202,
         headers: {
@@ -124,93 +124,33 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("[TTS] Work acquired, starting TTS generation...");
+    console.log("[AI-TTS] Work acquired, starting TTS generation...");
 
     try {
-      console.log("[TTS] Calling Gemini TTS API...");
+      console.log("[AI-TTS] Calling ElevenLabs via Vercel AI SDK...");
 
-      let retries = 0;
-      const maxRetries = 3;
-      let response: Response | null = null;
+      const { audio } = await generateSpeech({
+        model: elevenlabs("eleven_flash_v2_5"),
+        text: text,
+        voice: "Rachel",
+        apiKey: ELEVENLABS_API_KEY,
+      });
 
-      while (retries < maxRetries) {
-        response = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": GEMINI_API_KEY,
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text }] }],
-              generationConfig: {
-                responseModalities: ["AUDIO"],
-                speechConfig: {
-                  voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: "Kore" },
-                  },
-                },
-              },
-              model: "gemini-2.5-flash-preview-tts",
-            }),
-          }
-        );
+      const audioBuffer = await audio.arrayBuffer();
+      const audioData = new Uint8Array(audioBuffer);
 
-        if (response.ok) {
-          break;
-        }
-
-        if (response.status === 429) {
-          const errorData = await response.json();
-          const retryDelay = errorData?.error?.details?.find(
-            (d: any) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
-          )?.retryDelay;
-
-          let waitMs = 1000 * Math.pow(2, retries);
-          if (retryDelay) {
-            const seconds = parseInt(retryDelay.replace("s", ""));
-            waitMs = seconds * 1000;
-          }
-
-          console.log(`[TTS] Rate limited. Waiting ${waitMs}ms before retry ${retries + 1}/${maxRetries}`);
-          await new Promise((resolve) => setTimeout(resolve, waitMs));
-          retries++;
-        } else {
-          const errorText = await response.text();
-          console.error("[TTS] Gemini API error:", errorText);
-          throw new Error(`Gemini API failed: ${response.status}`);
-        }
-      }
-
-      if (!response || !response.ok) {
-        const errorText = response ? await response.text() : "No response";
-        console.error("[TTS] Gemini API error after retries:", errorText);
-        throw new Error(`Gemini API failed after ${maxRetries} retries`);
-      }
-
-      const data = await response.json();
-
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data) {
-        throw new Error("No audio data in response");
-      }
-
-      const audioData = data.candidates[0].content.parts[0].inlineData.data;
-      const pcmBuffer = Uint8Array.from(atob(audioData), (c) => c.charCodeAt(0));
-      const wavBuffer = createWavFile(pcmBuffer, 24000, 1, 16);
-
-      const fileName = `${summaryId}_${section}_${Date.now()}.wav`;
-      console.log(`[TTS] Uploading to storage: ${fileName}`);
+      const fileName = `${summaryId}_${section}_${Date.now()}.mp3`;
+      console.log(`[AI-TTS] Uploading to storage: ${fileName}`);
 
       const { error: uploadError } = await supabase.storage
         .from("tts-audio")
-        .upload(fileName, wavBuffer, {
-          contentType: "audio/wav",
+        .upload(fileName, audioData, {
+          contentType: "audio/mpeg",
           upsert: true,
         });
 
       if (uploadError) {
-        console.error("[TTS] Upload error:", uploadError);
+        console.error("[AI-TTS] Upload error:", uploadError);
         throw uploadError;
       }
 
@@ -230,11 +170,11 @@ Deno.serve(async (req) => {
         .eq("id", summaryId);
 
       if (dbUpdateError) {
-        console.error("[TTS] DB update error:", dbUpdateError);
+        console.error("[AI-TTS] DB update error:", dbUpdateError);
         throw dbUpdateError;
       }
 
-      console.log("[TTS] ✅ Successfully completed");
+      console.log("[AI-TTS] ✅ Successfully completed");
 
       return new Response(null, {
         status: 202,
@@ -243,7 +183,7 @@ Deno.serve(async (req) => {
         },
       });
     } catch (processingError) {
-      console.error("[TTS] Processing error:", processingError);
+      console.error("[AI-TTS] Processing error:", processingError);
 
       const statusColumn = `${section}_audio_status` as
         | "summary_audio_status"
@@ -257,7 +197,7 @@ Deno.serve(async (req) => {
       throw processingError;
     }
   } catch (error) {
-    console.error("[TTS] Request error:", error);
+    console.error("[AI-TTS] Request error:", error);
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ error: errorMessage }), {

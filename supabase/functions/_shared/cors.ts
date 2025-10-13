@@ -28,12 +28,24 @@ export const DEFAULT_CORS_CONFIG: CorsConfig = {
 export function generateCorsHeaders(
   config: CorsConfig = DEFAULT_CORS_CONFIG,
 ): Record<string, string> {
+  const origins = config.allowedOrigins ?? DEFAULT_CORS_CONFIG.allowedOrigins!;
+  const headers = config.allowedHeaders ?? DEFAULT_CORS_CONFIG.allowedHeaders!;
+  const methods = config.allowedMethods ?? DEFAULT_CORS_CONFIG.allowedMethods!;
+
+  if (origins.length === 0) {
+    throw new Error("allowedOrigins cannot be empty. Use ['*'] for all origins.");
+  }
+  if (headers.length === 0) {
+    throw new Error("allowedHeaders cannot be empty.");
+  }
+  if (methods.length === 0) {
+    throw new Error("allowedMethods cannot be empty.");
+  }
+
   return {
-    "Access-Control-Allow-Origin": config.allowedOrigins?.join(", ") || "*",
-    "Access-Control-Allow-Headers": config.allowedHeaders?.join(", ") ||
-      "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": config.allowedMethods?.join(", ") ||
-      "POST, GET, OPTIONS",
+    "Access-Control-Allow-Origin": origins.join(", "),
+    "Access-Control-Allow-Headers": headers.join(", "),
+    "Access-Control-Allow-Methods": methods.join(", "),
   };
 }
 

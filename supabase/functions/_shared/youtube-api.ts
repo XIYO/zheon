@@ -70,14 +70,21 @@ async function getChannelDetails(channelId: string, apiKey: string) {
 	}
 
 	const channel = data.items[0];
+
+	let thumbnail = "";
+	if (channel.snippet.thumbnails?.high?.url) {
+		thumbnail = channel.snippet.thumbnails.high.url;
+	} else if (channel.snippet.thumbnails?.default?.url) {
+		thumbnail = channel.snippet.thumbnails.default.url;
+	} else {
+		console.warn(`[YouTube API] No thumbnail found for channel ${channel.id}`);
+	}
+
 	return {
 		id: channel.id,
 		name: channel.snippet.title,
 		description: channel.snippet.description,
-		thumbnail:
-			channel.snippet.thumbnails?.high?.url ||
-			channel.snippet.thumbnails?.default?.url ||
-			"",
+		thumbnail,
 		subscriberCount: channel.statistics?.subscriberCount
 			? parseInt(channel.statistics.subscriberCount).toLocaleString()
 			: undefined,
@@ -109,16 +116,24 @@ async function getChannelVideos(
 		return [];
 	}
 
-	return data.items.map((item: any) => ({
-		id: item.snippet.resourceId.videoId,
-		title: item.snippet.title,
-		thumbnail:
-			item.snippet.thumbnails?.high?.url ||
-			item.snippet.thumbnails?.default?.url ||
-			"",
-		publishedAt: item.snippet.publishedAt,
-		url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-	}));
+	return data.items.map((item: any) => {
+		let thumbnail = "";
+		if (item.snippet.thumbnails?.high?.url) {
+			thumbnail = item.snippet.thumbnails.high.url;
+		} else if (item.snippet.thumbnails?.default?.url) {
+			thumbnail = item.snippet.thumbnails.default.url;
+		} else {
+			console.warn(`[YouTube API] No thumbnail found for video ${item.snippet.resourceId.videoId}`);
+		}
+
+		return {
+			id: item.snippet.resourceId.videoId,
+			title: item.snippet.title,
+			thumbnail,
+			publishedAt: item.snippet.publishedAt,
+			url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+		};
+	});
 }
 
 /**

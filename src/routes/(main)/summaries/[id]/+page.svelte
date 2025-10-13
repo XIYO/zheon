@@ -1,6 +1,4 @@
 <script>
-	import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-
 	let { data } = $props();
 
 	// summary를 반응형 상태로 관리
@@ -235,8 +233,11 @@
 				isReading = true;
 				currentSection = section + '-gemini';
 
-				const audioUrl = `${PUBLIC_SUPABASE_URL}/storage/v1/object/public/tts-audio/${cachedAudioUrl}`;
-				currentAudio = new Audio(audioUrl);
+				const { data: urlData } = data.supabase.storage
+					.from('tts-audio')
+					.getPublicUrl(cachedAudioUrl);
+
+				currentAudio = new Audio(urlData.publicUrl);
 
 				currentAudio.onended = () => {
 					isReading = false;
@@ -266,65 +267,23 @@
 			isReading = true;
 			currentSection = section + '-gemini';
 
-			// Supabase Edge Function으로 SSE 연결
-			const url = `${PUBLIC_SUPABASE_URL}/functions/v1/tts-stream`;
-			console.log('Fetch URL:', url);
-			console.log('Request body:', { text, summaryId: summary.id, section });
+			// Supabase Edge Function 호출
+			console.log('Calling tts-stream with:', { text, summaryId: summary.id, section });
 
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${PUBLIC_SUPABASE_ANON_KEY}`
-				},
-				body: JSON.stringify({
+			const { data: result, error } = await data.supabase.functions.invoke('tts-stream', {
+				body: {
 					text,
 					summaryId: summary.id,
 					section
-				})
+				}
 			});
 
-			console.log('Response status:', response.status, response.statusText);
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error('Response error:', errorText);
-				throw new Error('TTS 생성 실패');
+			if (error) {
+				console.error('TTS error:', error);
+				throw new Error(error.message || 'TTS 생성 실패');
 			}
-
-			// JSON 응답 파싱
-			const result = await response.json();
-			console.log('[TTS] Received result:', result);
-
-			if (!result.success || !result.audioUrl) {
-				throw new Error('오디오 URL을 받지 못했습니다');
-			}
-
-			// summary 상태 업데이트 (UI 반영)
-			summary[urlKey] = result.fileName;
-			summary[statusKey] = 'completed';
-			console.log('[TTS] Updated summary state:', { [urlKey]: result.fileName, [statusKey]: 'completed' });
-
-			// 오디오 재생
-			currentAudio = new Audio(result.audioUrl);
-
-			currentAudio.onended = () => {
-				console.log('[Audio] Playback ended');
-				isReading = false;
-				currentSection = '';
-				currentAudio = null;
-			};
-
-			currentAudio.onerror = (e) => {
-				console.error('[Audio] Playback error:', e);
-				isReading = false;
-				currentSection = '';
-				currentAudio = null;
-			};
-
-			console.log('[Audio] Starting playback...');
-			await currentAudio.play();
-			console.log('[Audio] Play() called');
+			// 202 응답 (처리 시작됨, Realtime으로 완료 감지)
+			console.log('[TTS] Request accepted (202), waiting for Realtime update...');
 		} catch (error) {
 			console.error('Gemini TTS 오류:', error);
 			alert('음성 생성에 실패했습니다: ' + error.message);
@@ -358,8 +317,9 @@
 			alt={summary.title}
 			width="1280"
 			height="720"
-			class="w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-700 opacity-100 starting:opacity-0"
-			style="view-transition-name: summary-image-{summary.id}; aspect-ratio: 16/9" />
+			class="w-full rounded-xl shadow-lg hover:shadow-xl transition-all duration-700 opacity-100 starting:opacity-0 aspect-video"
+			style="view-transition-name: summary-image-{summary.id}"
+		/>
 	</a>
 
 	<!-- 제목과 날짜 -->

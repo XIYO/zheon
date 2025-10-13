@@ -28,20 +28,25 @@ export const getRecentSummaries = query(async () => {
  * Form: 요약 제출
  * - 익명 사용자 포함 모두 가능
  * - Valibot 자동 검증
- * - Edge Function이 모든 것 처리 (upsert, 메타데이터 추출, 요약 생성)
+ * - DB INSERT → Webhook → insight Edge Function 자동 트리거
  */
 export const createSummary = form(SummarySchema, async ({ url }) => {
 	const { locals } = getRequestEvent();
 	const { supabase } = locals;
 
-	// Edge Function 호출 - 모든 처리 위임
-	const { error: edgeError } = await supabase.functions.invoke('summary', {
-		body: { url }
-	});
+	// summary 테이블에 직접 INSERT (Webhook이 insight 트리거)
+	const { error: dbError } = await supabase
+		.from('summary')
+		.insert({
+			url,
+			title: '정리 중...',
+			summary: '영상을 분석하고 있습니다',
+			processing_status: 'pending'
+		});
 
-	if (edgeError) {
-		console.error('Edge function failed:', edgeError);
-		throw error(500, edgeError.message || '요약 생성 실패');
+	if (dbError) {
+		console.error('DB insert failed:', dbError);
+		throw error(500, dbError.message || '요약 생성 실패');
 	}
 
 	// Query 갱신
