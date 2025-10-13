@@ -26,9 +26,6 @@ importers:
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.3)
-      ws:
-        specifier: ^8.18.3
-        version: 8.18.3
       youtubei.js:
         specifier: ^16.0.0
         version: 16.0.0
