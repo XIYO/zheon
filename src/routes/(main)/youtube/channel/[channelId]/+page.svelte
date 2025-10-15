@@ -1,8 +1,7 @@
 <script>
 	import { page } from '$app/state';
-	import { syncChannelVideos, syncChannelVideosCommand } from '$lib/remote/youtube.remote.js';
+	import { syncChannelVideos, getChannelVideos } from '$lib/remote/channel_videos.remote.js';
 	import { getChannel } from '$lib/remote/channel.remote.js';
-	import { getChannelVideos } from '$lib/remote/channel_videos.remote.js';
 	import VideoCard from '$lib/components/VideoCard.svelte';
 
 	/** @type {string} */
@@ -63,6 +62,45 @@
 		observer.observe(sentinel);
 
 		return () => observer.disconnect();
+	});
+
+	// Realtime updates for channel sync status
+	$effect.pre(() => {
+		const { supabase } = page.data;
+
+		const needsUpdate = ['pending', 'processing'].includes(channel?.video_sync_status);
+
+		if (!needsUpdate) return;
+
+		const channelUpdateChannel = supabase
+			.channel(`channel-sync-${channelId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'channels',
+					filter: `channel_id=eq.${channelId}`
+				},
+				async (payload) => {
+					const updated = await getChannel(channelId);
+					channel = updated;
+
+					if (updated.video_sync_status === 'completed') {
+						const refreshedData = await getChannelVideos({ channelId });
+						videos = refreshedData.videos;
+						nextCursor = refreshedData.nextCursor;
+						hasMore = refreshedData.hasMore;
+					}
+				}
+			)
+			.subscribe((status, err) => {
+				if (err) console.error('[Realtime] Channel sync subscription error:', err);
+			});
+
+		return () => {
+			channelUpdateChannel.unsubscribe();
+		};
 	});
 </script>
 

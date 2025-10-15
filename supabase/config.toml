@@ -266,8 +266,6 @@ client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
 redirect_uri = ""
 skip_nonce_check = true
-# YouTube API 스코프 추가
-additional_scopes = "https://www.googleapis.com/auth/youtube.readonly"
 
 [auth.external.apple]
 enabled = false

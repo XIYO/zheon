@@ -1,5 +1,5 @@
 <script>
-    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/youtube.remote.js';
+    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/subscription.remote.js';
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
 
@@ -23,26 +23,35 @@
 		if (!hasMore || isLoadingMore) return;
 
 		isLoadingMore = true;
-		const result = await getSubscriptions({ cursor: nextCursor });
+		try {
+			const result = await getSubscriptions({ cursor: nextCursor });
 
-		subscriptions = [...subscriptions, ...result.subscriptions];
-		nextCursor = result.nextCursor;
-		hasMore = result.hasMore;
-		isLoadingMore = false;
+			subscriptions = [...subscriptions, ...result.subscriptions];
+			nextCursor = result.nextCursor;
+			hasMore = result.hasMore;
+		} catch (err) {
+			console.error('구독 목록 추가 로딩 실패:', err);
+		} finally {
+			isLoadingMore = false;
+		}
 	}
 
 	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ form, submit }) => {
 		isSubscriptionSyncSubmitting = true;
-		await submit();
-		await getProfile().refresh();
+		try {
+			await submit();
+			await getProfile().refresh();
 
-		// 동기화 후 구독 목록 리셋
-		const refreshedData = await getSubscriptions();
-		subscriptions = refreshedData.subscriptions;
-		nextCursor = refreshedData.nextCursor;
-		hasMore = refreshedData.hasMore;
-
-		isSubscriptionSyncSubmitting = false;
+			// 동기화 후 구독 목록 리셋
+			const refreshedData = await getSubscriptions();
+			subscriptions = refreshedData.subscriptions;
+			nextCursor = refreshedData.nextCursor;
+			hasMore = refreshedData.hasMore;
+		} catch (err) {
+			console.error('구독 동기화 실패:', err);
+		} finally {
+			isSubscriptionSyncSubmitting = false;
+		}
 	})
 
 	// IntersectionObserver로 무한 스크롤 구현
@@ -61,19 +70,32 @@
 		return () => observer.disconnect();
 	});
 
+	let autoSyncAttempted = $state(false);
+
     // 구독 목록이 0개이고 동기화 중이 아니면 자동 동기화
     $effect.pre(() => {
-        if (subscriptions.length === 0 && !isSync) {
+        if (subscriptions.length === 0 && !isSync && !autoSyncAttempted) {
+			autoSyncAttempted = true;
 			isSubscriptionSyncSubmitting = true;
-			syncSubscriptionsCommand().updates(getSubscriptions(), getProfile());
+			syncSubscriptionsCommand()
+				.updates(getSubscriptions(), getProfile())
+				.catch((err) => {
+					console.error('구독 동기화 실패:', err);
+					isSubscriptionSyncSubmitting = false;
+				});
 
 			// 동기화 후 구독 목록 리셋
-			getSubscriptions().then((refreshedData) => {
-				subscriptions = refreshedData.subscriptions;
-				nextCursor = refreshedData.nextCursor;
-				hasMore = refreshedData.hasMore;
-				isSubscriptionSyncSubmitting = false;
-			});
+			getSubscriptions()
+				.then((refreshedData) => {
+					subscriptions = refreshedData.subscriptions;
+					nextCursor = refreshedData.nextCursor;
+					hasMore = refreshedData.hasMore;
+					isSubscriptionSyncSubmitting = false;
+				})
+				.catch((err) => {
+					console.error('구독 목록 조회 실패:', err);
+					isSubscriptionSyncSubmitting = false;
+				});
         }
     });
 </script>
