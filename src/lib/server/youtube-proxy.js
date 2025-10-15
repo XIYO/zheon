@@ -37,9 +37,9 @@ function createProxyFetch(proxyUrl) {
  * 프록시를 사용하는 Innertube 인스턴스 생성
  */
 async function createYouTubeClient() {
-	const proxyUrl = env.HEADER_PROXY_URL;
+	const proxyUrl = env.HTTP_PROXY_URL;
 	if (!proxyUrl) {
-		throw new Error('HEADER_PROXY_URL not configured');
+		throw new Error('HTTP_PROXY_URL not configured');
 	}
 
 	return await Innertube.create({

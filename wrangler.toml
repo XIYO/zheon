@@ -19,15 +19,11 @@ directory = ".svelte-kit/cloudflare"  # 빌드된 client 파일 위치
 [vars]
 PUBLIC_SUPABASE_URL = "https://iefgdhwmgljjacafqomd.supabase.co"
 PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2DSwr9dKHxpA4WOEEOYkww_AMIhsiUb"
-SUPABASE_SECRET_KEY = "your_service_role_key_here"
-SOCKS5_PROXY_HOST = "xiyo.dev"
-SOCKS5_PROXY_PORT = "19050"
 
 # Cloudflare Workers 개발 모드 사용법
-# watch_ignore를 사용하면 paraglide.js 무한 빌드 루프 방지 가능!
-[build]
-command = "pnpm build"
-watch_ignore = ["lib/paraglide/**"]
+# paraglidejs가 무한빌드돼서 일딴 주석처리
+#[build]
+#command = "pnpm build"
 
 [observability.logs]
 enabled = true

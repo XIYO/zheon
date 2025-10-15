@@ -38,7 +38,7 @@
 						{...signInEmail.fields?.email?.as('email')}
 						aria-invalid={(signInEmail.fields?.email?.issues()?.length ?? 0) > 0}
 					/>
-					{#each signInEmail.fields?.email?.issues() || [] as issue}
+					{#each signInEmail.fields?.email?.issues() || [] as issue (issue.message)}
 						<span class="text-error-500 text-sm">{issue.message}</span>
 					{/each}
 				</label>
@@ -50,7 +50,7 @@
 						{...signInEmail.fields?.password?.as('password')}
 						aria-invalid={(signInEmail.fields?.password?.issues()?.length ?? 0) > 0}
 					/>
-					{#each signInEmail.fields?.password?.issues() || [] as issue}
+					{#each signInEmail.fields?.password?.issues() || [] as issue (issue.message)}
 						<span class="text-error-500 text-sm">{issue.message}</span>
 					{/each}
 				</label>

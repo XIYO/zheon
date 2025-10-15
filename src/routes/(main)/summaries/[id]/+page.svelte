@@ -4,34 +4,32 @@ import { getSummaryById } from '$lib/remote/getSummaries.remote.js';
 import { generateTTS } from '$lib/remote/ai.remote.js';
 import { getAudioSignedUrl } from '$lib/remote/audio.remote.js';
 import { getSummaryAudio } from '$lib/utils/audio-cache.js';
+import Sparkles from '@lucide/svelte/icons/sparkles';
+import Loader from '@lucide/svelte/icons/loader';
+import Play from '@lucide/svelte/icons/play';
+import Pause from '@lucide/svelte/icons/pause';
+import CircleX from '@lucide/svelte/icons/circle-x';
 
-// 리모트 펑션으로 직접 데이터 가져오기
 let summary = $derived(await getSummaryById({ id: page.params.id }));
 const { summaryId } = generateTTS.fields;
 
-// 오디오 재생 상태
 let isLoadingAudio = $state(false);
+let isPlaying = $state(false);
 let audioElement = $state(null);
 let currentAudioUrl = $state(null);
 
-/**
- * 오디오 재생
- */
-async function playAudio(type = 'summary') {
+async function playAudio() {
 	try {
 		isLoadingAudio = true;
 
-		// 오디오 가져오기 (캐시 우선)
-		const audioUrl = await getSummaryAudio(summary.id, getAudioSignedUrl, type);
+		const audioUrl = await getSummaryAudio(summary.id, getAudioSignedUrl);
 
-		// 기존 URL 해제 (메모리 누수 방지)
 		if (currentAudioUrl) {
 			URL.revokeObjectURL(currentAudioUrl);
 		}
 
 		currentAudioUrl = audioUrl;
 
-		// 재생
 		if (audioElement) {
 			audioElement.src = audioUrl;
 			await audioElement.play();
@@ -43,6 +41,63 @@ async function playAudio(type = 'summary') {
 		isLoadingAudio = false;
 	}
 }
+
+function togglePlayPause() {
+	if (isPlaying) {
+		audioElement?.pause();
+	} else {
+		if (audioElement?.src) {
+			audioElement.play();
+		} else {
+			playAudio();
+		}
+	}
+}
+
+$effect(() => {
+	if (audioElement) {
+		audioElement.onplay = () => {
+			isPlaying = true;
+		};
+		audioElement.onpause = () => {
+			isPlaying = false;
+		};
+		audioElement.onended = () => {
+			isPlaying = false;
+		};
+	}
+});
+
+$effect.pre(() => {
+	const { supabase } = page.data;
+
+	const needsUpdate = ['pending', 'processing'].includes(summary.summary_audio_status);
+
+	if (!needsUpdate) return;
+
+	const channel = supabase
+		.channel(`summary-audio-${summary.id}`)
+		.on(
+			'postgres_changes',
+			{
+				event: 'UPDATE',
+				schema: 'public',
+				table: 'summary',
+				filter: `id=eq.${summary.id}`
+			},
+			async (payload) => {
+				const updated = await getSummaryById({ id: summary.id });
+				summary = updated;
+			}
+		)
+		.subscribe((status, err) => {
+			if (err) console.error('[Realtime] Audio status subscription error:', err);
+		});
+
+	return () => {
+		channel.unsubscribe();
+	};
+});
 </script>
 
 <main class="container mx-auto px-4 py-12 max-w-5xl">
@@ -68,30 +123,32 @@ async function playAudio(type = 'summary') {
 			<h2 class="h2">AI 요약</h2>
 			<div class="flex gap-2">
 				{#if summary.summary_audio_status === 'completed'}
-					<button
-						class="chip preset-filled-primary"
-						onclick={() => playAudio('summary')}
-						disabled={isLoadingAudio}
-						>
-						{isLoadingAudio ? '로딩 중...' : '재생'}
-					</button>
+					{#if isLoadingAudio}
+						<button type="button" class="chip-icon preset-filled" disabled>
+							<Loader size={16} class="animate-spin" />
+						</button>
+					{:else if isPlaying}
+						<button type="button" class="chip-icon preset-filled" onclick={togglePlayPause}>
+							<Pause size={16} />
+						</button>
+					{:else}
+						<button type="button" class="chip-icon preset-filled" onclick={togglePlayPause}>
+							<Play size={16} />
+						</button>
+					{/if}
 				{:else if summary.summary_audio_status === 'pending' || summary.summary_audio_status === 'processing'}
-					<div class="chip preset-tonal-surface-500 flex items-center gap-2">
-						<div class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
-						<span>생성 중...</span>
-					</div>
+					<button type="button" class="chip-icon preset-tonal" disabled>
+						<Loader size={16} class="animate-spin" />
+					</button>
 				{:else if summary.summary_audio_status === 'failed'}
-					<div class="chip preset-tonal-error-500 flex items-center gap-2">
-						<span>생성 실패</span>
-					</div>
-			{:else}
-				<form {...generateTTS}>
-					<input {...summaryId.as('hidden', summary.id)} />
-					<button
-						type="submit"
-						class="chip preset-tonal-primary-500"
-						>
-							AI음성 생성
+					<button type="button" class="chip-icon preset-tonal-error" disabled>
+						<CircleX size={16} />
+					</button>
+				{:else}
+					<form {...generateTTS}>
+						<input {...summaryId.as('hidden', summary.id)} />
+						<button type="submit" class="chip-icon preset-tonal">
+							<Sparkles size={16} />
 						</button>
 					</form>
 				{/if}

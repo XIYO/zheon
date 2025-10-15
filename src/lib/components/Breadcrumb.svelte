@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
 
-	const pathSegments = $derived(() => {
+	const pathSegments = $derived.by(() => {
 		const pathname = page.url.pathname;
 		if (pathname === '/') return [];
 
@@ -14,9 +14,9 @@
 </script>
 
 <nav class="flex items-center gap-2 text-sm">
-	{#each pathSegments() as { segment, path }, index}
+	{#each pathSegments as { segment, path }, index (path)}
 		<span class="text-surface-400">/</span>
-		{#if index === pathSegments().length - 1}
+		{#if index === pathSegments.length - 1}
 			<span class="text-surface-900-100 font-medium">
 				{segment}
 			</span>

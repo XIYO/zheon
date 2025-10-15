@@ -22,7 +22,7 @@
 			{...url.as('text')}
 			placeholder="YouTube URL을 입력하세요"
 			class="input" />
-		{#each url.issues() as issue}
+		{#each url.issues() as issue (issue.message)}
 			<p class="mt-1 text-xs text-error-500">{issue.message}</p>
 		{/each}
 	</div>
