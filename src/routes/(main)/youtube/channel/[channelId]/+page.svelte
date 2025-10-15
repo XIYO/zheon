@@ -15,11 +15,18 @@
 	let isSync = $derived(isChannelSyncSubmitting || ['pending', 'processing'].includes(channel?.video_sync_status));
 
 	// 무한 스크롤 상태
-	let videos = $state(initialData.videos);
-	let nextCursor = $state(initialData.nextCursor);
-	let hasMore = $state(initialData.hasMore);
+	let videos = $state([]);
+	let nextCursor = $state(null);
+	let hasMore = $state(false);
 	let isLoadingMore = $state(false);
 	let sentinel = $state(null);
+
+	// initialData가 변경되면 로컬 상태 동기화
+	$effect(() => {
+		videos = initialData.videos;
+		nextCursor = initialData.nextCursor;
+		hasMore = initialData.hasMore;
+	});
 
 	// 더 불러오기 함수
 	async function loadMore() {

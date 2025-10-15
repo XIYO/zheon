@@ -9,9 +9,9 @@
 	let queryResult = $derived(await query);
 
 	// 무한 스크롤 상태
-	let summaries = $state(queryResult.summaries);
-	let nextCursor = $state(queryResult.nextCursor);
-	let hasMore = $state(queryResult.hasMore);
+	let summaries = $state([]);
+	let nextCursor = $state(null);
+	let hasMore = $state(false);
 	let isLoadingMore = $state(false);
 	let sentinel = $state(null);
 
@@ -136,7 +136,7 @@
 							{:else}
 								<div
 									class="w-20 h-[45px] rounded bg-surface-200-800 animate-pulse"
-								/>
+								></div>
 							{/if}
 								<p class="font-medium text-surface-900-100 truncate">
 									{summary.title}

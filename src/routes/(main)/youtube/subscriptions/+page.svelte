@@ -10,11 +10,18 @@
 	]));
 
 	// 무한 스크롤 상태
-	let subscriptions = $state(initialData.subscriptions);
-	let nextCursor = $state(initialData.nextCursor);
-	let hasMore = $state(initialData.hasMore);
+	let subscriptions = $state([]);
+	let nextCursor = $state(null);
+	let hasMore = $state(false);
 	let isLoadingMore = $state(false);
 	let sentinel = $state(null);
+
+	// initialData가 변경되면 로컬 상태 동기화
+	$effect(() => {
+		subscriptions = initialData.subscriptions;
+		nextCursor = initialData.nextCursor;
+		hasMore = initialData.hasMore;
+	});
 
 	let isSubscriptionSyncSubmitting = $state(false);
 	let isSync = $derived(isSubscriptionSyncSubmitting || ['pending', 'processing'].includes(profile?.youtube_subscription_sync_status));
