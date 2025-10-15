@@ -1,8 +1,63 @@
-<!-- 🙈 Sign-in page with clean monochromatic design -->
 <script>
-	import SignInForm from '$lib/components/SignInForm.svelte';
+	import { signInEmail, signInGoogle } from '$lib/remote/auth.remote.js';
+	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
+	import * as m from '$lib/paraglide/messages';
 </script>
 
 <div class="h-screen w-screen flex items-center justify-center">
-	<SignInForm />
+	<div class="max-w-md w-full">
+		<!-- Header Section -->
+		<header class="p-4 text-center">
+			<h2 class="text-xl font-bold">{m.auth_sign_in_title()}</h2>
+			<p>{m.auth_sign_in_subtitle()}</p>
+		</header>
+
+		<div class="divider"></div>
+
+		<!-- Content Section -->
+		<section class="p-4 space-y-4">
+			<!-- Google Login Form -->
+			{#if signInGoogle}
+				<form {...signInGoogle}>
+					<button type="submit" class="btn preset-filled-primary w-full">
+						<GoogleIcon size={20} class="h-5 w-5" />
+						<span>{m.auth_sign_in_google_button()}</span>
+					</button>
+				</form>
+			{/if}
+
+			<div class="divider">또는</div>
+
+			<!-- Email Login Form -->
+			{#if signInEmail}
+				<form {...signInEmail}>
+				<label class="label">
+					<span>이메일</span>
+					<input
+						class="input"
+						{...signInEmail.fields?.email?.as('email')}
+						aria-invalid={(signInEmail.fields?.email?.issues()?.length ?? 0) > 0}
+					/>
+					{#each signInEmail.fields?.email?.issues() || [] as issue}
+						<span class="text-error-500 text-sm">{issue.message}</span>
+					{/each}
+				</label>
+
+				<label class="label mt-4">
+					<span>비밀번호</span>
+					<input
+						class="input"
+						{...signInEmail.fields?.password?.as('password')}
+						aria-invalid={(signInEmail.fields?.password?.issues()?.length ?? 0) > 0}
+					/>
+					{#each signInEmail.fields?.password?.issues() || [] as issue}
+						<span class="text-error-500 text-sm">{issue.message}</span>
+					{/each}
+				</label>
+
+					<button type="submit" class="btn preset-filled-primary w-full mt-4">로그인</button>
+				</form>
+			{/if}
+		</section>
+	</div>
 </div>

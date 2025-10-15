@@ -73,6 +73,8 @@ export type Database = {
           subscriber_count: string | null
           updated_at: string | null
           video_count: number | null
+          video_sync_status: string | null
+          video_synced_at: string | null
         }
         Insert: {
           channel_avatar?: string | null
@@ -85,6 +87,8 @@ export type Database = {
           subscriber_count?: string | null
           updated_at?: string | null
           video_count?: number | null
+          video_sync_status?: string | null
+          video_synced_at?: string | null
         }
         Update: {
           channel_avatar?: string | null
@@ -97,6 +101,8 @@ export type Database = {
           subscriber_count?: string | null
           updated_at?: string | null
           video_count?: number | null
+          video_sync_status?: string | null
+          video_synced_at?: string | null
         }
         Relationships: []
       }
@@ -108,6 +114,8 @@ export type Database = {
           display_name: string | null
           id: string
           updated_at: string | null
+          youtube_subscription_sync_status: string | null
+          youtube_subscription_synced_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -116,6 +124,8 @@ export type Database = {
           display_name?: string | null
           id: string
           updated_at?: string | null
+          youtube_subscription_sync_status?: string | null
+          youtube_subscription_synced_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -124,6 +134,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string | null
+          youtube_subscription_sync_status?: string | null
+          youtube_subscription_synced_at?: string | null
         }
         Relationships: []
       }

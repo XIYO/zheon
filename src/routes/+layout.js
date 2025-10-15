@@ -1,7 +1,9 @@
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { env } from '$env/dynamic/public';
 
-/** @type {import('./$types').LayoutServerLoad} */
+/** @typedef {import('$lib/types/database.types').Database} Database */
+
+/** @type {import('./$types').LayoutLoad} */
 export const load = async ({ depends, fetch, data }) => {
 	/**
 	 * Declare a dependency so the layout can be invalidated, for example, on
@@ -9,6 +11,7 @@ export const load = async ({ depends, fetch, data }) => {
 	 */
 	depends('supabase:auth');
 
+	/** @type {import('@supabase/supabase-js').SupabaseClient<Database>} */
 	const supabase = isBrowser()
 		? createBrowserClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
@@ -25,12 +28,16 @@ export const load = async ({ depends, fetch, data }) => {
 			});
 
 	const {
-		data: { session }
-	} = await supabase.auth.getSession();
-
-	const {
 		data: { user }
 	} = await supabase.auth.getUser();
 
-	return { session, supabase, user };
+	const {
+		data: { session }
+	} = await supabase.auth.getSession();
+
+	return {
+		session: session ? { ...session, user: undefined } : null,
+		supabase,
+		user
+	};
 };

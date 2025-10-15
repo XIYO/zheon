@@ -46,11 +46,11 @@
 	<div class="mb-6 flex items-center justify-between">
 		<div>
 			<h1 class="h1 mb-2">추천 YouTube 채널</h1>
-			<p class="text-surface-600-300-token">
+			<p class="text-surface-600-300">
 				고품질 프로그래밍 및 웹 개발 콘텐츠를 제공하는 채널들입니다
 			</p>
 		</div>
-		<button class="btn preset-filled-primary-500" onclick={openChannelPopover}>
+		<button class="btn preset-filled-primary" onclick={openChannelPopover}>
 			+ 채널 추가
 		</button>
 	</div>
@@ -76,18 +76,17 @@
 						type="text"
 						name="channelHandle"
 						placeholder="@channelname"
-						class="input preset-outlined-surface-500 w-full"
+						class="input w-full"
 						required
-						autofocus
 						disabled={isSubmitting}
 					/>
-					<span class="text-xs text-surface-600-300-token mt-1">예: @fireship, @ThePrimeagen</span>
+					<span class="text-xs text-surface-600-300 mt-1">예: @fireship, @ThePrimeagen</span>
 				</label>
 				<div class="flex gap-2 justify-end">
-					<button type="button" class="btn preset-outlined-surface-500" onclick={closeChannelPopover} disabled={isSubmitting}>
+					<button type="button" class="btn preset-outlined" onclick={closeChannelPopover} disabled={isSubmitting}>
 						취소
 					</button>
-					<button type="submit" class="btn preset-filled-primary-500" disabled={isSubmitting}>
+					<button type="submit" class="btn preset-filled-primary" disabled={isSubmitting}>
 						{isSubmitting ? '추가 중...' : '추가'}
 					</button>
 				</div>
@@ -106,12 +105,12 @@
 				class:pointer-events-none={isLoading}
 			>
 				<!-- 채널 썸네일 -->
-				<div class="w-16 h-16 rounded-full overflow-hidden bg-surface-200-700-token flex items-center justify-center flex-shrink-0">
+				<div class="w-16 h-16 rounded-full overflow-hidden bg-surface-200-700 flex items-center justify-center flex-shrink-0">
 					{#if channel.thumbnail && !isLoading}
 						<img src={channel.thumbnail} alt={channel.name} class="w-full h-full object-cover" />
 					{:else}
 						<!-- 썸네일 없을 때 placeholder -->
-						<div class="placeholder-circle w-16 h-16 bg-surface-300-600-token" class:animate-pulse={isLoading}></div>
+						<div class="placeholder-circle w-16 h-16 bg-surface-200-800" class:animate-pulse={isLoading}></div>
 					{/if}
 				</div>
 
@@ -120,11 +119,11 @@
 					<h3 class="font-bold text-sm truncate" class:animate-pulse={isLoading}>
 						{channel.name}
 					</h3>
-					<p class="text-xs text-surface-600-300-token truncate" class:animate-pulse={isLoading}>
+					<p class="text-xs text-surface-600-300 truncate" class:animate-pulse={isLoading}>
 						{channel.handle}
 					</p>
 					{#if channel.description}
-						<p class="text-xs text-surface-700-200-token line-clamp-2">
+						<p class="text-xs text-surface-700-200 line-clamp-2">
 							{channel.description}
 						</p>
 					{/if}
@@ -135,8 +134,8 @@
 
 	<!-- 추가 정보 -->
 	<div class="card preset-tonal-primary mt-8 p-4">
-		<h2 class="font-bold text-lg mb-2">💡 Tip</h2>
-		<p class="text-sm text-surface-700-200-token">
+		<h2 class="h2 mb-2">Tip</h2>
+		<p class="text-sm text-surface-700-200">
 			위의 "채널 추가" 버튼을 클릭하여 원하는 YouTube 채널을 추가할 수 있습니다.
 		</p>
 	</div>

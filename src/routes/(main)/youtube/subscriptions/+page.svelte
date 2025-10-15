@@ -1,235 +1,135 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
+    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/youtube.remote.js';
+    import { getProfile } from '$lib/remote/profile.remote.js';
+    import ChannelCard from '$lib/components/ChannelCard.svelte';
 
-	let { data } = $props();
-	let syncing = $state(false);
-	let syncResult = $state(null);
+    let [initialData, profile] = $derived(await Promise.all([
+		getSubscriptions(),
+		getProfile()
+	]));
 
-	function formatTimeAgo(dateString) {
-		if (!dateString) return '동기화 필요';
+	// 무한 스크롤 상태
+	let subscriptions = $state(initialData.subscriptions);
+	let nextCursor = $state(initialData.nextCursor);
+	let hasMore = $state(initialData.hasMore);
+	let isLoadingMore = $state(false);
+	let sentinel = $state(null);
 
-		const date = new Date(dateString);
-		const now = new Date();
-		const diff = now - date;
+	let isSubscriptionSyncSubmitting = $state(false);
+	let isSync = $derived(isSubscriptionSyncSubmitting || ['pending', 'processing'].includes(profile?.youtube_subscription_sync_status));
 
-		const minutes = Math.floor(diff / 60000);
-		const hours = Math.floor(diff / 3600000);
-		const days = Math.floor(diff / 86400000);
+	// 더 불러오기 함수
+	async function loadMore() {
+		if (!hasMore || isLoadingMore) return;
 
-		if (minutes < 1) return '방금 전';
-		if (minutes < 60) return `${minutes}분 전`;
-		if (hours < 24) return `${hours}시간 전`;
-		return `${days}일 전`;
+		isLoadingMore = true;
+		const result = await getSubscriptions({ cursor: nextCursor });
+
+		subscriptions = [...subscriptions, ...result.subscriptions];
+		nextCursor = result.nextCursor;
+		hasMore = result.hasMore;
+		isLoadingMore = false;
 	}
 
-	// 클라이언트에서 직접 동기화
-	async function handleSync() {
-		syncing = true;
-		syncResult = null;
+	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ form, submit }) => {
+		isSubscriptionSyncSubmitting = true;
+		await submit();
+		await getProfile().refresh();
 
-		try {
-			// data에서 supabase 가져오기
-			const { supabase } = data;
+		// 동기화 후 구독 목록 리셋
+		const refreshedData = await getSubscriptions();
+		subscriptions = refreshedData.subscriptions;
+		nextCursor = refreshedData.nextCursor;
+		hasMore = refreshedData.hasMore;
 
-			// 세션 확인
-			const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+		isSubscriptionSyncSubmitting = false;
+	})
 
-			console.log('🔍 Session check:', {
-				hasSession: !!session,
-				userId: session?.user?.id,
-				provider: session?.user?.app_metadata?.provider,
-				hasProviderToken: !!session?.provider_token,
-				sessionError
+	// IntersectionObserver로 무한 스크롤 구현
+	$effect(() => {
+		if (!sentinel || !hasMore) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) loadMore();
+			},
+			{ threshold: 0.1 }
+		);
+
+		observer.observe(sentinel);
+
+		return () => observer.disconnect();
+	});
+
+    // 구독 목록이 0개이고 동기화 중이 아니면 자동 동기화
+    $effect.pre(() => {
+        if (subscriptions.length === 0 && !isSync) {
+			isSubscriptionSyncSubmitting = true;
+			syncSubscriptionsCommand().updates(getSubscriptions(), getProfile());
+
+			// 동기화 후 구독 목록 리셋
+			getSubscriptions().then((refreshedData) => {
+				subscriptions = refreshedData.subscriptions;
+				nextCursor = refreshedData.nextCursor;
+				hasMore = refreshedData.hasMore;
+				isSubscriptionSyncSubmitting = false;
 			});
-
-			if (!session) {
-				syncResult = { error: '로그인이 필요합니다' };
-				return;
-			}
-
-			if (!session.provider_token) {
-				console.error('❌ No provider_token in session');
-				syncResult = { error: 'Google 재인증이 필요합니다. 다시 로그인해주세요.' };
-				return;
-			}
-
-			console.log('📤 Calling Edge Function with provider_token...');
-
-			// Edge Function 호출 (provider_token을 body로 전달)
-			const { data: result, error } = await supabase.functions.invoke(
-				'sync-youtube-subscriptions',
-				{
-					body: {
-						providerToken: session.provider_token,
-						userId: session.user.id
-					}
-				}
-			);
-
-			if (error) {
-				console.error('❌ Sync error:', error);
-				syncResult = { error: error.message || '동기화 실패' };
-			} else {
-				console.log('✅ Sync success:', result);
-				syncResult = result;
-				// 페이지 데이터 새로고침
-				await invalidateAll();
-			}
-		} catch (err) {
-			console.error('❌ Sync failed:', err);
-			syncResult = { error: err.message || '동기화 중 오류 발생' };
-		} finally {
-			syncing = false;
-		}
-	}
-
-	// 테스트 함수
-	async function testSession() {
-		const { supabase } = data;
-		const { data: { session } } = await supabase.auth.getSession();
-
-		console.log('=== Session Test Results ===');
-		console.log('Session:', session);
-		console.log('User ID:', session?.user?.id);
-		console.log('Email:', session?.user?.email);
-		console.log('Provider:', session?.user?.app_metadata?.provider);
-		console.log('Provider Token:', session?.provider_token);
-		console.log('Provider Refresh Token:', session?.provider_refresh_token);
-		console.log('Access Token:', session?.access_token);
-		console.log('========================');
-
-		alert(`Session Test Complete! Check console for details.
-Provider Token: ${session?.provider_token ? 'EXISTS' : 'MISSING'}
-Provider: ${session?.user?.app_metadata?.provider || 'NONE'}`);
-	}
+        }
+    });
 </script>
 
-<div class="container mx-auto px-4 py-12">
-	<!-- 페이지 헤더 + 동기화 버튼 -->
-	<div class="mb-12 flex items-start justify-between">
-		<div>
-			<h1 class="text-xl font-bold mb-4">YouTube 구독 채널</h1>
-			<p class="text-surface-400-600">
-				총 {data.totalChannels}개 채널 구독 중
-			</p>
-		</div>
-
-		<div class="text-right">
-			{#if data.lastSync}
-				<p class="mb-2 text-sm text-surface-400-600">
-					마지막 동기화: {formatTimeAgo(data.lastSync)}
-					{#if data.apiUnitsUsed > 0}
-						<span class="ml-2">(API {data.apiUnitsUsed} units)</span>
-					{/if}
-				</p>
-			{/if}
-
-			<div class="flex gap-2 justify-end">
-				<!-- 테스트 버튼 -->
+<main>
+	<header class="flex items-start justify-between px-4 my-8">
+		<h1 class="h1 mb-4">YouTube 구독 채널</h1>
+		<div class="flex flex-col items-end gap-2">
+			<form {...enhanceSyncSubscriptions}>
 				<button
-					onclick={testSession}
-					class="btn preset-outlined"
+					type="submit"
+					class={["chip preset-tonal-primary", {'animate-pulse' : isSync}]}
+					disabled={isSync}
 				>
-					🔍 세션 테스트
+					{isSync ? '동기화 중...' : '구독 동기화'}
 				</button>
-
-				<!-- 동기화 버튼 -->
-				<button
-					onclick={handleSync}
-					class="btn preset-filled-primary min-w-32"
-					disabled={syncing}
-				>
-					{#if syncing}
-						<span class="animate-spin">🔄</span> 동기화 중...
-					{:else}
-						🔄 동기화
-					{/if}
-				</button>
-			</div>
-
-			{#if syncResult}
-				<div class="mt-2 text-sm">
-					{#if syncResult.error}
-						<p class="text-red-500">❌ {syncResult.error}</p>
-					{:else}
-						<p class="text-green-500">
-							✅ {syncResult.channels_synced}개 채널 동기화 완료
-						</p>
-						<p class="text-surface-400-600">
-							API {syncResult.api_units_used} units 사용
-						</p>
-					{/if}
-				</div>
-			{/if}
-		</div>
-	</div>
-
-	<!-- 구독 채널 목록 -->
-	{#if data.channels && data.channels.length > 0}
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-			{#each data.channels as channel}
-				<a
-					href="/youtube/channel/{channel.channel_id}"
-					class="preset-outlined-surface group flex overflow-hidden rounded-xl transition-all hover:scale-[1.02]"
-				>
-					<!-- 채널 프로필 이미지 -->
-					<div class="aspect-square w-32 flex-shrink-0 overflow-hidden bg-surface-800">
-						{#if channel.channel_avatar}
-							<img
-								src={channel.channel_avatar}
-								alt={channel.channel_name}
-								class="h-full w-full object-cover"
-								loading="lazy"
-							/>
-						{:else}
-							<div class="flex h-full w-full items-center justify-center">
-								<span class="text-4xl">📺</span>
-							</div>
-						{/if}
-					</div>
-
-					<!-- 채널 정보 -->
-					<div class="flex flex-1 flex-col justify-center p-4">
-						<h3 class="font-semibold mb-1 truncate">
-							{channel.channel_name}
-						</h3>
-
-						{#if channel.channel_handle}
-							<p class="text-surface-400-600 mb-1">
-								{channel.channel_handle}
-							</p>
-						{/if}
-
-						<div class="flex gap-3 text-xs text-surface-400-600">
-							{#if channel.subscriber_count}
-								<span>👥 {channel.subscriber_count}</span>
-							{/if}
-							{#if channel.video_count}
-								<span>📹 {channel.video_count}개</span>
-							{/if}
-						</div>
-
-						{#if channel.description}
-							<p class="line-clamp-2 text-surface-400-600 mt-2">
-								{channel.description}
-							</p>
-						{/if}
-					</div>
-				</a>
+			</form>
+			{#each syncSubscriptions.fields.allIssues() as issue}
+				<span class="text-error-500 text-sm">
+					{issue.message}
+				</span>
 			{/each}
 		</div>
-	{:else if syncing}
-		<div class="preset-outlined-surface rounded-xl p-12 text-center">
-			<div class="animate-spin text-4xl mb-4">🔄</div>
-			<p class="text-surface-400-600">채널 목록을 동기화하는 중...</p>
+	</header>
+
+	<section class="px-4 my-8">
+		<header class="flex justify-end mb-4">
+			<span>
+				총 {subscriptions.length}개 채널 구독 중
+			</span>
+		</header>
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+			{#if subscriptions.length === 0}
+				{#each Array(4) as _}
+					<ChannelCard />
+				{/each}
+			{:else}
+				{#each subscriptions as subscription}
+					<ChannelCard channel={subscription.channel} />
+				{/each}
+			{/if}
 		</div>
-	{:else}
-		<div class="preset-outlined-surface rounded-xl p-12 text-center">
-			<p class="text-surface-400-600 mb-4">구독 중인 채널이 없습니다</p>
-			<p class="text-surface-400-600">
-				상단의 동기화 버튼을 눌러 YouTube 구독 목록을 가져오세요
-			</p>
-		</div>
-	{/if}
-</div>
+
+		<!-- Sentinel (무한 스크롤 트리거) -->
+		{#if hasMore}
+			<div bind:this={sentinel} class="mt-8 flex h-20 items-center justify-center">
+				{#if isLoadingMore}
+					<div class="animate-pulse text-surface-400">로딩 중...</div>
+				{:else}
+					<div class="text-surface-400">스크롤하여 더 보기</div>
+				{/if}
+			</div>
+		{:else if subscriptions.length > 0}
+			<div class="mt-8 py-8 text-center text-surface-400">
+				모든 채널을 불러왔습니다
+			</div>
+		{/if}
+	</section>
+</main>

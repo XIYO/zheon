@@ -3,8 +3,11 @@ import { createServerClient } from '@supabase/ssr';
 import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-import { env } from '$env/dynamic/public';
+import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import { createClient } from '@supabase/supabase-js';
 
+/** @type {import('@sveltejs/kit').Handle} */
 const handleParaglide = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {
 		event.request = request;
@@ -14,6 +17,7 @@ const handleParaglide = ({ event, resolve }) =>
 		});
 	});
 
+/** @type {import('@sveltejs/kit').Handle} */
 const supabase = async ({ event, resolve }) => {
 	/**
 	 * Creates a Supabase client specific to this server request.
@@ -21,8 +25,8 @@ const supabase = async ({ event, resolve }) => {
 	 * The Supabase client gets the Auth token from the request cookies.
 	 */
 	event.locals.supabase = createServerClient(
-		env.PUBLIC_SUPABASE_URL,
-		env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		publicEnv.PUBLIC_SUPABASE_URL,
+		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 		{
 			cookies: {
 				getAll: () => event.cookies.getAll(),
@@ -76,6 +80,19 @@ const supabase = async ({ event, resolve }) => {
 	});
 };
 
+/** @type {import('@sveltejs/kit').Handle} */
+const adminSupabase = async ({ event, resolve }) => {
+	event.locals.adminSupabase = createClient(publicEnv.PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
+		auth: {
+			persistSession: false,
+			autoRefreshToken: false
+		}
+	});
+
+	return resolve(event);
+};
+
+/** @type {import('@sveltejs/kit').Handle} */
 const authGuard = async ({ event, resolve }) => {
 	const { session, user } = await event.locals.safeGetSession();
 	event.locals.session = session;
@@ -92,4 +109,4 @@ const authGuard = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(handleParaglide, supabase, authGuard);
+export const handle = sequence(handleParaglide, supabase, adminSupabase, authGuard);
