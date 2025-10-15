@@ -204,9 +204,9 @@ async function performSubscriptionsSync() {
 
 			channelDetails.set(channelId, {
 				channel_id: channelId,
-				channel_name: snippet.title || channelId,
-				channel_avatar: avatar,
-				channel_handle: handle,
+				title: snippet.title || channelId,
+				thumbnail_url: avatar,
+				custom_url: handle,
 				subscriber_count: subscriberCount,
 				description,
 				video_count: videoCount,
@@ -819,9 +819,9 @@ export const getSubscriptions = query(
 				subscribed_at,
 				channel:channels (
 					channel_id,
-					channel_name,
-					channel_handle,
-					channel_avatar,
+					title,
+					custom_url,
+					thumbnail_url,
 					subscriber_count,
 					video_count,
 					description,

@@ -1,4 +1,5 @@
 <script>
+	import { page } from '$app/state';
     import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/subscription.remote.js';
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
@@ -62,7 +63,10 @@
 			(entries) => {
 				if (entries[0].isIntersecting) loadMore();
 			},
-			{ threshold: 0.1 }
+			{
+				threshold: 0,
+				rootMargin: '800px'
+			}
 		);
 
 		observer.observe(sentinel);
@@ -98,6 +102,42 @@
 				});
         }
     });
+
+	// Realtime updates
+	$effect.pre(() => {
+		const { supabase } = page.data;
+
+		const needsSync = ['pending', 'processing'].includes(
+			profile?.youtube_subscription_sync_status
+		);
+		if (!needsSync) return;
+
+		const channel = supabase
+			.channel('profile-sync-updates')
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'profile'
+				},
+				async (payload) => {
+					// profile 새로고침
+					await getProfile().refresh();
+
+					// 동기화 완료 시 구독 목록 새로고침
+					const refreshedData = await getSubscriptions();
+					subscriptions = refreshedData.subscriptions;
+					nextCursor = refreshedData.nextCursor;
+					hasMore = refreshedData.hasMore;
+				}
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
+	});
 </script>
 
 <main>

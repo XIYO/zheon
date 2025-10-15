@@ -30,9 +30,9 @@ export const getChannel = query.batch(v.string(), async (channelIds) => {
 export const upsertChannel = command(
 	v.object({
 		channel_id: v.string(),
-		channel_name: v.optional(v.string()),
-		channel_handle: v.optional(v.string()),
-		channel_avatar: v.optional(v.string()),
+		title: v.optional(v.string()),
+		custom_url: v.optional(v.string()),
+		thumbnail_url: v.optional(v.string()),
 		subscriber_count: v.optional(v.string()),
 		description: v.optional(v.string()),
 		video_count: v.optional(v.number()),

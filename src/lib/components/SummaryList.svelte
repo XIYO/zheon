@@ -3,26 +3,28 @@
 	import { page } from '$app/state';
 	import { getSummaries } from '$lib/remote/getSummaries.remote';
 
-	/**
-	 * @type {{ limit?: number }}
-	 */
-	let { limit } = $props();
+	const { supabase } = page.data;
 
-	let initialData = $derived(await getSummaries(limit ? { limit } : {}));
+	let query = getSummaries({});
+	let queryResult = $derived(await query);
 
 	// 무한 스크롤 상태
-	let summaries = $state(initialData.summaries);
-	let nextCursor = $state(initialData.nextCursor);
-	let hasMore = $state(initialData.hasMore);
+	let summaries = $state(queryResult.summaries);
+	let nextCursor = $state(queryResult.nextCursor);
+	let hasMore = $state(queryResult.hasMore);
 	let isLoadingMore = $state(false);
 	let sentinel = $state(null);
 
-	// limit이 있으면 무한 스크롤 비활성화
-	let enableInfiniteScroll = $derived(!limit && hasMore);
+	// 쿼리 결과가 변경되면 로컬 상태 동기화
+	$effect(() => {
+		summaries = queryResult.summaries;
+		nextCursor = queryResult.nextCursor;
+		hasMore = queryResult.hasMore;
+	});
 
 	// 더 불러오기 함수
 	async function loadMore() {
-		if (!hasMore || isLoadingMore || limit) return;
+		if (!hasMore || isLoadingMore) return;
 
 		isLoadingMore = true;
 		const result = await getSummaries({ cursor: nextCursor });
@@ -35,13 +37,16 @@
 
 	// IntersectionObserver로 무한 스크롤 구현
 	$effect(() => {
-		if (!sentinel || !enableInfiniteScroll) return;
+		if (!sentinel || !hasMore) return;
 
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) loadMore();
 			},
-			{ threshold: 0.1 }
+			{
+				threshold: 0,
+				rootMargin: '800px'
+			}
 		);
 
 		observer.observe(sentinel);
@@ -49,15 +54,20 @@
 		return () => observer.disconnect();
 	});
 
+	let hasPending = $derived(
+		summaries.some((s) => ['pending', 'processing'].includes(s.processing_status))
+	);
+
 	// Realtime updates
 	$effect.pre(() => {
-		const { supabase } = page.data;
+		$inspect('hasPending', hasPending);
 
-		const hasPending = summaries.some(
-			(s) => s.processing_status === 'pending' || s.processing_status === 'processing'
-		);
-		if (!hasPending) return;
+		if (!hasPending) {
+			console.log('[SummaryList] pending/processing 상태 없음, 구독 안 함');
+			return;
+		}
 
+		console.log('[SummaryList] Realtime 구독 시작');
 		const channel = supabase
 			.channel('summary-updates')
 			.on(
@@ -67,17 +77,26 @@
 					schema: 'public',
 					table: 'summary'
 				},
-				async (payload) => {
-					// 새 데이터가 오면 전체 리셋
-					const refreshedData = await getSummaries(limit ? { limit } : {});
-					summaries = refreshedData.summaries;
-					nextCursor = refreshedData.nextCursor;
-					hasMore = refreshedData.hasMore;
+				(payload) => {
+					console.log('[SummaryList] Realtime UPDATE 이벤트 수신:', payload);
+
+					// payload.new에서 업데이트된 summary 가져오기
+					const updatedSummary = payload.new;
+
+					// 배열에서 url을 키로 찾아서 업데이트
+					const index = summaries.findIndex(s => s.url === updatedSummary.url);
+					if (index !== -1) {
+						summaries[index] = updatedSummary;
+						console.log('[SummaryList] 배열 업데이트 완료:', updatedSummary);
+					}
 				}
 			)
-			.subscribe((status, err) => {});
+			.subscribe((status, err) => {
+				console.log('[SummaryList] 구독 상태:', status, err);
+			});
 
 		return () => {
+			console.log('[SummaryList] Realtime 구독 해제');
 			channel.unsubscribe();
 		};
 	});
@@ -97,7 +116,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each summaries as summary (summary.id)}
+				{#each summaries as summary (summary.url)}
 					<tr class="border-b border-surface-200-800 hover:opacity-80">
 						<td class="px-4 py-3">
 							<a href="/summaries/{summary.id}/" class="flex items-center gap-3">
@@ -131,7 +150,7 @@
 		</div>
 
 		<!-- Sentinel (무한 스크롤 트리거) -->
-		{#if enableInfiniteScroll}
+		{#if hasMore}
 			<div bind:this={sentinel} class="mt-8 flex h-20 items-center justify-center">
 				{#if isLoadingMore}
 					<div class="animate-pulse text-surface-400">로딩 중...</div>
@@ -139,7 +158,7 @@
 					<div class="text-surface-400">스크롤하여 더 보기</div>
 				{/if}
 			</div>
-		{:else if !limit && !hasMore}
+		{:else}
 			<div class="mt-8 py-8 text-center text-surface-400">
 				모든 항목을 불러왔습니다
 			</div>

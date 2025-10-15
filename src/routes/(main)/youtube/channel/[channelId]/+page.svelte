@@ -56,7 +56,10 @@
 			(entries) => {
 				if (entries[0].isIntersecting) loadMore();
 			},
-			{ threshold: 0.1 }
+			{
+				threshold: 0,
+				rootMargin: '800px'
+			}
 		);
 
 		observer.observe(sentinel);
@@ -109,17 +112,17 @@
 	{#if channel}
 		<div class="mb-8 flex items-start justify-between">
 			<div class="flex gap-6">
-				{#if channel.channel_avatar}
+				{#if channel.thumbnail_url}
 					<img
-						src={channel.channel_avatar}
-						alt={channel.channel_name}
+						src={channel.thumbnail_url}
+						alt={channel.title}
 						class="h-24 w-24 rounded-full object-cover"
 					/>
 				{/if}
 				<div>
-					<h1 class="h1 mb-2">{channel.channel_name}</h1>
-					{#if channel.channel_handle}
-						<p class="text-surface-400-600">{channel.channel_handle}</p>
+					<h1 class="h1 mb-2">{channel.title}</h1>
+					{#if channel.custom_url}
+						<p class="text-surface-400-600">{channel.custom_url}</p>
 					{/if}
 					<div class="mt-2 flex gap-4 text-sm text-surface-400-600">
 						{#if channel.subscriber_count}
