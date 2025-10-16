@@ -5,24 +5,26 @@
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
 
-    let [initialData, profile] = $derived(await Promise.all([
-		getSubscriptions(),
-		getProfile()
-	]));
+    let firstPage = $derived(await getSubscriptions());
+	let profile = $derived(await getProfile());
+
+	// 추가 페이지는 수동 관리
+	let additionalPages = $state(/** @type {Array<{subscriptions: any[], nextCursor: string | null, hasMore: boolean}>} */ ([]));
+
+	// 모든 페이지 합치기
+	let subscriptions = $derived([
+		...firstPage.subscriptions,
+		...additionalPages.flatMap(p => p.subscriptions)
+	]);
 
 	// 무한 스크롤 상태
-	let subscriptions = $state([]);
-	let nextCursor = $state(null);
-	let hasMore = $state(false);
+	let hasMore = $derived(
+		additionalPages.length === 0
+			? firstPage.hasMore
+			: additionalPages.at(-1)?.hasMore ?? false
+	);
 	let isLoadingMore = $state(false);
-	let sentinel = $state(null);
-
-	// initialData가 변경되면 로컬 상태 동기화
-	$effect(() => {
-		subscriptions = initialData.subscriptions;
-		nextCursor = initialData.nextCursor;
-		hasMore = initialData.hasMore;
-	});
+	let sentinel = $state(/** @type {HTMLDivElement | null} */ (null));
 
 	let isSubscriptionSyncSubmitting = $state(false);
 	let isSync = $derived(isSubscriptionSyncSubmitting || ['pending', 'processing'].includes(profile?.youtube_subscription_sync_status));
@@ -32,17 +34,11 @@
 		if (!hasMore || isLoadingMore) return;
 
 		isLoadingMore = true;
-		try {
-			const result = await getSubscriptions({ cursor: nextCursor });
+		const cursor = additionalPages.at(-1)?.nextCursor ?? firstPage.nextCursor;
+		const result = await getSubscriptions({ cursor });
 
-			subscriptions = [...subscriptions, ...result.subscriptions];
-			nextCursor = result.nextCursor;
-			hasMore = result.hasMore;
-		} catch (err) {
-			console.error('구독 목록 추가 로딩 실패:', err);
-		} finally {
-			isLoadingMore = false;
-		}
+		additionalPages = [...additionalPages, result];
+		isLoadingMore = false;
 	}
 
 	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ form, submit }) => {
@@ -52,10 +48,8 @@
 			await getProfile().refresh();
 
 			// 동기화 후 구독 목록 리셋
-			const refreshedData = await getSubscriptions();
-			subscriptions = refreshedData.subscriptions;
-			nextCursor = refreshedData.nextCursor;
-			hasMore = refreshedData.hasMore;
+			additionalPages = [];
+			await getSubscriptions().refresh();
 		} catch (err) {
 			console.error('구독 동기화 실패:', err);
 		} finally {
@@ -91,21 +85,12 @@
 			isSubscriptionSyncSubmitting = true;
 			syncSubscriptionsCommand()
 				.updates(getSubscriptions(), getProfile())
-				.catch((err) => {
-					console.error('구독 동기화 실패:', err);
-					isSubscriptionSyncSubmitting = false;
-				});
-
-			// 동기화 후 구독 목록 리셋
-			getSubscriptions()
-				.then((refreshedData) => {
-					subscriptions = refreshedData.subscriptions;
-					nextCursor = refreshedData.nextCursor;
-					hasMore = refreshedData.hasMore;
+				.then(() => {
+					additionalPages = [];
 					isSubscriptionSyncSubmitting = false;
 				})
 				.catch((err) => {
-					console.error('구독 목록 조회 실패:', err);
+					console.error('구독 동기화 실패:', err);
 					isSubscriptionSyncSubmitting = false;
 				});
         }
@@ -130,14 +115,11 @@
 					table: 'profile'
 				},
 				async (payload) => {
-					// profile 새로고침
 					await getProfile().refresh();
 
-					// 동기화 완료 시 구독 목록 새로고침
-					const refreshedData = await getSubscriptions();
-					subscriptions = refreshedData.subscriptions;
-					nextCursor = refreshedData.nextCursor;
-					hasMore = refreshedData.hasMore;
+					// 동기화 완료 시 구독 목록 리셋
+					additionalPages = [];
+					await getSubscriptions().refresh();
 				}
 			)
 			.subscribe();
