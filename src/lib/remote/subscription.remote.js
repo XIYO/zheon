@@ -114,13 +114,21 @@ async function performSubscriptionsSync() {
 	if (updateStartError) throw error(500, updateStartError.message);
 
 	try {
-		const accessToken = session.provider_token;
+		let accessToken = session.provider_token;
 
 		console.log('[동기화] 시작 - 사용자:', userId);
 
 		if (!accessToken) {
-			console.error('[동기화] 에러: Google 인증 토큰이 없습니다');
-			throw error(401, 'Google 인증 토큰이 없습니다');
+			console.log('[동기화] provider_token 없음, 세션 refresh 시도...');
+			const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+
+			if (refreshError || !refreshData.session?.provider_token) {
+				console.error('[동기화] 에러: Google 인증 토큰이 없습니다');
+				throw error(401, 'Google 인증 토큰이 없습니다. 다시 로그인해주세요.');
+			}
+
+			accessToken = refreshData.session.provider_token;
+			console.log('[동기화] 세션 refresh 완료, provider_token 획득');
 		}
 
 		console.log('[동기화] OAuth 토큰 확인 완료, 구독 목록 가져오는 중...');

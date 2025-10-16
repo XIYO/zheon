@@ -48,6 +48,8 @@ const supabase = async ({ event, resolve }) => {
 	 * Unlike `supabase.auth.getSession()`, which returns the session _without_
 	 * validating the JWT, this function also calls `getUser()` to validate the
 	 * JWT before returning the session.
+	 *
+	 * If provider_token is missing (OAuth token expired), automatically refreshes the session.
 	 */
 	event.locals.safeGetSession = async () => {
 		const {
@@ -64,6 +66,15 @@ const supabase = async ({ event, resolve }) => {
 		if (error) {
 			// JWT validation has failed
 			return { session: null, user: null };
+		}
+
+		// provider_token이 없으면 세션 refresh 시도
+		if (session.provider_token === undefined || session.provider_token === null) {
+			const { data: refreshData, error: refreshError } = await event.locals.supabase.auth.refreshSession();
+
+			if (!refreshError && refreshData.session) {
+				return { session: refreshData.session, user: refreshData.user };
+			}
 		}
 
 		return { session, user };

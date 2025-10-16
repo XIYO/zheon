@@ -5,7 +5,10 @@
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
 
-    let firstPage = $derived(await getSubscriptions());
+	const { supabase } = page.data;
+
+
+	let firstPage = $derived(await getSubscriptions({}));
 	let profile = $derived(await getProfile());
 
 	// 추가 페이지는 수동 관리
@@ -44,12 +47,7 @@
 	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ form, submit }) => {
 		isSubscriptionSyncSubmitting = true;
 		try {
-			await submit();
-			await getProfile().refresh();
-
-			// 동기화 후 구독 목록 리셋
-			additionalPages = [];
-			await getSubscriptions().refresh();
+			await submit(); // 단지 동기화 요청만 보내고, 리얼타임으로 업데이트 상태 추적
 		} catch (err) {
 			console.error('구독 동기화 실패:', err);
 		} finally {
@@ -76,30 +74,8 @@
 		return () => observer.disconnect();
 	});
 
-	let autoSyncAttempted = $state(false);
-
-    // 구독 목록이 0개이고 동기화 중이 아니면 자동 동기화
-    $effect.pre(() => {
-        if (subscriptions.length === 0 && !isSync && !autoSyncAttempted) {
-			autoSyncAttempted = true;
-			isSubscriptionSyncSubmitting = true;
-			syncSubscriptionsCommand()
-				.updates(getSubscriptions(), getProfile())
-				.then(() => {
-					additionalPages = [];
-					isSubscriptionSyncSubmitting = false;
-				})
-				.catch((err) => {
-					console.error('구독 동기화 실패:', err);
-					isSubscriptionSyncSubmitting = false;
-				});
-        }
-    });
-
 	// Realtime updates
-	$effect.pre(() => {
-		const { supabase } = page.data;
-
+	$effect(() => {
 		const needsSync = ['pending', 'processing'].includes(
 			profile?.youtube_subscription_sync_status
 		);
@@ -112,14 +88,16 @@
 				{
 					event: 'UPDATE',
 					schema: 'public',
-					table: 'profile'
+					table: 'profile',
+					filter: `id=eq.${profile?.id}`
 				},
 				async (payload) => {
-					await getProfile().refresh();
-
 					// 동기화 완료 시 구독 목록 리셋
 					additionalPages = [];
-					await getSubscriptions().refresh();
+					await Promise.all([
+						getProfile().refresh(),
+						getSubscriptions({}).refresh()
+					])
 				}
 			)
 			.subscribe();
