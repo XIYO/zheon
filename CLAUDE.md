@@ -76,3 +76,4 @@ if (dbError) throw error(500, dbError.message);
 - 클라이언트: session 반환 시 user 속성 제거
 - 검증된 `user` 객체만 사용 (`supabase.auth.getUser()` 결과)
 - 서버: `safeGetSession()` 사용 (getUser()로 JWT 검증)
+- supabase 관련은 supabase mcp를 꼭 사용하기

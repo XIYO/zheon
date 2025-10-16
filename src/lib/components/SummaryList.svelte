@@ -2,36 +2,40 @@
 <script>
 	import { page } from '$app/state';
 	import { getSummaries } from '$lib/remote/getSummaries.remote';
+	import { innerHeight } from 'svelte/reactivity/window';
 
 	const { supabase } = page.data;
 
-	let query = getSummaries({});
-	let queryResult = $derived(await query);
+	// 첫 페이지는 query로 캐싱, withOverride 동작
+	let firstPage = $derived(await getSummaries({}));
+
+	// 추가 페이지는 수동 관리
+	let additionalPages = $state(/** @type {Array<{summaries: any[], nextCursor: string | null, hasMore: boolean}>} */ ([]));
+
+	// 모든 페이지 합치기
+	let summaries = $derived([
+		...firstPage.summaries,
+		...additionalPages.flatMap(p => p.summaries)
+	]);
 
 	// 무한 스크롤 상태
-	let summaries = $state([]);
-	let nextCursor = $state(null);
-	let hasMore = $state(false);
+	let hasMore = $derived(
+		additionalPages.length === 0
+			? firstPage.hasMore
+			: additionalPages.at(-1)?.hasMore ?? false
+	);
 	let isLoadingMore = $state(false);
-	let sentinel = $state(null);
-
-	// 쿼리 결과가 변경되면 로컬 상태 동기화
-	$effect(() => {
-		summaries = queryResult.summaries;
-		nextCursor = queryResult.nextCursor;
-		hasMore = queryResult.hasMore;
-	});
+	let sentinel = $state(/** @type {HTMLDivElement | null} */ (null));
 
 	// 더 불러오기 함수
 	async function loadMore() {
 		if (!hasMore || isLoadingMore) return;
 
 		isLoadingMore = true;
-		const result = await getSummaries({ cursor: nextCursor });
+		const cursor = additionalPages.at(-1)?.nextCursor ?? firstPage.nextCursor;
+		const result = await getSummaries({ cursor });
 
-		summaries = [...summaries, ...result.summaries];
-		nextCursor = result.nextCursor;
-		hasMore = result.hasMore;
+		additionalPages = [...additionalPages, result];
 		isLoadingMore = false;
 	}
 
@@ -45,7 +49,7 @@
 			},
 			{
 				threshold: 0,
-				rootMargin: '800px'
+				rootMargin: `${innerHeight.current}px`
 			}
 		);
 
@@ -54,16 +58,15 @@
 		return () => observer.disconnect();
 	});
 
+	// pending/processing 상태 추적
 	let hasPending = $derived(
 		summaries.some((s) => ['pending', 'processing'].includes(s.processing_status))
 	);
 
-	// Realtime updates
-	$effect.pre(() => {
-		$inspect('hasPending', hasPending);
-
+	// Realtime updates - pending/processing이 있을 때만 구독
+	$effect(() => {
 		if (!hasPending) {
-			console.log('[SummaryList] pending/processing 상태 없음, 구독 안 함');
+			console.log('[SummaryList] pending/processing 없음, 구독 안 함');
 			return;
 		}
 
@@ -77,22 +80,36 @@
 					schema: 'public',
 					table: 'summary'
 				},
-				(payload) => {
+				async (payload) => {
 					console.log('[SummaryList] Realtime UPDATE 이벤트 수신:', payload);
 
-					// payload.new에서 업데이트된 summary 가져오기
 					const updatedSummary = payload.new;
 
-					// 배열에서 url을 키로 찾아서 업데이트
-					const index = summaries.findIndex(s => s.url === updatedSummary.url);
+					// 현재 query 결과 가져오기
+					const currentResult = await getSummaries({});
+
+					// URL 기반으로 낙관적 항목 찾아서 교체
+					const index = currentResult.summaries.findIndex(s => s.url === updatedSummary.url);
+
 					if (index !== -1) {
-						summaries[index] = updatedSummary;
-						console.log('[SummaryList] 배열 업데이트 완료:', updatedSummary);
+						// 찾았으면 교체
+						const updatedSummaries = [...currentResult.summaries];
+						updatedSummaries[index] = updatedSummary;
+
+						// query 결과 직접 업데이트
+						getSummaries({}).set({
+							...currentResult,
+							summaries: updatedSummaries
+						});
+
+						console.log('[SummaryList] URL 기반 교체 완료:', updatedSummary.url);
+					} else {
+						console.log('[SummaryList] 해당 URL을 찾지 못함:', updatedSummary.url);
 					}
 				}
 			)
 			.subscribe((status, err) => {
-				console.log('[SummaryList] 구독 상태:', status, err);
+				if (err) console.error('[SummaryList] 구독 에러:', status, err);
 			});
 
 		return () => {

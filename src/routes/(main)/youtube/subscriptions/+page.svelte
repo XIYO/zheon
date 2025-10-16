@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import { innerHeight } from 'svelte/reactivity/window';
     import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/subscription.remote.js';
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
@@ -72,7 +73,7 @@
 			},
 			{
 				threshold: 0,
-				rootMargin: '800px'
+				rootMargin: `${innerHeight.current}px`
 			}
 		);
 

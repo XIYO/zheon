@@ -10,7 +10,7 @@ import Play from '@lucide/svelte/icons/play';
 import Pause from '@lucide/svelte/icons/pause';
 import CircleX from '@lucide/svelte/icons/circle-x';
 
-let summary = $derived(await getSummaryById({ id: page.params.id }));
+let summary = $state(null);
 const { summaryId } = generateTTS.fields;
 
 let isLoadingAudio = $state(false);
@@ -18,7 +18,15 @@ let isPlaying = $state(false);
 let audioElement = $state(null);
 let currentAudioUrl = $state(null);
 
+$effect(() => {
+	getSummaryById({ id: page.params.id }).then(data => {
+		summary = data;
+	});
+});
+
 async function playAudio() {
+	if (!summary) return;
+
 	try {
 		isLoadingAudio = true;
 
@@ -69,6 +77,8 @@ $effect(() => {
 });
 
 $effect.pre(() => {
+	if (!summary) return;
+
 	const { supabase } = page.data;
 
 	const needsUpdate = ['pending', 'processing'].includes(summary.summary_audio_status);
@@ -100,9 +110,9 @@ $effect.pre(() => {
 });
 </script>
 
+{#if summary}
 <main class="container mx-auto px-4 py-12 max-w-5xl">
 	<header>
-		<!-- 썸네일 -->
 		<a href={summary.url} target="_blank" rel="noopener noreferrer">
 			<img
 				src={summary.thumbnail_url || ''}
@@ -112,12 +122,10 @@ $effect.pre(() => {
 				class="rounded-xl starting:opacity-0 aspect-video"
 			/>
 		</a>
-		<!-- 제목만 -->
 		<div class="mt-8 mb-12">
 			<h1 class="h1 mb-2">{summary.title}</h1>
 		</div>
 	</header>
-	<!-- AI 요약 -->
 	<section class="card preset-filled-surface-50-900 p-4">
 		<header class="flex items-center justify-between mb-4">
 			<h2 class="h2">AI 요약</h2>
@@ -159,6 +167,6 @@ $effect.pre(() => {
 		</p>
 	</section>
 
-	<!-- 오디오 플레이어 (숨김) -->
 	<audio bind:this={audioElement} controls class="hidden"></audio>
 </main>
+{/if}

@@ -20,10 +20,9 @@ directory = ".svelte-kit/cloudflare"  # 빌드된 client 파일 위치
 PUBLIC_SUPABASE_URL = "https://iefgdhwmgljjacafqomd.supabase.co"
 PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2DSwr9dKHxpA4WOEEOYkww_AMIhsiUb"
 
-# Cloudflare Workers 개발 모드 사용법
-# paraglidejs가 무한빌드돼서 일딴 주석처리
 #[build]
 #command = "pnpm build"
+#watch_dirs = ["src/routes", "src/lib/components", "src/lib/server", "src/lib/utils", "static", "project.inlang"]
 
 [observability.logs]
 enabled = true

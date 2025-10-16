@@ -5,8 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"dev:wrangler": "wrangler dev",
-		"build": "vite build",
+		"dev:wrangler": "wrangler dev --port 5170",
+		"build": "vite build --watch",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",

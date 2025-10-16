@@ -10,39 +10,32 @@
 		.enhance(async ({ form, submit }) => {
 		try {
 			console.log('[SummaryForm] 제출 시작, URL:', url.value());
-			await submit().updates(
-				getSummaries({}).withOverride((result) => {
-					form.reset();
-					console.log('[SummaryForm] withOverride 호출, 기존 result:', result);
 
-					const newUrl = url.value();
+			const newUrl = url.value();
 
-					// 중복 체크: 이미 같은 URL이 있으면 낙관적 추가 안 함
-					const exists = result.summaries.some(s => s.url === newUrl);
+			// 낙관적 업데이트: set()으로 영구 추가
+			const optimisticSummary = {
+				id: null,
+				url: newUrl,
+				title: null,
+				summary: null,
+				processing_status: 'pending',
+				thumbnail_url: null,
+				created_at: null,
+				updated_at: null
+			};
 
-					if (exists) {
-						console.log('[SummaryForm] 중복 URL, 낙관적 추가 안 함:', newUrl);
-						return result;
-					}
+			const current = await getSummaries({});
+			getSummaries({}).set({
+				...current,
+				summaries: [optimisticSummary, ...current.summaries]
+			});
+			console.log('[SummaryForm] 낙관적 업데이트 (set):', optimisticSummary);
 
-					const optimisticSummary = {
-						id: crypto.randomUUID(),
-						url: newUrl,
-						title: null,
-						summary: null,
-						processing_status: 'pending',
-						thumbnail_url: null,
-						created_at: null,
-						updated_at: null
-					};
-					console.log('[SummaryForm] 낙관적 업데이트:', optimisticSummary);
-					return {
-						...result,
-						summaries: [optimisticSummary, ...result.summaries]
-					};
-				})
-			);
+			// submit만 호출 (updates 불필요)
+			await submit();
 
+			form.reset();
 			console.log('[SummaryForm] 제출 완료');
 		} catch (error) {
 			console.error('[SummaryForm] 요약 제출 실패:', error);
