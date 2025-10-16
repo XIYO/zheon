@@ -70,11 +70,16 @@ const supabase = async ({ event, resolve }) => {
 
 		// provider_token이 없으면 세션 refresh 시도
 		if (session.provider_token === undefined || session.provider_token === null) {
-			const { data: refreshData, error: refreshError } = await event.locals.supabase.auth.refreshSession();
+			const { data: refreshData, error: refreshError } =
+				await event.locals.supabase.auth.refreshSession();
 
 			if (!refreshError && refreshData.session) {
+				// refresh 성공 시 쿠키 자동 업데이트됨
 				return { session: refreshData.session, user: refreshData.user };
 			}
+
+			// refresh 실패 시 기존 세션 반환
+			console.warn('[safeGetSession] refresh 실패 - 재로그인 필요:', refreshError?.message);
 		}
 
 		return { session, user };
