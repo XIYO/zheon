@@ -16,6 +16,9 @@ export const load = async ({ depends, fetch, data }) => {
 		? createBrowserClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch
+				},
+				db: {
+					schema: 'zheon'
 				}
 			})
 		: createServerClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
@@ -24,12 +27,21 @@ export const load = async ({ depends, fetch, data }) => {
 				},
 				cookies: {
 					getAll: () => data.cookies
+				},
+				db: {
+					schema: 'zheon'
 				}
 			});
 
-	const {
-		data: { user }
-	} = await supabase.auth.getUser();
+	let user = null;
+	try {
+		const {
+			data: { user: fetchedUser }
+		} = await supabase.auth.getUser();
+		user = fetchedUser;
+	} catch (error) {
+		console.error('[Layout] Failed to get user:', error);
+	}
 
 	return {
 		supabase,

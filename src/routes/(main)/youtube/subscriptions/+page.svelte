@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import { innerHeight } from 'svelte/reactivity/window';
-    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/subscription.remote.js';
+    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/youtube/subscription.remote.js';
     import { getProfile } from '$lib/remote/profile.remote.js';
     import ChannelCard from '$lib/components/ChannelCard.svelte';
 

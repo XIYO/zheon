@@ -4,6 +4,7 @@ import { error } from '@sveltejs/kit';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
 import { getVideoInfo, getVideoTranscript } from '$lib/remote/youtube.remote.js';
 import { summarizeTranscript, generateTtsAudio } from '$lib/remote/ai.remote.js';
+import { analyzeVideo } from '$lib/remote/youtube/analyze.remote.js';
 
 /**
  * Form: 요약 제출
@@ -23,7 +24,7 @@ export const createSummary = form(SummarySchema, async ({ url }) => {
 
 	// 3. 기존 요약 확인
 	const { data: existing, error: selectError } = await supabase
-		.from('summary')
+		.from('summaries')
 		.select('id')
 		.eq('url', normalizedUrl)
 		.maybeSingle();
@@ -35,7 +36,7 @@ export const createSummary = form(SummarySchema, async ({ url }) => {
 	if (existing) {
 		// 이미 있으면 updated_at만 최신화 (트리거가 자동 처리)
 		const { error: updateError } = await supabase
-			.from('summary')
+			.from('summaries')
 			.update({ updated_at: new Date().toISOString() })
 			.eq('id', existing.id);
 
@@ -44,7 +45,7 @@ export const createSummary = form(SummarySchema, async ({ url }) => {
 	} else {
 		// 없으면 새로 생성 (pending 상태)
 		const { data: newData, error: insertError } = await supabase
-			.from('summary')
+			.from('summaries')
 			.insert({ url: normalizedUrl, processing_status: 'pending' })
 			.select('id')
 			.single();
@@ -78,7 +79,7 @@ async function processVideoSummary(summaryId, videoId, url) {
 	try {
 		// processing 상태로 변경
 		const { error: statusError } = await adminSupabase
-			.from('summary')
+			.from('summaries')
 			.update({ processing_status: 'processing' })
 			.eq('id', summaryId);
 
@@ -103,7 +104,7 @@ async function processVideoSummary(summaryId, videoId, url) {
 		const transcriptText = transcript?.captions?.map((c) => c.text).join(' ') || '';
 
 		const { error: metadataError } = await adminSupabase
-			.from('summary')
+			.from('summaries')
 			.update({
 				title: metadata.title,
 				channel_id: metadata.channel?.id,
@@ -131,7 +132,7 @@ async function processVideoSummary(summaryId, videoId, url) {
 
 		// 8. 최종 업데이트 (요약 + 완료 상태)
 		const { error: completeError } = await adminSupabase
-			.from('summary')
+			.from('summaries')
 			.update({
 				summary: aiResult?.summary || '요약을 생성할 수 없습니다',
 				processing_status: 'completed'
@@ -144,11 +145,16 @@ async function processVideoSummary(summaryId, videoId, url) {
 		if (aiResult?.summary) {
 			generateTtsAudio({ summaryId }).catch(() => {});
 		}
+
+		// 10. 댓글 분석 (백그라운드, 실패해도 무시)
+		analyzeVideo({ videoId }).catch((err) => {
+			console.warn(`[댓글 분석 실패] videoId: ${videoId}`, err.message);
+		});
 	} catch (err) {
 
 		// 실패 상태로 변경
 		const { error: failError } = await adminSupabase
-			.from('summary')
+			.from('summaries')
 			.update({
 				processing_status: 'failed',
 				summary: err.message || '처리 중 오류가 발생했습니다'

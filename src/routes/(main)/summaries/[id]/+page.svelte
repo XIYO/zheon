@@ -167,6 +167,77 @@ $effect.pre(() => {
 		</p>
 	</section>
 
+	{#if summary.video_insight}
+		<section class="card preset-filled-surface-50-900 p-4 mt-6">
+			<header class="mb-4">
+				<h2 class="h2">커뮤니티 신뢰도 분석</h2>
+			</header>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+				<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
+					<p class="text-sm text-surface-600 dark:text-surface-400 mb-1">감정 점수</p>
+					<p class="h3">{Math.round(summary.video_insight.comment_analysis.current_emotion.community_emotion_score)}%</p>
+				</div>
+
+				<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
+					<p class="text-sm text-surface-600 dark:text-surface-400 mb-1">신뢰도</p>
+					<p class="h3 capitalize">{summary.video_insight.combined_credibility.overall_trust_level === 'high' ? '높음' : summary.video_insight.combined_credibility.overall_trust_level === 'medium' ? '중간' : '낮음'}</p>
+				</div>
+			</div>
+
+			<div class="space-y-4">
+				<div>
+					<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">감정 분포</p>
+					<div class="space-y-2">
+						<div class="flex items-center gap-2">
+							<span class="text-sm w-16">긍정</span>
+							<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
+								<div class="h-full bg-green-500" style="width: {summary.video_insight.comment_analysis.current_emotion.percentage.positive}%"></div>
+							</div>
+							<span class="text-sm w-12 text-right">{Math.round(summary.video_insight.comment_analysis.current_emotion.percentage.positive)}%</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="text-sm w-16">중립</span>
+							<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
+								<div class="h-full bg-gray-500" style="width: {summary.video_insight.comment_analysis.current_emotion.percentage.neutral}%"></div>
+							</div>
+							<span class="text-sm w-12 text-right">{Math.round(summary.video_insight.comment_analysis.current_emotion.percentage.neutral)}%</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="text-sm w-16">부정</span>
+							<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
+								<div class="h-full bg-red-500" style="width: {summary.video_insight.comment_analysis.current_emotion.percentage.negative}%"></div>
+							</div>
+							<span class="text-sm w-12 text-right">{Math.round(summary.video_insight.comment_analysis.current_emotion.percentage.negative)}%</span>
+						</div>
+					</div>
+				</div>
+
+				<div>
+					<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">트렌드</p>
+					<p class="text-sm text-surface-600 dark:text-surface-400">
+						{summary.video_insight.comment_analysis.trend.insights}
+					</p>
+				</div>
+
+				<div>
+					<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">평가</p>
+					<p class="text-sm text-surface-600 dark:text-surface-400">
+						{summary.video_insight.combined_credibility.recommendation}
+					</p>
+				</div>
+
+				<div class="text-xs text-surface-500 dark:text-surface-500">
+					분석된 댓글: {summary.video_insight.comment_analysis.metadata.total_comments_analyzed}개
+				</div>
+			</div>
+		</section>
+	{:else}
+		<section class="card preset-filled-surface-50-900 p-4 mt-6">
+			<p class="text-surface-500">아직 커뮤니티 신뢰도 분석이 진행 중입니다. 잠시 후 다시 확인해주세요.</p>
+		</section>
+	{/if}
+
 	<audio bind:this={audioElement} controls class="hidden"></audio>
 </main>
 {/if}

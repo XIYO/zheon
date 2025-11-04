@@ -2,7 +2,7 @@ import { form, command, getRequestEvent, query } from '$app/server';
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { getYouTubeClient } from '$lib/server/youtube-proxy.js';
-import { upsertChannel } from '$lib/remote/channel.remote.js';
+import { upsertChannel } from '$lib/remote/youtube/channel.remote.js';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 

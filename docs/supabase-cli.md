@@ -253,7 +253,7 @@ supabase db diff -s public,auth
 # 2. 변경사항을 마이그레이션 파일로 저장
 supabase db diff -f create_users_table
 # 3. 생성된 파일 확인
-cat supabase/migrations/20231215120000_create_users_table.sql
+cat supabase/migrations.bak2.bak/20231215120000_create_users_table.sql
 ```
 
 #### `supabase db push`
@@ -1070,7 +1070,7 @@ supabase db pull
 ```bash
 # 방법 1: 마이그레이션 파일 직접 작성
 supabase migration new add_profiles_table
-# supabase/migrations/xxx_add_profiles_table.sql 편집
+# supabase/migrations.bak2.bak/xxx_add_profiles_table.sql 편집
 supabase db reset  # 로컬에 적용
 
 # 방법 2: Studio에서 변경 후 diff
@@ -1132,7 +1132,7 @@ pnpm types:remote  # 원격 DB에서 타입 생성
 ```bash
 # 팀원 A: 데이터베이스 변경
 supabase db diff -f add_feature_x
-git add supabase/migrations/xxx_add_feature_x.sql
+git add supabase/migrations.bak2.bak/xxx_add_feature_x.sql
 git commit -m "Add feature X database schema"
 git push
 
@@ -1244,7 +1244,7 @@ supabase secrets set --env-file .env.prod
   with:
     version: latest
 
-- name: Run migrations
+- name: Run migrations.bak2.bak
   run: |
     supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
     supabase db push

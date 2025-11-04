@@ -7,6 +7,15 @@ import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { createClient } from '@supabase/supabase-js';
 
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('=== UNHANDLED REJECTION ===');
+	console.error('Reason:', reason);
+	console.error('Promise:', promise);
+	if (reason && typeof reason === 'object') {
+		console.error('Reason details:', JSON.stringify(reason, null, 2));
+	}
+});
+
 /** @type {import('@sveltejs/kit').Handle} */
 const handleParaglide = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {
@@ -24,6 +33,8 @@ const supabase = async ({ event, resolve }) => {
 	 *
 	 * The Supabase client gets the Auth token from the request cookies.
 	 */
+	console.log('[hooks.server.js] SUPABASE_URL:', publicEnv.PUBLIC_SUPABASE_URL);
+	console.log('[hooks.server.js] SUPABASE_KEY:', publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	event.locals.supabase = createServerClient(
 		publicEnv.PUBLIC_SUPABASE_URL,
 		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -40,6 +51,9 @@ const supabase = async ({ event, resolve }) => {
 						event.cookies.set(name, value, { ...options, path: '/' });
 					});
 				}
+			},
+			db: {
+				schema: 'zheon'
 			}
 		}
 	);
@@ -52,37 +66,46 @@ const supabase = async ({ event, resolve }) => {
 	 * If provider_token is missing (OAuth token expired), automatically refreshes the session.
 	 */
 	event.locals.safeGetSession = async () => {
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-		if (!session) {
-			return { session: null, user: null };
-		}
-
-		const {
-			data: { user },
-			error
-		} = await event.locals.supabase.auth.getUser();
-		if (error) {
-			// JWT validation has failed
-			return { session: null, user: null };
-		}
-
-		// provider_token이 없으면 세션 refresh 시도
-		if (session.provider_token === undefined || session.provider_token === null) {
-			const { data: refreshData, error: refreshError } =
-				await event.locals.supabase.auth.refreshSession();
-
-			if (!refreshError && refreshData.session) {
-				// refresh 성공 시 쿠키 자동 업데이트됨
-				return { session: refreshData.session, user: refreshData.user };
+		try {
+			const {
+				data: { session }
+			} = await event.locals.supabase.auth.getSession();
+			if (!session) {
+				return { session: null, user: null };
 			}
 
-			// refresh 실패 시 기존 세션 반환
-			console.warn('[safeGetSession] refresh 실패 - 재로그인 필요:', refreshError?.message);
-		}
+			const {
+				data: { user },
+				error
+			} = await event.locals.supabase.auth.getUser();
+			if (error) {
+				// JWT validation has failed
+				return { session: null, user: null };
+			}
 
-		return { session, user };
+			// provider_token이 없으면 세션 refresh 시도
+			if (session.provider_token === undefined || session.provider_token === null) {
+				try {
+					const { data: refreshData, error: refreshError } =
+						await event.locals.supabase.auth.refreshSession();
+
+					if (!refreshError && refreshData.session) {
+						// refresh 성공 시 쿠키 자동 업데이트됨
+						return { session: refreshData.session, user: refreshData.user };
+					}
+
+					// refresh 실패 시 기존 세션 반환
+					console.warn('[safeGetSession] refresh 실패 - 재로그인 필요:', refreshError?.message);
+				} catch (refreshError) {
+					console.error('[safeGetSession] refresh exception:', refreshError);
+				}
+			}
+
+			return { session, user };
+		} catch (error) {
+			console.error('[safeGetSession] Error:', error);
+			return { session: null, user: null };
+		}
 	};
 
 	return resolve(event, {
@@ -98,28 +121,39 @@ const supabase = async ({ event, resolve }) => {
 
 /** @type {import('@sveltejs/kit').Handle} */
 const adminSupabase = async ({ event, resolve }) => {
-	event.locals.adminSupabase = createClient(publicEnv.PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
-		auth: {
-			persistSession: false,
-			autoRefreshToken: false
-		}
-	});
+	try {
+		event.locals.adminSupabase = createClient(publicEnv.PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
+			auth: {
+				persistSession: false,
+				autoRefreshToken: false
+			},
+			db: {
+				schema: 'zheon'
+			}
+		});
+	} catch (error) {
+		console.error('[adminSupabase] Error creating admin client:', error);
+	}
 
 	return resolve(event);
 };
 
 /** @type {import('@sveltejs/kit').Handle} */
 const authGuard = async ({ event, resolve }) => {
-	const { session, user } = await event.locals.safeGetSession();
-	event.locals.session = session;
-	event.locals.user = user;
+	try {
+		const { session, user } = await event.locals.safeGetSession();
+		event.locals.session = session;
+		event.locals.user = user;
 
-	if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-		redirect(303, '/auth');
-	}
+		if (!event.locals.session && event.url.pathname.startsWith('/private')) {
+			redirect(303, '/auth');
+		}
 
-	if (event.locals.session && event.url.pathname === '/auth') {
-		redirect(303, '/private');
+		if (event.locals.session && event.url.pathname === '/auth') {
+			redirect(303, '/private');
+		}
+	} catch (error) {
+		console.error('[authGuard] Error:', error);
 	}
 
 	return resolve(event);

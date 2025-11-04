@@ -1,5 +1,13 @@
 # Zheon
 
+크롬 실행 
+
+```shell
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.codex-chrome-profile" 
+```
+
 YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다. Cloudflare Workers에 배포되며, Edge Functions로 AI 요약 파이프라인을 구성합니다.
 
 ## 빠른 시작

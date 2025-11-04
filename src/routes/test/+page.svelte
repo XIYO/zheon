@@ -1,5 +1,5 @@
 <script>
-	import { syncSubscriptionsCommand } from '$lib/remote/subscription.remote.js';
+	import { syncSubscriptionsCommand } from '$lib/remote/youtube/subscription.remote.js';
 
 	let isRunning = $state(false);
 	let result = $state(null);

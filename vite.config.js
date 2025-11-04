@@ -13,10 +13,15 @@ export default defineConfig({
 		})
 	],
 	server: {
-		port: 5170,
+		port: 7777,
+		strictPort: true,
 		watch: {
 			ignored: ['**/src/lib/paraglide/**']
-		},
+		}
+	},
+	preview: {
+		port: 17777,
+		strictPort: true
 	},
 	build: {
 		rollupOptions: {

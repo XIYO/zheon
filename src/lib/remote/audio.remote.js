@@ -18,7 +18,7 @@ export const getAudioSignedUrl = command(
 
 		// 1. DB에서 storage path 조회
 		const { data: summary, error: dbError } = await adminSupabase
-			.from('summary')
+			.from('summaries')
 			.select('summary_audio_url')
 			.eq('id', summaryId)
 			.single();

@@ -27,8 +27,8 @@ export const getSummaries = query(GetSummariesSchema, async (params = {}) => {
 	const ascending = sortBy === 'oldest';
 
 	let query = supabase
-		.from('summary')
-		.select('id, url, title, summary, processing_status, thumbnail_url, created_at, updated_at')
+		.from('summaries')
+		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
 		.order('updated_at', { ascending })
 		.limit(limit + 1);
 
@@ -63,12 +63,31 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 	const { supabase } = locals;
 
 	const { data, error: sbError } = await supabase
-		.from('summary')
-		.select('id, url, title, summary, language, processing_status, thumbnail_url, created_at, updated_at, summary_audio_url, summary_audio_status')
+		.from('summaries')
+		.select('id, url, title, summary, language, processing_status, thumbnail_url, updated_at, summary_audio_url, summary_audio_status')
 		.eq('id', id)
 		.single();
 
 	if (sbError) throw error(404, 'Summary not found');
 
-	return data;
+	if (!data) throw error(404, 'Summary not found');
+
+	const videoIdMatch = data.url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+	const videoId = videoIdMatch?.[1];
+
+	let insight = null;
+	if (videoId) {
+		const { data: videoData } = await supabase
+			.from('channel_videos')
+			.select('video_insight')
+			.eq('video_id', videoId)
+			.single();
+
+		insight = videoData?.video_insight || null;
+	}
+
+	return {
+		...data,
+		video_insight: insight
+	};
 });

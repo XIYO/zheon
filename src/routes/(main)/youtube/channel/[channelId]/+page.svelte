@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
-	import { syncChannelVideos, getChannelVideos } from '$lib/remote/channel_videos.remote.js';
-	import { getChannel } from '$lib/remote/channel.remote.js';
+	import { syncChannelVideos, getChannelVideos } from '$lib/remote/youtube/channel_videos.remote.js';
+	import { getChannel } from '$lib/remote/youtube/channel.remote.js';
 	import VideoCard from '$lib/components/VideoCard.svelte';
 
 	/** @type {string} */
