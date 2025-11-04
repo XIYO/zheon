@@ -8,7 +8,7 @@ import { env } from '$env/dynamic/private';
 
 const VideoAnalysisWithSummarySchema = valibotSchema(
 	v.object({
-		summary: v.pipe(v.string(), v.minLength(200), v.maxLength(1000)),
+		summary: v.pipe(v.string(), v.minLength(100), v.maxLength(1000)),
 		content_quality: v.object({
 			educational_value: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 			entertainment_value: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
@@ -45,8 +45,8 @@ const VideoAnalysisWithSummarySchema = valibotSchema(
 		insights: v.object({
 			content_summary: v.pipe(v.string(), v.minLength(50), v.maxLength(500)),
 			audience_reaction: v.pipe(v.string(), v.minLength(50), v.maxLength(500)),
-			key_insights: v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(5)),
-			recommendations: v.pipe(v.array(v.string()), v.minLength(0), v.maxLength(3))
+			key_insights: v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(10)),
+			recommendations: v.pipe(v.array(v.string()), v.minLength(0), v.maxLength(10))
 		})
 	})
 );

@@ -47,7 +47,10 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 		await adminSupabase
 			.schema('zheon')
 			.from('summaries')
-			.update({ analysis_status: 'processing' })
+			.update({
+				analysis_status: 'processing',
+				processing_status: 'processing'
+			})
 			.eq('id', summaryId);
 
 		console.log(`[Summaries] 1단계: 자막/댓글 병렬 수집 시작`);
