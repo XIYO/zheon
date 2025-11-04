@@ -21,8 +21,7 @@
 		<input type="hidden" name="youtubeUrl" value="https://youtube.com/watch?v={video.video_id}" />
 		<button
 			type="submit"
-			class="preset-outlined-surface block w-full overflow-hidden rounded-xl text-left transition-all hover:scale-[1.02]"
-		>
+			class="preset-outlined-surface block w-full overflow-hidden rounded-xl text-left transition-all hover:scale-[1.02]">
 			<!-- 썸네일 -->
 			<div class="aspect-video w-full overflow-hidden bg-surface-800 relative">
 				{#if video.thumbnail_url}
@@ -30,8 +29,7 @@
 						src={video.thumbnail_url}
 						alt={video.title}
 						class="h-full w-full object-cover"
-						loading="lazy"
-					/>
+						loading="lazy" />
 				{:else}
 					<div class="flex h-full w-full items-center justify-center bg-surface-700">
 						<span class="text-sm text-surface-400">썸네일 없음</span>
@@ -42,7 +40,8 @@
 						{video.duration}
 					</span>
 				{/if}
-				<div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+				<div
+					class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
 					<span class="font-semibold text-white">요약 시작</span>
 				</div>
 			</div>

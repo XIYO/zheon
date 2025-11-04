@@ -8,7 +8,7 @@ export async function load({ locals: { safeGetSession }, url, cookies }) {
 		throw redirect(303, `/auth/callback?${searchParams.toString()}`);
 	}
 
-	const { session, user } = await safeGetSession();
+	const { user } = await safeGetSession();
 	return {
 		user,
 		cookies: cookies.getAll()

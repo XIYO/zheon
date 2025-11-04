@@ -199,6 +199,9 @@ CREATE TABLE IF NOT EXISTS zheon.comments (
   comment_id text NOT NULL UNIQUE,
   video_id text NOT NULL,
   data jsonb NOT NULL,
+  sentiment text CHECK (sentiment IN ('positive', 'neutral', 'negative')),
+  sentiment_confidence real CHECK (sentiment_confidence >= 0 AND sentiment_confidence <= 1),
+  sentiment_analyzed_at timestamptz,
   updated_at timestamptz DEFAULT now()
 );
 
@@ -335,6 +338,10 @@ CREATE POLICY "Allow service role delete"
   TO service_role
   USING (true);
 
+-- 4.5.1 summaries 테이블 권한
+GRANT SELECT, INSERT ON zheon.summaries TO anon;
+GRANT ALL ON zheon.summaries TO authenticated;
+
 -- 4.6 subscriptions RLS policies
 CREATE POLICY "Users can view own subscriptions"
   ON zheon.subscriptions FOR SELECT
@@ -370,6 +377,10 @@ CREATE POLICY "Service role can manage comments"
   USING (true)
   WITH CHECK (true);
 
+-- 4.7.1 comments 테이블 권한
+GRANT SELECT, INSERT ON zheon.comments TO anon;
+GRANT ALL ON zheon.comments TO authenticated;
+
 -- 4.8 transcripts RLS policies
 CREATE POLICY "Anyone can view transcripts"
   ON zheon.transcripts FOR SELECT
@@ -386,6 +397,10 @@ CREATE POLICY "Service role can manage transcripts"
   TO service_role
   USING (true)
   WITH CHECK (true);
+
+-- 4.8.1 transcripts 테이블 권한
+GRANT SELECT, INSERT ON zheon.transcripts TO anon;
+GRANT ALL ON zheon.transcripts TO authenticated;
 
 -- ============================================================================
 -- 5. COMMENTS

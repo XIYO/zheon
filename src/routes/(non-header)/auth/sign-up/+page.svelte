@@ -1,5 +1,5 @@
 <script>
-	import { signUpEmail, signUpGoogle } from '$lib/remote/auth.remote.js';
+	import { signUpEmail, signUpGoogle } from '$lib/remote/auth.remote';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
 	import * as m from '$lib/paraglide/messages';
 </script>
@@ -33,8 +33,7 @@
 					<input
 						class="input"
 						{...signUpEmail.fields?.email?.as('email')}
-						aria-invalid={(signUpEmail.fields?.email?.issues()?.length ?? 0) > 0}
-					/>
+						aria-invalid={(signUpEmail.fields?.email?.issues()?.length ?? 0) > 0} />
 					{#each signUpEmail.fields?.email?.issues() || [] as issue (issue.message)}
 						<span class="text-error-500 text-sm">{issue.message}</span>
 					{/each}
@@ -45,8 +44,7 @@
 					<input
 						class="input"
 						{...signUpEmail.fields?.password?.as('password')}
-						aria-invalid={(signUpEmail.fields?.password?.issues()?.length ?? 0) > 0}
-					/>
+						aria-invalid={(signUpEmail.fields?.password?.issues()?.length ?? 0) > 0} />
 					{#each signUpEmail.fields?.password?.issues() || [] as issue (issue.message)}
 						<span class="text-error-500 text-sm">{issue.message}</span>
 					{/each}
@@ -57,8 +55,7 @@
 					<input
 						class="input"
 						{...signUpEmail.fields?.confirmPassword?.as('password')}
-						aria-invalid={(signUpEmail.fields?.confirmPassword?.issues()?.length ?? 0) > 0}
-					/>
+						aria-invalid={(signUpEmail.fields?.confirmPassword?.issues()?.length ?? 0) > 0} />
 					{#each signUpEmail.fields?.confirmPassword?.issues() || [] as issue (issue.message)}
 						<span class="text-error-500 text-sm">{issue.message}</span>
 					{/each}

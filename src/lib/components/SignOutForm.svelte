@@ -3,6 +3,7 @@
 	import { applyAction, enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import * as m from '$lib/paraglide/messages';
+	import { localizeHref } from '$lib/paraglide/runtime';
 
 	/** @type {{ onsuccess?: () => void }} */
 	const { onsuccess } = $props();
@@ -12,7 +13,7 @@
 		return ({ result }) => {
 			if (result.type === 'redirect') {
 				onsuccess?.();
-				goto(result.location, { invalidateAll: true });
+				goto(localizeHref(result.location), { invalidateAll: true });
 			} else {
 				applyAction(result);
 			}
@@ -67,9 +68,7 @@
 	<!-- Footer Section -->
 	<footer class="p-6 flex gap-3">
 		<!-- Cancel Button -->
-		<a
-			href="/"
-			class="btn preset-ghost-surface-500 btn-base flex-1 ">
+		<a href={localizeHref('/')} class="btn preset-ghost-surface-500 btn-base flex-1">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path
 					stroke-linecap="round"
@@ -81,7 +80,7 @@
 		</a>
 
 		<!-- Sign Out Button -->
-		<button type="submit" class="btn preset-filled-error-500 btn-base flex-1 ">
+		<button type="submit" class="btn preset-filled-error-500 btn-base flex-1">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path
 					stroke-linecap="round"

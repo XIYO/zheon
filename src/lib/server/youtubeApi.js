@@ -130,7 +130,9 @@ export async function getChannels(channelIds) {
 		thumbnail_width: item.snippet?.thumbnails?.high?.width,
 		thumbnail_height: item.snippet?.thumbnails?.high?.height,
 		view_count: item.statistics?.viewCount ? item.statistics.viewCount : undefined,
-		subscriber_count: item.statistics?.subscriberCount ? item.statistics.subscriberCount : undefined,
+		subscriber_count: item.statistics?.subscriberCount
+			? item.statistics.subscriberCount
+			: undefined,
 		video_count: item.statistics?.videoCount ? parseInt(item.statistics.videoCount) : undefined,
 		uploads_playlist_id: item.contentDetails?.relatedPlaylists?.uploads,
 		channel_data: item
@@ -277,6 +279,8 @@ export async function getAllSubscriptions(accessToken) {
 		pageToken = result.nextPageToken;
 	} while (pageToken);
 
-	console.log(`[YouTube API] 모든 구독 목록 가져오기 완료: 총 ${allSubscriptions.length}개 (${pageCount}페이지)`);
+	console.log(
+		`[YouTube API] 모든 구독 목록 가져오기 완료: 총 ${allSubscriptions.length}개 (${pageCount}페이지)`
+	);
 	return allSubscriptions;
 }

@@ -122,15 +122,19 @@ const supabase = async ({ event, resolve }) => {
 /** @type {import('@sveltejs/kit').Handle} */
 const adminSupabase = async ({ event, resolve }) => {
 	try {
-		event.locals.adminSupabase = createClient(publicEnv.PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
-			auth: {
-				persistSession: false,
-				autoRefreshToken: false
-			},
-			db: {
-				schema: 'zheon'
+		event.locals.adminSupabase = createClient(
+			publicEnv.PUBLIC_SUPABASE_URL,
+			env.SUPABASE_SECRET_KEY,
+			{
+				auth: {
+					persistSession: false,
+					autoRefreshToken: false
+				},
+				db: {
+					schema: 'zheon'
+				}
 			}
-		});
+		);
 	} catch (error) {
 		console.error('[adminSupabase] Error creating admin client:', error);
 	}

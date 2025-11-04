@@ -1,36 +1,38 @@
 <script>
 	import { page } from '$app/state';
 	import { innerHeight } from 'svelte/reactivity/window';
-    import { getSubscriptions, syncSubscriptions, syncSubscriptionsCommand } from '$lib/remote/youtube/subscription.remote.js';
-    import { getProfile } from '$lib/remote/profile.remote.js';
-    import ChannelCard from '$lib/components/ChannelCard.svelte';
+	import { getSubscriptions, syncSubscriptions } from '$lib/remote/youtube/subscription.remote';
+	import { getProfile } from '$lib/remote/profile.remote';
+	import ChannelCard from '$lib/components/ChannelCard.svelte';
 
 	const { supabase } = page.data;
-
 
 	let firstPage = $derived(await getSubscriptions({}));
 	let profile = $derived(await getProfile());
 
 	// 추가 페이지는 수동 관리
-	let additionalPages = $state(/** @type {Array<{subscriptions: any[], nextCursor: string | null, hasMore: boolean}>} */ ([]));
+	let additionalPages = $state(
+		/** @type {Array<{subscriptions: any[], nextCursor: string | null, hasMore: boolean}>} */ ([])
+	);
 
 	// 모든 페이지 합치기
 	let subscriptions = $derived([
 		...firstPage.subscriptions,
-		...additionalPages.flatMap(p => p.subscriptions)
+		...additionalPages.flatMap((p) => p.subscriptions)
 	]);
 
 	// 무한 스크롤 상태
 	let hasMore = $derived(
-		additionalPages.length === 0
-			? firstPage.hasMore
-			: additionalPages.at(-1)?.hasMore ?? false
+		additionalPages.length === 0 ? firstPage.hasMore : (additionalPages.at(-1)?.hasMore ?? false)
 	);
 	let isLoadingMore = $state(false);
 	let sentinel = $state(/** @type {HTMLDivElement | null} */ (null));
 
 	let isSubscriptionSyncSubmitting = $state(false);
-	let isSync = $derived(isSubscriptionSyncSubmitting || ['pending', 'processing'].includes(profile?.youtube_subscription_sync_status));
+	let isSync = $derived(
+		isSubscriptionSyncSubmitting ||
+			['pending', 'processing'].includes(profile?.youtube_subscription_sync_status)
+	);
 
 	// 더 불러오기 함수
 	async function loadMore() {
@@ -44,7 +46,7 @@
 		isLoadingMore = false;
 	}
 
-	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ form, submit }) => {
+	const enhanceSyncSubscriptions = syncSubscriptions.enhance(async ({ submit }) => {
 		isSubscriptionSyncSubmitting = true;
 		try {
 			await submit(); // 단지 동기화 요청만 보내고, 리얼타임으로 업데이트 상태 추적
@@ -53,7 +55,7 @@
 		} finally {
 			isSubscriptionSyncSubmitting = false;
 		}
-	})
+	});
 
 	// IntersectionObserver로 무한 스크롤 구현
 	$effect(() => {
@@ -76,9 +78,7 @@
 
 	// Realtime updates
 	$effect(() => {
-		const needsSync = ['pending', 'processing'].includes(
-			profile?.youtube_subscription_sync_status
-		);
+		const needsSync = ['pending', 'processing'].includes(profile?.youtube_subscription_sync_status);
 		if (!needsSync) return;
 
 		const channel = supabase
@@ -91,13 +91,10 @@
 					table: 'profile',
 					filter: `id=eq.${profile?.id}`
 				},
-				async (payload) => {
+				async () => {
 					// 동기화 완료 시 구독 목록 리셋
 					additionalPages = [];
-					await Promise.all([
-						getProfile().refresh(),
-						getSubscriptions({}).refresh()
-					])
+					await Promise.all([getProfile().refresh(), getSubscriptions({}).refresh()]);
 				}
 			)
 			.subscribe();
@@ -115,13 +112,12 @@
 			<form {...enhanceSyncSubscriptions}>
 				<button
 					type="submit"
-					class={["chip preset-tonal-primary", {'animate-pulse' : isSync}]}
-					disabled={isSync}
-				>
+					class={['chip preset-tonal-primary', { 'animate-pulse': isSync }]}
+					disabled={isSync}>
 					{isSync ? '동기화 중...' : '구독 동기화'}
 				</button>
 			</form>
-			{#each syncSubscriptions.fields.allIssues() as issue}
+			{#each syncSubscriptions.fields.allIssues() as issue (issue.message)}
 				<span class="text-error-500 text-sm">
 					{issue.message}
 				</span>
@@ -137,11 +133,11 @@
 		</header>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#if subscriptions.length === 0}
-				{#each Array(4) as _}
+				{#each Array(4) as _, idx (idx)}
 					<ChannelCard />
 				{/each}
 			{:else}
-				{#each subscriptions as subscription}
+				{#each subscriptions as subscription (subscription.channel.channel_id)}
 					<ChannelCard channel={subscription.channel} />
 				{/each}
 			{/if}
@@ -157,9 +153,7 @@
 				{/if}
 			</div>
 		{:else if subscriptions.length > 0}
-			<div class="mt-8 py-8 text-center text-surface-400">
-				모든 채널을 불러왔습니다
-			</div>
+			<div class="mt-8 py-8 text-center text-surface-400">모든 채널을 불러왔습니다</div>
 		{/if}
 	</section>
 </main>

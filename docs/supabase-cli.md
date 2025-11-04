@@ -1,7 +1,6 @@
 # Supabase CLI 완벽 가이드
 
-> **버전**: Supabase CLI 2.48.3
-> **설치 방법**: `brew install supabase/tap/supabase`
+> **버전**: Supabase CLI 2.48.3 **설치 방법**: `brew install supabase/tap/supabase`
 
 이 문서는 Supabase CLI의 모든 명령어와 사용법을 상세하게 설명합니다. Supabase CLI는 로컬 개발 환경 구축부터 프로덕션 배포까지 전체 워크플로우를 지원합니다.
 
@@ -46,6 +45,7 @@ supabase init
 **설명**: 현재 디렉토리에 `supabase/` 폴더를 생성하고 기본 설정 파일(`config.toml`)을 만듭니다. 모든 로컬 개발의 시작점입니다.
 
 **생성되는 구조**:
+
 ```
 supabase/
 ├── config.toml          # 프로젝트 설정
@@ -62,6 +62,7 @@ supabase start
 ```
 
 **주요 플래그**:
+
 - `-x, --exclude strings`: 시작하지 않을 컨테이너 지정
   ```bash
   supabase start --exclude gotrue,realtime
@@ -69,6 +70,7 @@ supabase start
 - `--ignore-health-check`: 비정상 서비스를 무시하고 exit 0 반환
 
 **시작되는 서비스들**:
+
 - `postgres`: PostgreSQL 데이터베이스
 - `gotrue`: 인증 서비스
 - `postgrest`: REST API
@@ -85,6 +87,7 @@ supabase start
 - `supavisor`: 연결 풀링
 
 **실행 후**:
+
 - Studio: http://localhost:54323
 - API URL: http://localhost:54321
 - DB: postgresql://postgres:postgres@localhost:54322/postgres
@@ -108,6 +111,7 @@ supabase status
 ```
 
 **출력 형식**:
+
 ```
          API URL: http://localhost:54321
           DB URL: postgresql://postgres:postgres@localhost:54322/postgres
@@ -125,6 +129,7 @@ supabase link --project-ref <project-ref>
 **설명**: 로컬 프로젝트를 원격 Supabase 프로젝트와 연결합니다. 프로젝트 ref는 대시보드 URL에서 확인할 수 있습니다.
 
 **예시**:
+
 ```bash
 supabase link --project-ref iefgdhwmgljjacafqomd
 ```
@@ -238,6 +243,7 @@ supabase db diff -s public,auth
 ```
 
 **주요 플래그**:
+
 - `-f, --file string`: diff를 새 마이그레이션 파일에 저장
 - `--linked`: 로컬 마이그레이션과 연결된 프로젝트 비교
 - `--local`: 로컬 마이그레이션과 로컬 데이터베이스 비교 (기본값)
@@ -248,6 +254,7 @@ supabase db diff -s public,auth
 - `--db-url string`: 특정 데이터베이스 URL과 비교
 
 **워크플로우 예시**:
+
 ```bash
 # 1. Studio에서 수동으로 테이블 생성
 # 2. 변경사항을 마이그레이션 파일로 저장
@@ -275,6 +282,7 @@ supabase db push --include-roles
 ```
 
 **주요 플래그**:
+
 - `--linked`: 연결된 프로젝트에 푸시 (기본값)
 - `--local`: 로컬 데이터베이스에 푸시
 - `--dry-run`: 실제 적용하지 않고 실행될 마이그레이션만 출력
@@ -338,25 +346,24 @@ supabase functions new hello-world
 ```
 
 **생성되는 구조**:
+
 ```
 supabase/functions/hello-world/
 └── index.ts
 ```
 
 **기본 템플릿**:
+
 ```typescript
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 Deno.serve(async (req) => {
-  const data = {
-    message: `Hello from Edge Function!`,
-  }
+	const data = {
+		message: `Hello from Edge Function!`
+	};
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+	return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+});
 ```
 
 #### `supabase functions serve`
@@ -381,6 +388,7 @@ supabase functions serve --import-map ./import_map.json
 ```
 
 **주요 플래그**:
+
 - `--env-file string`: Function 환경에 로드할 env 파일 경로
 - `--import-map string`: import map 파일 경로
 - `--inspect`: `--inspect-mode brk`의 별칭
@@ -392,6 +400,7 @@ supabase functions serve --import-map ./import_map.json
 - `--no-verify-jwt`: JWT 검증 비활성화
 
 **디버깅 워크플로우**:
+
 ```bash
 # 1. 디버그 모드로 서빙
 supabase functions serve --inspect-mode brk
@@ -402,6 +411,7 @@ supabase functions serve --inspect-mode brk
 ```
 
 **로컬 테스트**:
+
 ```bash
 curl -i --location --request POST 'http://localhost:54321/functions/v1/hello-world' \
   --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
@@ -440,6 +450,7 @@ supabase functions deploy --use-docker
 ```
 
 **주요 플래그**:
+
 - `--import-map string`: import map 파일 경로
 - `-j, --jobs uint`: 최대 병렬 작업 수 (기본값: 1)
 - `--no-verify-jwt`: Function의 JWT 검증 비활성화
@@ -449,6 +460,7 @@ supabase functions deploy --use-docker
 - `--use-docker`: Docker로 함수 번들링 (기본값)
 
 **배포 전 체크리스트**:
+
 1. `supabase functions serve`로 로컬 테스트 완료
 2. 환경 변수를 `supabase secrets set`으로 설정
 3. `--dry-run` 없지만 `--prune` 사용 시 주의
@@ -497,6 +509,7 @@ supabase migration new create_users_table
 ```
 
 **생성되는 파일**:
+
 ```
 supabase/migrations/20231215120000_create_users_table.sql
 ```
@@ -516,6 +529,7 @@ supabase migration list --linked
 ```
 
 **출력 예시**:
+
 ```
         LOCAL      │   REMOTE   │     TIME (UTC)
   ─────────────────┼────────────┼──────────────────────
@@ -621,6 +635,7 @@ supabase gen types --lang=swift --swift-access-control public > Database.swift
 ```
 
 **주요 플래그**:
+
 - `--lang [typescript|go|swift]`: 출력 언어 (기본값: typescript)
 - `--local`: 로컬 dev 데이터베이스에서 생성
 - `--linked`: 연결된 프로젝트에서 생성
@@ -632,19 +647,15 @@ supabase gen types --lang=swift --swift-access-control public > Database.swift
 - `--query-timeout duration`: 데이터베이스 쿼리 최대 타임아웃 (기본값: 15s)
 
 **생성된 TypeScript 타입 사용 예시**:
-```typescript
-import { Database } from './lib/database.types'
-import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient<Database>(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-)
+```typescript
+import { Database } from './lib/database.types';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient<Database>(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 // 이제 타입이 자동으로 추론됩니다
-const { data, error } = await supabase
-  .from('users')
-  .select('*')
+const { data, error } = await supabase.from('users').select('*');
 ```
 
 ### `supabase gen bearer-jwt`
@@ -692,18 +703,20 @@ supabase secrets set MY_SECRET=value --project-ref abc-def-123
 ```
 
 **중요**:
+
 - Edge Functions는 자동으로 재배포되어 새 시크릿을 사용합니다
 - 시크릿은 암호화되어 저장되며 Edge Functions 런타임에서만 접근 가능합니다
 - Git에 커밋하지 마세요!
 
 **Edge Function에서 사용**:
+
 ```typescript
 Deno.serve(async (req) => {
-  const apiKey = Deno.env.get('API_KEY')
-  const dbUrl = Deno.env.get('DATABASE_URL')
+	const apiKey = Deno.env.get('API_KEY');
+	const dbUrl = Deno.env.get('DATABASE_URL');
 
-  // 환경 변수 사용
-})
+	// 환경 변수 사용
+});
 ```
 
 #### `supabase secrets list`
@@ -715,6 +728,7 @@ supabase secrets list
 ```
 
 **출력 예시**:
+
 ```
 NAME           │ DIGEST
 ───────────────┼─────────────────
@@ -753,6 +767,7 @@ supabase projects list
 ```
 
 **출력 예시**:
+
 ```
 ┌───────────────────┬─────────────┬──────────┐
 │       NAME        │ PROJECT REF │  REGION  │
@@ -771,6 +786,7 @@ supabase projects create my-project --org-id my-org --region us-east-1
 ```
 
 **주요 옵션**:
+
 - `--org-id`: 조직 ID (필수)
 - `--region`: 프로젝트 리전 (예: us-east-1, eu-west-1, ap-southeast-1)
 - `--db-password`: 데이터베이스 비밀번호
@@ -794,6 +810,7 @@ supabase projects api-keys --project-ref abc-def-123
 ```
 
 **출력 예시**:
+
 ```
 anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -932,6 +949,7 @@ supabase config
 **설명**: 상태 변수의 출력 형식을 지정합니다.
 
 **예시**:
+
 ```bash
 # JSON 형식으로 출력
 supabase status -o json
@@ -949,6 +967,7 @@ supabase projects list -o yaml
 **설명**: stderr로 디버그 로그를 출력합니다.
 
 **예시**:
+
 ```bash
 supabase start --debug
 ```
@@ -964,6 +983,7 @@ supabase start --debug
 **사용 사례**: 여러 Supabase 계정을 관리할 때 유용합니다.
 
 **예시**:
+
 ```bash
 # 개인 프로필로 로그인
 supabase login --profile personal
@@ -984,6 +1004,7 @@ supabase projects list --profile company
 **설명**: Supabase 프로젝트 디렉토리 경로를 지정합니다.
 
 **예시**:
+
 ```bash
 supabase start --workdir /path/to/my-project
 ```
@@ -997,6 +1018,7 @@ supabase start --workdir /path/to/my-project
 **설명**: 모든 프롬프트에 yes로 자동 응답합니다.
 
 **예시**:
+
 ```bash
 # 확인 없이 프로젝트 삭제
 supabase projects delete --project-ref abc-def-123 --yes
@@ -1011,6 +1033,7 @@ supabase projects delete --project-ref abc-def-123 --yes
 **설명**: 도메인 이름 조회 시 사용할 resolver를 지정합니다. (기본값: native)
 
 **사용 사례**:
+
 - `native`: 시스템 DNS 사용
 - `https`: DNS over HTTPS (DoH) 사용 (방화벽 뒤에서 유용)
 
@@ -1291,5 +1314,4 @@ supabase migration new update
 
 ---
 
-**마지막 업데이트**: 2025-10-12
-**CLI 버전**: 2.48.3
+**마지막 업데이트**: 2025-10-12 **CLI 버전**: 2.48.3

@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import { localizeHref } from '$lib/paraglide/runtime';
 
 	const pathSegments = $derived.by(() => {
 		const pathname = page.url.pathname;
@@ -21,7 +22,9 @@
 				{segment}
 			</span>
 		{:else}
-			<a href={path} class="text-surface-600-400 hover:text-surface-900-100 transition-colors">
+			<a
+				href={localizeHref(path)}
+				class="text-surface-600-400 hover:text-surface-900-100 transition-colors">
 				{segment}
 			</a>
 		{/if}

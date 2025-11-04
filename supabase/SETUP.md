@@ -47,18 +47,21 @@ YouTube Data API v3는 **하루 10,000 할당량** 제한이 있습니다.
 - Search (핸들 변환): **100 할당량**
 
 **최적화 전략:**
+
 - 채널 정보를 데이터베이스에 캐싱 (현재 구현됨)
 - 가능하면 채널 ID 직접 사용 (핸들 변환 비용 절약)
 
 ## 아키텍처
 
 ### 채널 정보 (YouTube Data API v3)
+
 - ✅ 패키지 용량 작음 (fetch만 사용)
 - ✅ 초기화 비용 없음
 - ✅ Edge Function 배포 가능
 - ⚠️ API 키 필요 (하루 10,000 할당량)
 
 ### 자막 추출 (extractor.xiyo.dev)
+
 - ✅ 외부 API 사용 (https://extractor.xiyo.dev/extract)
 - ✅ Edge Function에서 실행 가능
 - ✅ 패키지 의존성 없음

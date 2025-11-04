@@ -1,18 +1,19 @@
 <script>
 	import { page } from '$app/state';
-	import { syncChannelVideos, getChannelVideos } from '$lib/remote/youtube/channel_videos.remote.js';
-	import { getChannel } from '$lib/remote/youtube/channel.remote.js';
+	import { syncChannelVideos, getChannelVideos } from '$lib/remote/youtube/channel_video.remote';
+	import { getChannel } from '$lib/remote/youtube/channel.remote';
 	import VideoCard from '$lib/components/VideoCard.svelte';
 
 	/** @type {string} */
 	let channelId = $derived(page.params.channelId);
-	let [channel, initialData] = $derived(await Promise.all([
-		getChannel(channelId),
-		getChannelVideos({ channelId })
-	]));
+	let [channel, initialData] = $derived(
+		await Promise.all([getChannel(channelId), getChannelVideos({ channelId })])
+	);
 
 	let isChannelSyncSubmitting = $state(false);
-	let isSync = $derived(isChannelSyncSubmitting || ['pending', 'processing'].includes(channel?.video_sync_status));
+	let isSync = $derived(
+		isChannelSyncSubmitting || ['pending', 'processing'].includes(channel?.video_sync_status)
+	);
 
 	// 무한 스크롤 상태
 	let videos = $state([]);
@@ -41,7 +42,7 @@
 		isLoadingMore = false;
 	}
 
-	const enhancedForm = syncChannelVideos.enhance(async ({ form, submit }) => {
+	const enhancedForm = syncChannelVideos.enhance(async ({ submit }) => {
 		isChannelSyncSubmitting = true;
 		await submit();
 		await getChannel(channelId).refresh();
@@ -92,7 +93,7 @@
 					table: 'channels',
 					filter: `channel_id=eq.${channelId}`
 				},
-				async (payload) => {
+				async () => {
 					const updated = await getChannel(channelId);
 					channel = updated;
 
@@ -123,8 +124,7 @@
 					<img
 						src={channel.thumbnail_url}
 						alt={channel.title}
-						class="h-24 w-24 rounded-full object-cover"
-					/>
+						class="h-24 w-24 rounded-full object-cover" />
 				{/if}
 				<div>
 					<h1 class="h1 mb-2">{channel.title}</h1>
@@ -147,13 +147,12 @@
 					<input type="hidden" name="channelId" value={channelId} />
 					<button
 						type="submit"
-						class={["chip preset-tonal-primary", {'animate-pulse' : isSync}]}
-						disabled={isSync}
-					>
+						class={['chip preset-tonal-primary', { 'animate-pulse': isSync }]}
+						disabled={isSync}>
 						{isSync ? '동기화 중...' : '영상 목록 동기화'}
 					</button>
 				</form>
-				{#each syncChannelVideos.fields.allIssues() as issue}
+				{#each syncChannelVideos.fields.allIssues() as issue (issue.message)}
 					<span class="text-error-500 text-sm block mt-2">
 						{issue.message}
 					</span>
@@ -177,7 +176,7 @@
 
 	{#if videos.length > 0}
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each videos as video}
+			{#each videos as video (video.video_id)}
 				<VideoCard {video} />
 			{/each}
 		</div>
@@ -192,13 +191,11 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="mt-8 py-8 text-center text-surface-400">
-				모든 영상을 불러왔습니다
-			</div>
+			<div class="mt-8 py-8 text-center text-surface-400">모든 영상을 불러왔습니다</div>
 		{/if}
 	{:else}
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each Array(4) as _}
+			{#each Array(4) as _, idx (idx)}
 				<VideoCard />
 			{/each}
 		</div>

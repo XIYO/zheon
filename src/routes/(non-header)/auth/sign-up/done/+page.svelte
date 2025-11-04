@@ -1,6 +1,7 @@
 <!-- 회원가입 완료 페이지 -->
 <script>
 	import { page } from '$app/state';
+	import { localizeHref } from '$lib/paraglide/runtime';
 
 	const isEmailVerificationPending = $derived(
 		page.url.searchParams.get('email-verification') === 'pending'
@@ -26,9 +27,7 @@
 					</svg>
 				</div>
 				<h2 class="text-xl font-bold">이메일을 확인해주세요</h2>
-				<p class="mt-2">
-					회원가입을 완료하려면 이메일로 전송된 확인 링크를 클릭해주세요.
-				</p>
+				<p class="mt-2">회원가입을 완료하려면 이메일로 전송된 확인 링크를 클릭해주세요.</p>
 			{:else}
 				<div class="mb-4">
 					<svg
@@ -71,16 +70,14 @@
 					</p>
 				</div>
 			{:else}
-				<p class="text-center">
-					이제 로그인하여 Zheon의 모든 기능을 이용할 수 있습니다.
-				</p>
+				<p class="text-center">이제 로그인하여 Zheon의 모든 기능을 이용할 수 있습니다.</p>
 			{/if}
 
 			<div class="flex gap-3">
-				<a href="/auth/sign-in" class="btn preset-filled-primary-500 flex-1 ">
+				<a href={localizeHref('/auth/sign-in')} class="btn preset-filled-primary-500 flex-1">
 					로그인 페이지로
 				</a>
-				<a href="/" class="btn preset-tonal-surface-500 flex-1 ">홈으로</a>
+				<a href={localizeHref('/')} class="btn preset-tonal-surface-500 flex-1">홈으로</a>
 			</div>
 		</section>
 	</div>

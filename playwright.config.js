@@ -4,10 +4,7 @@ export default defineConfig({
 	testDir: 'e2e',
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
-	reporter: [
-		['html', { open: 'never', port: 27777 }],
-		['line']
-	],
+	reporter: [['html', { open: 'never', port: 27777 }], ['line']],
 	timeout: 30000,
 	use: {
 		baseURL: 'http://localhost:17777',
@@ -17,7 +14,10 @@ export default defineConfig({
 	webServer: {
 		command: 'pnpm build && pnpm preview',
 		port: 17777,
-		reuseExistingServer: !process.env.CI
+		reuseExistingServer: !process.env.CI,
+		env: {
+			...process.env
+		}
 	},
 	projects: [
 		{

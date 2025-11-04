@@ -53,4 +53,3 @@ Review `wrangler.toml` routes and the `adapter-cloudflare` output before deployi
 - Components: PascalCase (e.g., `Header.svelte`)
 - Server utilities: kebab-case (e.g., `summary-service.js`)
 - Commit style: emoji + imperative summary (see `AGENTS.md`)
-

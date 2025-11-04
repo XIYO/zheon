@@ -1,7 +1,5 @@
 <script>
 	import SummaryList from '$lib/components/SummaryList.svelte';
-
-	let { data } = $props();
 </script>
 
 <div class="container mx-auto px-4 py-8 max-w-7xl">

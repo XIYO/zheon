@@ -21,7 +21,7 @@ function createProxyFetch(proxyUrl) {
 				...init
 			};
 		} else {
-			targetUrl = typeof input === 'string' ? input : (input.href || String(input));
+			targetUrl = typeof input === 'string' ? input : input.href || String(input);
 			proxyInit = init ? { ...init } : {};
 		}
 

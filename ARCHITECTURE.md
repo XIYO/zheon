@@ -81,4 +81,3 @@ supabase/
 
 - Keep UI minimal; apply Skeleton presets selectively (hero/cta)
 - Prefer streaming/edge-friendly APIs to fit Cloudflare Workers limits
-

@@ -111,6 +111,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^3.13.0
         version: 3.13.0(eslint@9.39.1(jiti@2.6.1))(svelte@5.43.3)
+      eslint-plugin-unused-imports:
+        specifier: ^4.3.0
+        version: 4.3.0(eslint@9.39.1(jiti@2.6.1))
       globals:
         specifier: ^16.5.0
         version: 16.5.0
@@ -1650,6 +1653,15 @@ packages:
       svelte: ^3.37.0 || ^4.0.0 || ^5.0.0
     peerDependenciesMeta:
       svelte:
+        optional: true
+
+  eslint-plugin-unused-imports@4.3.0:
+    resolution: {integrity: sha512-ZFBmXMGBYfHttdRtOG9nFFpmUvMtbHSjsKrS20vdWdbfiVYsO3yA2SGYy9i9XmZJDfMGBflZGBCm70SEnFQtOA==}
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
+      eslint: ^9.0.0 || ^8.0.0
+    peerDependenciesMeta:
+      '@typescript-eslint/eslint-plugin':
         optional: true
 
   eslint-scope@8.4.0:
@@ -4171,6 +4183,10 @@ snapshots:
       svelte: 5.43.3
     transitivePeerDependencies:
       - ts-node
+
+  eslint-plugin-unused-imports@4.3.0(eslint@9.39.1(jiti@2.6.1)):
+    dependencies:
+      eslint: 9.39.1(jiti@2.6.1)
 
   eslint-scope@8.4.0:
     dependencies:

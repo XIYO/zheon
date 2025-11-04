@@ -1,5 +1,6 @@
 <script>
 	import { enhance } from '$app/forms';
+	import { localizeHref } from '$lib/paraglide/runtime';
 
 	let { data } = $props();
 
@@ -50,9 +51,7 @@
 				고품질 프로그래밍 및 웹 개발 콘텐츠를 제공하는 채널들입니다
 			</p>
 		</div>
-		<button class="btn preset-filled-primary" onclick={openChannelPopover}>
-			+ 채널 추가
-		</button>
+		<button class="btn preset-filled-primary" onclick={openChannelPopover}>+ 채널 추가</button>
 	</div>
 
 	<!-- 채널 추가 Popover -->
@@ -64,8 +63,7 @@
 					type="button"
 					class="btn-icon preset-ghost-surface-500"
 					onclick={closeChannelPopover}
-					aria-label="닫기"
-				>
+					aria-label="닫기">
 					✕
 				</button>
 			</div>
@@ -78,12 +76,15 @@
 						placeholder="@channelname"
 						class="input w-full"
 						required
-						disabled={isSubmitting}
-					/>
+						disabled={isSubmitting} />
 					<span class="text-xs text-surface-600-300 mt-1">예: @fireship, @ThePrimeagen</span>
 				</label>
 				<div class="flex gap-2 justify-end">
-					<button type="button" class="btn preset-outlined" onclick={closeChannelPopover} disabled={isSubmitting}>
+					<button
+						type="button"
+						class="btn preset-outlined"
+						onclick={closeChannelPopover}
+						disabled={isSubmitting}>
 						취소
 					</button>
 					<button type="submit" class="btn preset-filled-primary" disabled={isSubmitting}>
@@ -99,18 +100,21 @@
 		{#each data.channels as channel (channel.id)}
 			{@const isLoading = channel.id.startsWith('temp-')}
 			<a
-				href={isLoading ? '#' : `/youtube/channel/${channel.id}`}
+				href={isLoading ? '#' : localizeHref(`/youtube/channel/${channel.id}`)}
 				class="card preset-filled-surface-50-900 hover:preset-filled-primary-500 transition-all duration-200 p-4 flex flex-col items-center text-center space-y-3"
 				class:opacity-60={isLoading}
-				class:pointer-events-none={isLoading}
-			>
+				class:pointer-events-none={isLoading}>
 				<!-- 채널 썸네일 -->
-				<div class="w-16 h-16 rounded-full overflow-hidden bg-surface-200-700 flex items-center justify-center flex-shrink-0">
+				<div
+					class="w-16 h-16 rounded-full overflow-hidden bg-surface-200-700 flex items-center justify-center flex-shrink-0">
 					{#if channel.thumbnail && !isLoading}
 						<img src={channel.thumbnail} alt={channel.name} class="w-full h-full object-cover" />
 					{:else}
 						<!-- 썸네일 없을 때 placeholder -->
-						<div class="placeholder-circle w-16 h-16 bg-surface-200-800" class:animate-pulse={isLoading}></div>
+						<div
+							class="placeholder-circle w-16 h-16 bg-surface-200-800"
+							class:animate-pulse={isLoading}>
+						</div>
 					{/if}
 				</div>
 

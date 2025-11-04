@@ -2,14 +2,15 @@ import prettier from 'eslint-config-prettier';
 import js from '@eslint/js';
 import { includeIgnoreFile } from '@eslint/compat';
 import svelte from 'eslint-plugin-svelte';
+import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import svelteConfig from './svelte.config.js';
-import skeletonUIPlugin from './eslint-rules/index.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 export default [
+	{ ignores: ['**/database.types.ts', '**/database.ts', '**/*.d.ts'] },
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
 	...svelte.configs.recommended,
@@ -21,19 +22,19 @@ export default [
 		}
 	},
 	{
-		files: ['**/*.svelte', '**/*.svelte.js'],
-		languageOptions: { parserOptions: { svelteConfig } }
+		files: ['**/*.js', '**/*.ts', '**/*.jsx', '**/*.tsx'],
+		plugins: { 'unused-imports': unusedImports },
+		rules: {
+			'unused-imports/no-unused-imports': 'error',
+			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+		}
 	},
 	{
-		plugins: {
-			'skeleton-ui': {
-				rules: {
-					'color-pairs': skeletonColorPairs
-				}
-			}
-		},
+		files: ['**/*.svelte', '**/*.svelte.js'],
+		languageOptions: { parserOptions: { svelteConfig } },
 		rules: {
-			'skeleton-ui/color-pairs': 'error'
+			'svelte/no-navigation-without-resolve': 'off',
+			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
 		}
 	}
 ];

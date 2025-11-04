@@ -3,6 +3,7 @@
 ## 2025-10-09: Edge Function 프롬프트 개선 및 배포
 
 ### 작업 내용
+
 - `supabase/functions/_shared/runnables/generate-summary.ts` 프롬프트 대폭 개선
   - summary: 1-2문장 → 500자 체계적 요약
   - insights: 5000자+ 복잡한 구조 → 2000자 3섹션 구조
@@ -11,6 +12,7 @@
   - Hallucination 위험 감소 (영상 내용 기반, 실존 자료만 언급)
 
 ### 배포 결과
+
 - 모든 Edge Functions 성공적으로 배포 완료
 - summary function: 6.362MB
 - Dashboard: https://supabase.com/dashboard/project/iefgdhwmgljjacafqomd/functions
@@ -18,6 +20,7 @@
 ## 2025-10-10: Gemini TTS 및 동시성 제어 시스템 구현
 
 ### 작업 내용
+
 - Gemini TTS API를 활용한 고품질 한국어 음성 생성 기능 추가
   - 브라우저 기본 TTS에서 Gemini TTS로 전환 (음질 개선)
   - Gemini API 모델: `gemini-2.5-flash-preview-tts`
@@ -47,6 +50,7 @@
   - 실시간 상태 관리 ($state, $derived 활용)
 
 ### 배포 결과
+
 - 마이그레이션 적용 완료 (20251010031500, 20251010031501, 20251010050000)
 - Edge Function 배포 완료
   - tts-stream: 702kB
@@ -55,6 +59,7 @@
 ## 2025-10-10: Edge Function 리팩토링 - LangChain에서 Vercel AI SDK로 마이그레이션
 
 ### 작업 내용
+
 - **insight-generator 독립 Edge Function 생성**
   - Vercel AI SDK 5.0의 `generateObject()` 사용
   - Zod 스키마 기반 구조화된 출력 (Valibot 호환성 이슈로 변경)
@@ -78,6 +83,7 @@
   - .update() 호출 시 insights 필드 추가
 
 ### 최종 아키텍처
+
 ```
 summary Function (LangChain Runnables orchestrator, 6.237MB)
   ├─ extractSubtitles → Extractor API (https://extractor.xiyo.dev)
@@ -85,6 +91,7 @@ summary Function (LangChain Runnables orchestrator, 6.237MB)
 ```
 
 ### 배포 결과
+
 - Edge Functions 배포 완료
   - insight-generator: 884KB
   - summary: 6.237MB (이전 8.076MB에서 감소)
@@ -92,6 +99,7 @@ summary Function (LangChain Runnables orchestrator, 6.237MB)
 - Dashboard: https://supabase.com/dashboard/project/iefgdhwmgljjacafqomd/functions
 
 ### 목표 달성
+
 1. ✅ LangChain → Vercel AI SDK 5.0 마이그레이션
 2. ✅ LangChain Runnable 구조 유지 (검증된 아키텍처 보존)
 3. ✅ YouTubei.js 제거 및 WORKER_LIMIT 문제 해결
@@ -100,12 +108,14 @@ summary Function (LangChain Runnables orchestrator, 6.237MB)
 ## 2025-01-12: Supabase Edge Functions 타임아웃 심화 분석
 
 ### 발견사항
+
 - **Free Plan 제한**: Wall Clock 150초, CPU Time 2초, 메모리 256MB
 - **실제 CPU 사용량**: 전체 처리의 ~0.06초 (2초 제한의 3%)
 - **Network I/O 시간**: 16.5-93초 (YouTube API + Gemini API 대기)
 - **핵심 문제**: CPU Time이 아닌 Wall Clock Time이 병목
 
 ### 시간 분석
+
 - YouTube 메타데이터: 1-2초 (Network I/O)
 - 자막 추출 (Extractor API): 5-30초 (Network I/O)
 - Gemini AI 요약: 10-60초 (Network I/O)
@@ -113,11 +123,13 @@ summary Function (LangChain Runnables orchestrator, 6.237MB)
 - **99%가 Network I/O 대기 시간**
 
 ### 해결 방안
+
 1. **작업 분할**: subtitle-extractor와 insight-generator 분리
 2. **Cloudflare Workers 이전**: 타임아웃 제한 없음
 3. **API 병렬 처리 + 타임아웃 설정**
 
 ### Supabase Integrations 조사
+
 - **Queues**: PostgreSQL 기반 메시지 큐 (pgmq)
 - **Redis Wrapper**: 외부 Redis 인스턴스 연동
 - **Notion/Slack/D1 Wrapper**: FDW로 외부 서비스를 SQL 테이블처럼 사용
