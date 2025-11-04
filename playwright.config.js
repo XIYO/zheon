@@ -4,8 +4,6 @@ export default defineConfig({
 	testDir: 'e2e',
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
-	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
 	reporter: [
 		['html', { open: 'never', port: 27777 }],
 		['line']
@@ -17,7 +15,7 @@ export default defineConfig({
 		screenshot: 'on'
 	},
 	webServer: {
-		command: 'sh -c "set -a && . ./.env && set +a && pnpm build && pnpm preview"',
+		command: 'pnpm build && pnpm preview',
 		port: 17777,
 		reuseExistingServer: !process.env.CI
 	},
