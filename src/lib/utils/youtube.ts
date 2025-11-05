@@ -22,3 +22,8 @@ export function getYouTubeThumbnail(
 	if (!videoId) return null;
 	return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 }
+
+export function normalizeYouTubeUrl(videoId: string | null): string {
+	if (!videoId) return '';
+	return `https://www.youtube.com/watch?v=${videoId}`;
+}

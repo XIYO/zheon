@@ -143,11 +143,15 @@ export async function getSummaryAudio(
 	const getSignedUrlFn = _getSignedUrlFn;
 	const cacheKey = `${summaryId}-summary`;
 
-	const progress = await postMessage('getProgress', { id: cacheKey });
+	const progress = (await postMessage('getProgress', { id: cacheKey })) as {
+		complete: boolean;
+		downloadedBytes: number;
+		totalSize: number;
+	};
 
 	if (progress.complete) {
 		console.log(`[Audio Cache] Cache hit: ${cacheKey}`);
-		const arrayBuffer = await postMessage('read', { id: cacheKey });
+		const arrayBuffer = (await postMessage('read', { id: cacheKey })) as ArrayBuffer;
 		const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
 		return URL.createObjectURL(blob);
 	}
@@ -178,7 +182,7 @@ export async function getSummaryAudio(
 		await streamingDownload(cacheKey, signedUrl, 0);
 	}
 
-	const arrayBuffer = await postMessage('read', { id: cacheKey });
+	const arrayBuffer = (await postMessage('read', { id: cacheKey })) as ArrayBuffer;
 	const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
 	return URL.createObjectURL(blob);
 }

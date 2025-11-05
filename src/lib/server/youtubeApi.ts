@@ -64,6 +64,86 @@ interface SubscriptionsResult {
 	totalResults?: number;
 }
 
+interface YouTubeChannelsResponse {
+	items?: Array<{
+		id: string;
+		snippet?: {
+			title: string;
+			description: string;
+			customUrl?: string;
+			publishedAt: string;
+			thumbnails?: {
+				high?: { url: string; width: number; height: number };
+				medium?: { url: string; width: number; height: number };
+			};
+		};
+		statistics?: {
+			viewCount?: string;
+			subscriberCount?: string;
+			videoCount?: string;
+		};
+		contentDetails?: {
+			relatedPlaylists?: {
+				uploads: string;
+			};
+		};
+	}>;
+	pageInfo?: {
+		totalResults: number;
+		resultsPerPage: number;
+	};
+}
+
+interface YouTubePlaylistItemsResponse {
+	items?: Array<{
+		snippet?: {
+			channelId: string;
+			title: string;
+			description: string;
+			publishedAt: string;
+			channelTitle: string;
+			playlistId: string;
+			position: number;
+			thumbnails?: {
+				high?: { url: string; width: number; height: number };
+				medium?: { url: string; width: number; height: number };
+			};
+		};
+		contentDetails?: {
+			videoId: string;
+		};
+	}>;
+	nextPageToken?: string;
+	prevPageToken?: string;
+	pageInfo?: {
+		totalResults: number;
+		resultsPerPage: number;
+	};
+}
+
+interface YouTubeSubscriptionsResponse {
+	items?: Array<{
+		snippet?: {
+			title: string;
+			description: string;
+			publishedAt: string;
+			resourceId?: {
+				kind: string;
+				channelId: string;
+			};
+			thumbnails?: {
+				high?: { url: string; width: number; height: number };
+				medium?: { url: string; width: number; height: number };
+			};
+		};
+	}>;
+	nextPageToken?: string;
+	pageInfo?: {
+		totalResults: number;
+		resultsPerPage: number;
+	};
+}
+
 async function fetchYouTube(
 	endpoint: string,
 	params: Record<string, unknown> | Map<string, unknown>,
@@ -129,10 +209,10 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 export async function getChannelUploadsPlaylistId(channelId: string): Promise<string> {
-	const data = await fetchYouTube('channels', {
+	const data = (await fetchYouTube('channels', {
 		part: 'contentDetails',
 		id: channelId
-	});
+	})) as YouTubeChannelsResponse;
 
 	if (!data.items || data.items.length === 0) {
 		throw error(404, '채널을 찾을 수 없습니다');
@@ -161,10 +241,10 @@ export async function getChannels(channelIds: string | string[]): Promise<Channe
 
 	for (const idChunk of chunks) {
 		console.log(`[YouTube API] 채널 배치 요청: ${idChunk.length}개`);
-		const data = await fetchYouTube('channels', {
+		const data = (await fetchYouTube('channels', {
 			part: 'snippet,statistics,contentDetails',
 			id: idChunk.join(',')
-		});
+		})) as YouTubeChannelsResponse;
 
 		if (data.items) {
 			console.log(`[YouTube API] 채널 배치 응답: ${data.items.length}개`);
@@ -176,7 +256,7 @@ export async function getChannels(channelIds: string | string[]): Promise<Channe
 
 	console.log(`[YouTube API] 채널 정보 요청 완료: 총 ${allChannels.length}개`);
 
-	return allChannels.map((item: unknown) => ({
+	return allChannels.map((item) => ({
 		channel_id: item.id,
 		title: item.snippet?.title,
 		description: item.snippet?.description,
@@ -201,14 +281,14 @@ export async function getPlaylistItems(
 ): Promise<PlaylistItemsResult> {
 	const { maxResults = 50, pageToken } = options;
 
-	const data = await fetchYouTube('playlistItems', {
+	const data = (await fetchYouTube('playlistItems', {
 		part: 'snippet,contentDetails',
 		playlistId,
 		maxResults,
 		pageToken
-	});
+	})) as YouTubePlaylistItemsResponse;
 
-	const items: PlaylistItem[] = (data.items || []).map((item: unknown) => ({
+	const items: PlaylistItem[] = (data.items || []).map((item) => ({
 		channel_id: item.snippet?.channelId,
 		video_id: item.contentDetails?.videoId,
 		title: item.snippet?.title,
@@ -280,7 +360,7 @@ export async function getSubscriptions(
 
 	console.log('[YouTube API] 구독 목록 요청 시작', { maxResults, pageToken: pageToken || 'none' });
 
-	const data = await fetchYouTube(
+	const data = (await fetchYouTube(
 		'subscriptions',
 		{
 			part: 'snippet',
@@ -293,7 +373,7 @@ export async function getSubscriptions(
 				Authorization: `Bearer ${accessToken}`
 			}
 		}
-	);
+	)) as YouTubeSubscriptionsResponse;
 
 	console.log('[YouTube API] 구독 목록 응답:', {
 		items: data.items?.length || 0,
@@ -301,7 +381,7 @@ export async function getSubscriptions(
 		totalResults: data.pageInfo?.totalResults
 	});
 
-	const items: SubscriptionItem[] = (data.items || []).map((item: unknown) => ({
+	const items: SubscriptionItem[] = (data.items || []).map((item) => ({
 		channel_id: item.snippet?.resourceId?.channelId,
 		title: item.snippet?.title,
 		description: item.snippet?.description,
