@@ -9,7 +9,7 @@ export const getProfile = query(async () => {
 	const { supabase, safeGetSession } = locals;
 	const { session, user } = await safeGetSession();
 
-	if (!session) throw error(401, '로그인이 필요합니다');
+	if (!session || !user) throw error(401, '로그인이 필요합니다');
 
 	const { data: profile, error: profileError } = await supabase
 		.from('profiles')

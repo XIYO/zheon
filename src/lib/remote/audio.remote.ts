@@ -204,7 +204,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 			const request = strategy.buildRequest({ text: speechText });
 			if (!request) continue;
 
-			const result = await generateSpeech(request);
+			const result = await generateSpeech(request as Parameters<typeof generateSpeech>[0]);
 			if (!result?.audio?.uint8Array?.length) {
 				throw new Error('오디오 데이터가 생성되지 않았습니다');
 			}
@@ -242,7 +242,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 
 		const { error: uploadError } = await adminSupabase.storage
 			.from('audio')
-			.upload(fileName, audio.uint8Array, {
+			.upload(fileName, audio.uint8Array as Uint8Array, {
 				contentType: audio.mimeType ?? 'audio/mpeg',
 				upsert: true
 			});

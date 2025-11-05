@@ -1,8 +1,8 @@
 import { command, getRequestEvent } from '$app/server';
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
-import { getYouTubeClient } from '$lib/server/youtube-proxy.js';
-import { CollectTranscriptInputSchema } from './transcription.schema.ts';
+import { getYouTubeClient } from '$lib/server/youtube-proxy';
+import { CollectTranscriptInputSchema } from './transcription.schema';
 
 export const collectTranscript = command(CollectTranscriptInputSchema, async (input) => {
 	try {
@@ -52,7 +52,7 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 		const transcriptData = {
 			title: info.basic_info?.title,
 			duration: info.basic_info?.duration,
-			segments: segments.map((segment) => ({
+			segments: segments.map((segment: any) => ({
 				start_ms: parseInt(segment.start_ms),
 				end_ms: parseInt(segment.end_ms),
 				text: segment.snippet.text
@@ -116,7 +116,7 @@ export const getTranscriptFromDB = command(
 				};
 			}
 
-			const segments = transcript.data?.segments || [];
+			const segments = (transcript.data as any)?.segments || [];
 			console.log(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
 
 			return {
