@@ -62,7 +62,10 @@ export default [
 		languageOptions: { parserOptions: { svelteConfig } },
 		rules: {
 			'svelte/no-navigation-without-resolve': 'off',
-			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+			'@typescript-eslint/no-unsafe-member-access': 'off',
+			'@typescript-eslint/no-unsafe-call': 'off',
+			'@typescript-eslint/no-unsafe-assignment': 'off'
 		}
 	}
 ];
