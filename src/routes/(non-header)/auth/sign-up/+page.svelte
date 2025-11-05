@@ -1,15 +1,15 @@
 <script>
 	import { signUpEmail, signUpGoogle } from '$lib/remote/auth.remote';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
-	import * as m from '$lib/paraglide/messages';
+	
 </script>
 
 <div class="h-screen w-screen flex items-center justify-center">
 	<div class="max-w-md w-full">
 		<!-- Header Section -->
 		<header class="p-4 text-center">
-			<h2 class="text-xl font-bold">{m.auth_sign_up_title()}</h2>
-			<p>{m.auth_sign_up_subtitle()}</p>
+			<h2 class="text-xl font-bold">회원가입</h2>
+			<p>새 계정을 만드세요</p>
 		</header>
 
 		<div class="divider"></div>
@@ -20,7 +20,7 @@
 			<form {...signUpGoogle}>
 				<button type="submit" class="btn preset-filled-primary w-full">
 					<GoogleIcon size={20} class="h-5 w-5" />
-					<span>{m.auth_sign_up_google_button()}</span>
+					<span>Google로 가입</span>
 				</button>
 			</form>
 

@@ -1,7 +1,8 @@
 <!-- 회원가입 완료 페이지 -->
 <script>
 	import { page } from '$app/state';
-	import { localizeHref } from '$lib/paraglide/runtime';
+	import { resolve } from '$app/paths';
+	
 
 	const isEmailVerificationPending = $derived(
 		page.url.searchParams.get('email-verification') === 'pending'
@@ -74,10 +75,10 @@
 			{/if}
 
 			<div class="flex gap-3">
-				<a href={localizeHref('/auth/sign-in')} class="btn preset-filled-primary-500 flex-1">
+				<a href={resolve('/auth/sign-in')} class="btn preset-filled-primary-500 flex-1">
 					로그인 페이지로
 				</a>
-				<a href={localizeHref('/')} class="btn preset-tonal-surface-500 flex-1">홈으로</a>
+				<a href={resolve('/')} class="btn preset-tonal-surface-500 flex-1">홈으로</a>
 			</div>
 		</section>
 	</div>

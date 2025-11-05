@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
-	import { localizeHref } from '$lib/paraglide/runtime';
+	import { resolve } from '$app/paths';
+	
 
 	function getProviderName(user) {
 		const provider = user?.app_metadata?.provider;
@@ -38,7 +39,7 @@
 		<div class="mb-6">
 			<h2 class="h2 mb-3 text-surface-600-400">연결된 서비스</h2>
 			<a
-				href={localizeHref('/youtube/subscriptions')}
+				href={resolve('/youtube/subscriptions')}
 				class="btn preset-elevated w-full mb-3 flex items-center justify-center gap-2">
 				<svg class="size-5" viewBox="0 0 24 24" fill="currentColor">
 					<path
@@ -57,6 +58,6 @@
 		</div>
 
 		<!-- 로그아웃 -->
-		<a href={localizeHref('/auth/sign-out')} class="btn preset-outlined w-full">로그아웃</a>
+		<a href={resolve('/auth/sign-out')} class="btn preset-outlined w-full">로그아웃</a>
 	</div>
 </div>

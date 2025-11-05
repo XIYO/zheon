@@ -273,7 +273,7 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 
 	const { data: existing, error: selectError } = await supabase
 		.from('summaries')
-		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+		.select('analysis_status')
 		.eq('url', normalizedUrl)
 		.maybeSingle();
 
@@ -291,6 +291,10 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 
 		if (updateError) throw error(500, updateError);
 		summaryData = updated;
+
+		if (existing.analysis_status === 'completed') {
+			return summaryData;
+		}
 	} else {
 		const { data: newData, error: insertError } = await supabase
 			.from('summaries')

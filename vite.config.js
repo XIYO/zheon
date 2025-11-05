@@ -1,4 +1,3 @@
-import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
@@ -6,18 +5,11 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
-		sveltekit(),
-		paraglideVitePlugin({
-			project: './project.inlang',
-			outdir: './src/lib/paraglide'
-		})
+		sveltekit()
 	],
 	server: {
 		port: 7777,
-		strictPort: true,
-		watch: {
-			ignored: ['**/src/lib/paraglide/**']
-		}
+		strictPort: true
 	},
 	preview: {
 		port: 17777,

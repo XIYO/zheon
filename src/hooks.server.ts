@@ -1,4 +1,3 @@
-import { paraglideMiddleware } from '$lib/paraglide/server';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -16,15 +15,6 @@ process.on('unhandledRejection', (reason, promise) => {
 		console.error('Reason details:', JSON.stringify(reason, null, 2));
 	}
 });
-
-const handleParaglide: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
-
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
-		});
-	});
 
 const supabase: Handle = async ({ event, resolve }) => {
 	console.log('[hooks.server.ts] SUPABASE_URL:', publicEnv.PUBLIC_SUPABASE_URL);
@@ -135,4 +125,4 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(handleParaglide, supabase, adminSupabase, authGuard);
+export const handle = sequence(supabase, adminSupabase, authGuard);

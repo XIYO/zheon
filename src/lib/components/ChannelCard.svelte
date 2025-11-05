@@ -1,6 +1,6 @@
 <script>
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
-	import { localizeHref } from '$lib/paraglide/runtime';
+	import { resolve } from '$app/paths';
 
 	/**
 	 * @typedef {Object} Channel
@@ -23,7 +23,7 @@
 	{#if channel}
 		<!-- 실제 채널 데이터 -->
 		<a
-			href={localizeHref(`/youtube/channel/${channel.channel_id}`)}
+			href={resolve('/youtube/channel/[channel_id]', { channel_id: channel.channel_id })}
 			class="preset-outlined-surface group flex overflow-hidden rounded-xl hover:preset-filled-surface-500 transition-colors">
 			<div class="content-center-safe p-4">
 				<Avatar>

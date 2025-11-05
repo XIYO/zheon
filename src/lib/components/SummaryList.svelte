@@ -2,8 +2,8 @@
 <script>
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getSummaries } from '$lib/remote/summary.remote';
-	import { localizeHref } from '$lib/paraglide/runtime';
 	import { innerHeight } from 'svelte/reactivity/window';
 	import { extractVideoId, getYouTubeThumbnail } from '$lib/utils/youtube';
 
@@ -124,7 +124,7 @@
 					{#each summaries as summary (summary.url)}
 						<tr class="border-b border-surface-200-800 hover:opacity-80">
 							<td class="px-4 py-3">
-								<a href={localizeHref(`/summaries/${summary.id}/`)} class="flex items-center gap-3">
+								<a href={resolve('/summaries/[id]', { id: summary.id })} class="flex items-center gap-3">
 									<div
 										class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
 											? 'bg-warning-500 animate-pulse'
