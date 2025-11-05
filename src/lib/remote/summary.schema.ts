@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 
-const isYouTubeUrl = (input) => {
+const isYouTubeUrl = (input: string) => {
 	try {
 		const url = new URL(input);
 		const hostname = url.hostname.toLowerCase();

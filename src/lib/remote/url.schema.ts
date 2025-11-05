@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 
-const isValidUrl = (str) => {
+const isValidUrl = (str: string) => {
 	try {
 		const url = new URL(str);
 		return url.protocol === 'https:';

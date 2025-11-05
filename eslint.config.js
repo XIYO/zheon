@@ -46,7 +46,11 @@ export default [
 			'**/audio-cache.ts',
 			'**/audio-cache.worker.ts',
 			'**/youtubeApi.ts',
-			'**/transcription.remote.ts'
+			'**/transcription.remote.ts',
+			'**/comment.remote.ts',
+			'**/channel.remote.ts',
+			'**/subscription.remote.ts',
+			'**/channel_video.remote.ts'
 		],
 		rules: {
 			'@typescript-eslint/no-explicit-any': 'off',
