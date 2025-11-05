@@ -1,24 +1,22 @@
-/**
- * Audio Cache - Worker 기반 OPFS 캐싱
- * - 모든 OPFS 작업을 Worker에서 처리
- * - Promise 기반 통신 래퍼
- */
-
-let worker = null;
+let worker: Worker | null = null;
 let messageId = 0;
-const pendingMessages = new Map();
+const pendingMessages = new Map<number, { resolve: Function; reject: Function }>();
 
-/**
- * Worker 인스턴스 가져오기
- */
-function getWorker() {
+interface WorkerMessage {
+	messageId: number;
+	success: boolean;
+	data?: any;
+	error?: string;
+}
+
+function getWorker(): Worker {
 	if (worker) return worker;
 
 	worker = new Worker(new URL('../workers/audio-cache.worker.js', import.meta.url), {
 		type: 'module'
 	});
 
-	worker.onmessage = (event) => {
+	worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
 		const { messageId: id, success, data, error } = event.data;
 		const pending = pendingMessages.get(id);
 
@@ -32,17 +30,14 @@ function getWorker() {
 		}
 	};
 
-	worker.onerror = (error) => {
+	worker.onerror = (error: ErrorEvent) => {
 		console.error('[Audio Cache] Worker error:', error);
 	};
 
 	return worker;
 }
 
-/**
- * Worker에 메시지 전송
- */
-function postMessage(action, data = {}) {
+function postMessage(action: string, data: Record<string, any> = {}): Promise<any> {
 	return new Promise((resolve, reject) => {
 		const id = messageId++;
 		const w = getWorker();
@@ -57,10 +52,7 @@ function postMessage(action, data = {}) {
 	});
 }
 
-/**
- * 파일 크기 포맷팅
- */
-function formatBytes(bytes) {
+function formatBytes(bytes: number): string {
 	if (bytes === 0) return '0 B';
 	const k = 1024;
 	const sizes = ['B', 'KB', 'MB', 'GB'];
@@ -68,11 +60,8 @@ function formatBytes(bytes) {
 	return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
-/**
- * 스트리밍 다운로드
- */
-async function streamingDownload(cacheKey, signedUrl, startOffset = 0) {
-	const headers = {};
+async function streamingDownload(cacheKey: string, signedUrl: string, startOffset: number = 0): Promise<void> {
+	const headers: Record<string, string> = {};
 	if (startOffset > 0) {
 		headers['Range'] = `bytes=${startOffset}-`;
 	}
@@ -100,7 +89,7 @@ async function streamingDownload(cacheKey, signedUrl, startOffset = 0) {
 		);
 	}
 
-	const reader = response.body.getReader();
+	const reader = response.body!.getReader();
 	let offset = startOffset;
 	let lastLogTime = Date.now();
 	const LOG_INTERVAL = 500;
@@ -140,17 +129,10 @@ async function streamingDownload(cacheKey, signedUrl, startOffset = 0) {
 	console.log(`[Audio Cache] Download complete: ${formatBytes(totalSize)}`);
 }
 
-/**
- * Summary 오디오 가져오기
- * - 캐시가 있으면 즉시 반환
- * - 부분 다운로드 있으면 이어받기
- * - 없으면 처음부터 다운로드
- *
- * @param {string} summaryId - Summary ID
- * @param {Function} getSignedUrlFn - Remote 함수
- * @returns {Promise<string>} - blob URL
- */
-export async function getSummaryAudio(summaryId, getSignedUrlFn) {
+export async function getSummaryAudio(
+	summaryId: string,
+	getSignedUrlFn: (params: { summaryId: string }) => Promise<{ url: string }>
+): Promise<string> {
 	const cacheKey = `${summaryId}-summary`;
 
 	const progress = await postMessage('getProgress', { id: cacheKey });
@@ -193,10 +175,7 @@ export async function getSummaryAudio(summaryId, getSignedUrlFn) {
 	return URL.createObjectURL(blob);
 }
 
-/**
- * 캐시 삭제
- */
-export async function clearAudioCache(summaryId) {
+export async function clearAudioCache(summaryId: string): Promise<void> {
 	const cacheKey = `${summaryId}-summary`;
 
 	try {
@@ -207,10 +186,7 @@ export async function clearAudioCache(summaryId) {
 	}
 }
 
-/**
- * 전체 캐시 정보 조회
- */
-export async function getCacheInfo() {
+export async function getCacheInfo(): Promise<any[]> {
 	try {
 		return await postMessage('list');
 	} catch (error) {

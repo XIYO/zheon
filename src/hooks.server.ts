@@ -6,6 +6,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { createClient } from '@supabase/supabase-js';
+import type { Handle } from '@sveltejs/kit';
 
 process.on('unhandledRejection', (reason, promise) => {
 	console.error('=== UNHANDLED REJECTION ===');
@@ -16,8 +17,7 @@ process.on('unhandledRejection', (reason, promise) => {
 	}
 });
 
-/** @type {import('@sveltejs/kit').Handle} */
-const handleParaglide = ({ event, resolve }) =>
+const handleParaglide: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {
 		event.request = request;
 
@@ -26,26 +26,15 @@ const handleParaglide = ({ event, resolve }) =>
 		});
 	});
 
-/** @type {import('@sveltejs/kit').Handle} */
-const supabase = async ({ event, resolve }) => {
-	/**
-	 * Creates a Supabase client specific to this server request.
-	 *
-	 * The Supabase client gets the Auth token from the request cookies.
-	 */
-	console.log('[hooks.server.js] SUPABASE_URL:', publicEnv.PUBLIC_SUPABASE_URL);
-	console.log('[hooks.server.js] SUPABASE_KEY:', publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+const supabase: Handle = async ({ event, resolve }) => {
+	console.log('[hooks.server.ts] SUPABASE_URL:', publicEnv.PUBLIC_SUPABASE_URL);
+	console.log('[hooks.server.ts] SUPABASE_KEY:', publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	event.locals.supabase = createServerClient(
 		publicEnv.PUBLIC_SUPABASE_URL,
 		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 		{
 			cookies: {
 				getAll: () => event.cookies.getAll(),
-				/**
-				 * SvelteKit's cookies API requires `path` to be explicitly set in
-				 * the cookie options. Setting `path` to `/` replicates previous/
-				 * standard behavior.
-				 */
 				setAll: (cookiesToSet) => {
 					cookiesToSet.forEach(({ name, value, options }) => {
 						event.cookies.set(name, value, { ...options, path: '/' });
@@ -58,13 +47,6 @@ const supabase = async ({ event, resolve }) => {
 		}
 	);
 
-	/**
-	 * Unlike `supabase.auth.getSession()`, which returns the session _without_
-	 * validating the JWT, this function also calls `getUser()` to validate the
-	 * JWT before returning the session.
-	 *
-	 * If provider_token is missing (OAuth token expired), automatically refreshes the session.
-	 */
 	event.locals.safeGetSession = async () => {
 		try {
 			const {
@@ -79,22 +61,18 @@ const supabase = async ({ event, resolve }) => {
 				error
 			} = await event.locals.supabase.auth.getUser();
 			if (error) {
-				// JWT validation has failed
 				return { session: null, user: null };
 			}
 
-			// provider_token이 없으면 세션 refresh 시도
 			if (session.provider_token === undefined || session.provider_token === null) {
 				try {
 					const { data: refreshData, error: refreshError } =
 						await event.locals.supabase.auth.refreshSession();
 
 					if (!refreshError && refreshData.session) {
-						// refresh 성공 시 쿠키 자동 업데이트됨
 						return { session: refreshData.session, user: refreshData.user };
 					}
 
-					// refresh 실패 시 기존 세션 반환
 					console.warn('[safeGetSession] refresh 실패 - 재로그인 필요:', refreshError?.message);
 				} catch (refreshError) {
 					console.error('[safeGetSession] refresh exception:', refreshError);
@@ -110,17 +88,12 @@ const supabase = async ({ event, resolve }) => {
 
 	return resolve(event, {
 		filterSerializedResponseHeaders(name) {
-			/**
-			 * Supabase libraries use the `content-range` and `x-supabase-api-version`
-			 * headers, so we need to tell SvelteKit to pass it through.
-			 */
 			return name === 'content-range' || name === 'x-supabase-api-version';
 		}
 	});
 };
 
-/** @type {import('@sveltejs/kit').Handle} */
-const adminSupabase = async ({ event, resolve }) => {
+const adminSupabase: Handle = async ({ event, resolve }) => {
 	try {
 		event.locals.adminSupabase = createClient(
 			publicEnv.PUBLIC_SUPABASE_URL,
@@ -142,8 +115,7 @@ const adminSupabase = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-/** @type {import('@sveltejs/kit').Handle} */
-const authGuard = async ({ event, resolve }) => {
+const authGuard: Handle = async ({ event, resolve }) => {
 	try {
 		const { session, user } = await event.locals.safeGetSession();
 		event.locals.session = session;

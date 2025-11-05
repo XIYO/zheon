@@ -1,14 +1,13 @@
 import { env } from '$env/dynamic/private';
 import { Innertube } from 'youtubei.js/cf-worker';
 
-/**
- * YouTube 프록시 fetch 함수
- * TOR 프록시를 통해 YouTube API 요청
- */
-function createProxyFetch(proxyUrl) {
-	return async (input, init) => {
-		let targetUrl;
-		let proxyInit;
+type FetchInput = Request | string | URL;
+type FetchInit = RequestInit;
+
+function createProxyFetch(proxyUrl: string) {
+	return async (input: FetchInput, init?: FetchInit): Promise<Response> => {
+		let targetUrl: string;
+		let proxyInit: FetchInit;
 
 		if (input instanceof Request) {
 			targetUrl = input.url;
@@ -33,9 +32,6 @@ function createProxyFetch(proxyUrl) {
 	};
 }
 
-/**
- * 프록시를 사용하는 Innertube 인스턴스 생성
- */
 async function createYouTubeClient() {
 	const proxyUrl = env.HTTP_PROXY_URL;
 	if (!proxyUrl) {
@@ -47,12 +43,8 @@ async function createYouTubeClient() {
 	});
 }
 
-let ytPromise;
+let ytPromise: Promise<any>;
 
-/**
- * YouTube 클라이언트 싱글톤
- * Race condition 방지를 위해 Promise를 캐시
- */
 export async function getYouTubeClient() {
 	if (!ytPromise) {
 		ytPromise = createYouTubeClient();

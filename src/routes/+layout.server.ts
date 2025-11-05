@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+import type { LayoutServerLoad } from './$types';
 
-export async function load({ locals: { safeGetSession }, url, cookies }) {
-	// OAuth 콜백 처리: 메인 페이지에 code 파라미터가 있다면 콜백 페이지로 리디렉트
+export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, url, cookies }) => {
 	const code = url.searchParams.get('code');
 	if (code && url.pathname === '/') {
 		const searchParams = new URLSearchParams(url.searchParams);
@@ -13,4 +13,4 @@ export async function load({ locals: { safeGetSession }, url, cookies }) {
 		user,
 		cookies: cookies.getAll()
 	};
-}
+};

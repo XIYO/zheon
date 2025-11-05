@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
-export async function load({ url, locals: { supabase } }) {
+export const load: PageServerLoad = async ({ url, locals: { supabase } }) => {
 	const code = url.searchParams.get('code');
 	const error_code = url.searchParams.get('error');
 	const error_description = url.searchParams.get('error_description');
@@ -31,4 +32,4 @@ export async function load({ url, locals: { supabase } }) {
 	}
 
 	throw redirect(303, '/auth/sign-in?error=no_code');
-}
+};

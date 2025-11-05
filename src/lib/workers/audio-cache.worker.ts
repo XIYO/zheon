@@ -1,32 +1,16 @@
-/**
- * OPFS Audio Cache Worker
- * - 모든 OPFS 작업을 Worker에서 처리
- * - createSyncAccessHandle() 사용
- * - Safari 16.4+, Chrome 108+, Firefox 111+ 지원
- */
-
 const AUDIO_DIR = 'audio-cache';
 const META_SUFFIX = '.meta.json';
 
-/**
- * OPFS 루트 디렉토리 가져오기
- */
-async function getOPFSRoot() {
+async function getOPFSRoot(): Promise<FileSystemDirectoryHandle> {
 	return await navigator.storage.getDirectory();
 }
 
-/**
- * 오디오 캐시 디렉토리 가져오기/생성
- */
-async function getAudioDir() {
+async function getAudioDir(): Promise<FileSystemDirectoryHandle> {
 	const root = await getOPFSRoot();
 	return await root.getDirectoryHandle(AUDIO_DIR, { create: true });
 }
 
-/**
- * 캐시 존재 확인
- */
-async function handleHas(id) {
+async function handleHas(id: string): Promise<{ success: boolean; data?: boolean; error?: string }> {
 	try {
 		const dir = await getAudioDir();
 		await dir.getFileHandle(id);
@@ -41,10 +25,7 @@ async function handleHas(id) {
 	}
 }
 
-/**
- * 다운로드 진행 상황 조회
- */
-async function handleGetProgress(id) {
+async function handleGetProgress(id: string): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 		const metaHandle = await dir.getFileHandle(`${id}${META_SUFFIX}`);
@@ -74,10 +55,7 @@ async function handleGetProgress(id) {
 	}
 }
 
-/**
- * 다운로드 초기화
- */
-async function handleInitDownload(id, metadata) {
+async function handleInitDownload(id: string, metadata: any): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 
@@ -104,15 +82,12 @@ async function handleInitDownload(id, metadata) {
 		metaAccessHandle.close();
 
 		return { success: true };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 청크 쓰기
- */
-async function handleWriteChunk(id, offset, buffer) {
+async function handleWriteChunk(id: string, offset: number, buffer: Uint8Array): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 		const fileHandle = await dir.getFileHandle(id, { create: true });
@@ -123,15 +98,12 @@ async function handleWriteChunk(id, offset, buffer) {
 		accessHandle.close();
 
 		return { success: true };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 메타데이터 업데이트
- */
-async function handleUpdateMetadata(id, updates) {
+async function handleUpdateMetadata(id: string, updates: Record<string, any>): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 		const metaHandle = await dir.getFileHandle(`${id}${META_SUFFIX}`);
@@ -154,15 +126,12 @@ async function handleUpdateMetadata(id, updates) {
 		metaAccessHandle.close();
 
 		return { success: true };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 파일 읽기
- */
-async function handleRead(id) {
+async function handleRead(id: string): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 
@@ -185,15 +154,12 @@ async function handleRead(id) {
 		accessHandle.close();
 
 		return { success: true, data: buffer };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 파일 쓰기
- */
-async function handleWrite(id, buffer, metadata) {
+async function handleWrite(id: string, buffer: Uint8Array, metadata: any): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 
@@ -220,32 +186,26 @@ async function handleWrite(id, buffer, metadata) {
 		metaAccessHandle.close();
 
 		return { success: true };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 파일 삭제
- */
-async function handleDelete(id) {
+async function handleDelete(id: string): Promise<any> {
 	try {
 		const dir = await getAudioDir();
 		await dir.removeEntry(id).catch(() => {});
 		await dir.removeEntry(`${id}${META_SUFFIX}`).catch(() => {});
 		return { success: true };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 전체 목록 조회
- */
-async function handleList() {
+async function handleList(): Promise<any> {
 	try {
 		const dir = await getAudioDir();
-		const entries = [];
+		const entries: any[] = [];
 
 		for await (const [name, handle] of dir.entries()) {
 			if (handle.kind === 'file' && !name.endsWith(META_SUFFIX)) {
@@ -262,24 +222,20 @@ async function handleList() {
 						savedAt: meta.savedAt
 					});
 				} catch {
-					// 메타데이터 없으면 건너뛰기
 				}
 			}
 		}
 
 		return { success: true, data: entries };
-	} catch (error) {
+	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
 }
 
-/**
- * 메시지 핸들러
- */
-self.onmessage = async (event) => {
+self.onmessage = async (event: MessageEvent) => {
 	const { action, id, buffer, metadata, messageId, offset, updates } = event.data;
 
-	let result;
+	let result: any;
 
 	try {
 		switch (action) {
@@ -313,7 +269,7 @@ self.onmessage = async (event) => {
 			default:
 				result = { success: false, error: `Unknown action: ${action}` };
 		}
-	} catch (error) {
+	} catch (error: any) {
 		result = { success: false, error: error.message };
 	}
 

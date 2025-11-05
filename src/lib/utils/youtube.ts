@@ -1,7 +1,4 @@
-/**
- * YouTube URL에서 비디오 ID 추출
- */
-export function extractVideoId(url) {
+export function extractVideoId(url: string | null): string | null {
 	if (!url) return null;
 
 	const patterns = [
@@ -18,10 +15,7 @@ export function extractVideoId(url) {
 	return null;
 }
 
-/**
- * YouTube 썸네일 URL 생성
- */
-export function getYouTubeThumbnail(videoId, quality = 'maxresdefault') {
+export function getYouTubeThumbnail(videoId: string | null, quality: string = 'maxresdefault'): string | null {
 	if (!videoId) return null;
 	return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 }

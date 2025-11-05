@@ -3,10 +3,72 @@ import { env } from '$env/dynamic/private';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
-/**
- * YouTube Data API v3 공통 요청 함수
- */
-async function fetchYouTube(endpoint, params, init = {}) {
+interface ChannelData {
+	channel_id: string;
+	title?: string;
+	description?: string;
+	custom_url?: string;
+	published_at?: string;
+	thumbnail_url?: string;
+	thumbnail_width?: number;
+	thumbnail_height?: number;
+	view_count?: number;
+	subscriber_count?: number;
+	video_count?: number;
+	uploads_playlist_id?: string;
+	channel_data: any;
+}
+
+interface PlaylistItem {
+	channel_id?: string;
+	video_id?: string;
+	title?: string;
+	description?: string;
+	published_at?: string;
+	channel_title?: string;
+	thumbnail_url?: string;
+	thumbnail_width?: number;
+	thumbnail_height?: number;
+	playlist_id?: string;
+	position?: number;
+	video_data: any;
+}
+
+interface PlaylistItemsResult {
+	items: PlaylistItem[];
+	nextPageToken?: string;
+	prevPageToken?: string;
+	totalResults?: number;
+	resultsPerPage?: number;
+}
+
+interface ChannelVideosResult {
+	videos: PlaylistItem[];
+	isIncremental: boolean;
+	foundLatest: boolean;
+}
+
+interface SubscriptionItem {
+	channel_id?: string;
+	title?: string;
+	description?: string;
+	published_at?: string;
+	thumbnail_url?: string;
+	resource_kind?: string;
+	subscription_data: any;
+}
+
+interface SubscriptionsResult {
+	items: SubscriptionItem[];
+	nextPageToken?: string;
+	totalResults?: number;
+}
+
+async function fetchYouTube(
+	endpoint: string,
+	params: Record<string, any> | Map<string, any>,
+	init: RequestInit = {}
+): Promise<any> {
 	const url = new URL(`${YOUTUBE_API_BASE}/${endpoint}`);
 
 	if (params instanceof Map) {
@@ -23,7 +85,7 @@ async function fetchYouTube(endpoint, params, init = {}) {
 		});
 	}
 
-	const hasAuthHeader = init.headers?.Authorization;
+	const hasAuthHeader = init.headers instanceof Headers ? init.headers.has('Authorization') : (init.headers as any)?.Authorization;
 
 	if (!hasAuthHeader) {
 		const apiKey = env.YOUTUBE_API_KEY;
@@ -55,21 +117,15 @@ async function fetchYouTube(endpoint, params, init = {}) {
 	return response.json();
 }
 
-/**
- * 배열을 지정한 크기로 분할
- */
-function chunk(items, size) {
-	const result = [];
+function chunk<T>(items: T[], size: number): T[][] {
+	const result: T[][] = [];
 	for (let i = 0; i < items.length; i += size) {
 		result.push(items.slice(i, i + size));
 	}
 	return result;
 }
 
-/**
- * 채널의 uploads playlist ID 가져오기
- */
-export async function getChannelUploadsPlaylistId(channelId) {
+export async function getChannelUploadsPlaylistId(channelId: string): Promise<string> {
 	const data = await fetchYouTube('channels', {
 		part: 'contentDetails',
 		id: channelId
@@ -88,17 +144,14 @@ export async function getChannelUploadsPlaylistId(channelId) {
 	return uploadsPlaylistId;
 }
 
-/**
- * 채널 정보 가져오기 (batch 지원)
- */
-export async function getChannels(channelIds) {
+export async function getChannels(channelIds: string | string[]): Promise<ChannelData[]> {
 	const ids = Array.isArray(channelIds) ? channelIds : [channelIds];
 
 	console.log(`[YouTube API] 채널 정보 요청 시작: ${ids.length}개`);
 
 	if (ids.length === 0) return [];
 
-	const allChannels = [];
+	const allChannels: any[] = [];
 	const chunks = chunk(ids, 50);
 
 	console.log(`[YouTube API] 채널 정보 ${chunks.length}개 배치로 요청`);
@@ -139,10 +192,10 @@ export async function getChannels(channelIds) {
 	}));
 }
 
-/**
- * 플레이리스트 아이템 가져오기
- */
-export async function getPlaylistItems(playlistId, options = {}) {
+export async function getPlaylistItems(
+	playlistId: string,
+	options: { maxResults?: number; pageToken?: string } = {}
+): Promise<PlaylistItemsResult> {
 	const { maxResults = 50, pageToken } = options;
 
 	const data = await fetchYouTube('playlistItems', {
@@ -152,7 +205,7 @@ export async function getPlaylistItems(playlistId, options = {}) {
 		pageToken
 	});
 
-	const items = (data.items || []).map((item) => ({
+	const items: PlaylistItem[] = (data.items || []).map((item: any) => ({
 		channel_id: item.snippet?.channelId,
 		video_id: item.contentDetails?.videoId,
 		title: item.snippet?.title,
@@ -176,16 +229,16 @@ export async function getPlaylistItems(playlistId, options = {}) {
 	};
 }
 
-/**
- * 채널의 모든 비디오 가져오기 (증분 동기화 지원)
- */
-export async function getChannelVideos(channelId, options = {}) {
+export async function getChannelVideos(
+	channelId: string,
+	options: { maxPages?: number; latestVideoId?: string } = {}
+): Promise<ChannelVideosResult> {
 	const { maxPages = 10, latestVideoId } = options;
 
 	const uploadsPlaylistId = await getChannelUploadsPlaylistId(channelId);
 
-	const allVideos = [];
-	let pageToken;
+	const allVideos: PlaylistItem[] = [];
+	let pageToken: string | undefined;
 	let foundLatest = false;
 	let pageCount = 0;
 
@@ -216,10 +269,10 @@ export async function getChannelVideos(channelId, options = {}) {
 	};
 }
 
-/**
- * 사용자 구독 목록 가져오기
- */
-export async function getSubscriptions(accessToken, options = {}) {
+export async function getSubscriptions(
+	accessToken: string,
+	options: { maxResults?: number; pageToken?: string } = {}
+): Promise<SubscriptionsResult> {
 	const { maxResults = 50, pageToken } = options;
 
 	console.log('[YouTube API] 구독 목록 요청 시작', { maxResults, pageToken: pageToken || 'none' });
@@ -245,7 +298,7 @@ export async function getSubscriptions(accessToken, options = {}) {
 		totalResults: data.pageInfo?.totalResults
 	});
 
-	const items = (data.items || []).map((item) => ({
+	const items: SubscriptionItem[] = (data.items || []).map((item: any) => ({
 		channel_id: item.snippet?.resourceId?.channelId,
 		title: item.snippet?.title,
 		description: item.snippet?.description,
@@ -262,13 +315,10 @@ export async function getSubscriptions(accessToken, options = {}) {
 	};
 }
 
-/**
- * 모든 구독 목록 가져오기 (페이지네이션 자동 처리)
- */
-export async function getAllSubscriptions(accessToken) {
+export async function getAllSubscriptions(accessToken: string): Promise<SubscriptionItem[]> {
 	console.log('[YouTube API] 모든 구독 목록 가져오기 시작');
-	const allSubscriptions = [];
-	let pageToken;
+	const allSubscriptions: SubscriptionItem[] = [];
+	let pageToken: string | undefined;
 	let pageCount = 0;
 
 	do {

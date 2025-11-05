@@ -1,19 +1,13 @@
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
 import { env } from '$env/dynamic/public';
+import type { LayoutLoad } from './$types';
+import type { Database } from '$lib/types/database.types';
 
-/** @typedef {import('$lib/types/database.types').Database} Database */
-
-/** @type {import('./$types').LayoutLoad} */
-export const load = async ({ depends, fetch, data }) => {
-	/**
-	 * Declare a dependency so the layout can be invalidated, for example, on
-	 * session refresh.
-	 */
+export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 	depends('supabase:auth');
 
-	/** @type {import('@supabase/supabase-js').SupabaseClient<Database>} */
 	const supabase = isBrowser()
-		? createBrowserClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+		? createBrowserClient<Database>(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch
 				},
@@ -21,7 +15,7 @@ export const load = async ({ depends, fetch, data }) => {
 					schema: 'zheon'
 				}
 			})
-		: createServerClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+		: createServerClient<Database>(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
 					fetch
 				},
