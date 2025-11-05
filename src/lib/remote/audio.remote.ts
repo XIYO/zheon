@@ -1,10 +1,7 @@
 import { command, form, getRequestEvent } from '$app/server';
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
-import {
-	generateSpeech as generateSpeechSDK,
-	experimental_generateSpeech as generateSpeech
-} from 'ai';
+import { experimental_generateSpeech as generateSpeech } from 'ai';
 import { createLMNT } from '@ai-sdk/lmnt';
 import { createElevenLabs } from '@ai-sdk/elevenlabs';
 import { env } from '$env/dynamic/private';
@@ -33,14 +30,14 @@ interface TtsStrategy {
 	id: 'lmnt' | 'elevenlabs';
 	label: string;
 	isEnabled: () => boolean;
-	buildRequest: (args: { text: string }) => Record<string, unknown> | null;
+	buildRequest: (_args: { text: string }) => Record<string, unknown> | null;
 }
 
-interface LmntClient extends ReturnType<typeof createLMNT> {}
-interface ElevenLabsClient extends ReturnType<typeof createElevenLabs> {}
-
 let cachedTtsProviders:
-	| { lmnt: LmntClient | null; elevenlabs: ElevenLabsClient | null }
+	| {
+			lmnt: ReturnType<typeof createLMNT> | null;
+			elevenlabs: ReturnType<typeof createElevenLabs> | null;
+	  }
 	| undefined;
 
 function parseOptionalNumber(value: string | undefined): number | undefined {
@@ -71,7 +68,7 @@ function buildTtsStrategies(): TtsStrategy[] {
 			buildRequest: ({ text }) => {
 				if (!providers.lmnt) return null;
 
-				const request: Record<string, any> = {
+				const request: Record<string, unknown> = {
 					model: providers.lmnt.speech(LMNT_MODEL),
 					text
 				};
@@ -91,7 +88,7 @@ function buildTtsStrategies(): TtsStrategy[] {
 			buildRequest: ({ text }) => {
 				if (!providers.elevenlabs) return null;
 
-				const request: Record<string, any> = {
+				const request: Record<string, unknown> = {
 					model: providers.elevenlabs.speech(ELEVENLABS_MODEL),
 					text,
 					voice: ELEVENLABS_VOICE
@@ -106,7 +103,7 @@ function buildTtsStrategies(): TtsStrategy[] {
 	];
 }
 
-function resolveAudioExtension(audio: any): string {
+function resolveAudioExtension(audio: { format?: string; mimeType?: string } | null): string {
 	if (!audio) return 'mp3';
 	if (audio.format) return audio.format.toLowerCase();
 	if (audio.mimeType && AUDIO_MIME_EXTENSION_MAP[audio.mimeType]) {
@@ -172,7 +169,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 	const { adminSupabase } = locals;
 
 	const updateStatus = async (status: string, audioUrl: string | null = null) => {
-		const updateData: Record<string, any> = { summary_audio_status: status };
+		const updateData: Record<string, unknown> = { summary_audio_status: status };
 		if (audioUrl) {
 			updateData.summary_audio_url = audioUrl;
 		}
@@ -197,7 +194,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 	await updateStatus('processing');
 
 	const generationErrors: string[] = [];
-	let speechResult: any = null;
+	let speechResult: { audio: { uint8Array?: Uint8Array; mimeType?: string } } | null = null;
 	let providerId: string | null = null;
 
 	for (const strategy of randomizedStrategies) {

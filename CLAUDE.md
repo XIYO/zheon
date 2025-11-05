@@ -1,88 +1,192 @@
-- 수파베이스 모든 연결은 리모트 서버와 한다. 로컬 테스튼는 필요 없다.
+# CLAUDE.md
 
-## 에러 핸들링
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-### Supabase Go 스타일 에러 처리
+## Project Overview
 
-Supabase는 Go 스타일의 명시적 에러 처리를 사용합니다:
+YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다. Cloudflare Workers에 배포되며, Edge Functions로 AI 요약 파이프라인을 구성합니다.
+
+## Tech Stack
+
+- **Frontend**: SvelteKit 2 (Svelte 5), Tailwind CSS 4, Skeleton UI
+- **Backend**: Supabase (PostgreSQL + Edge Functions), Cloudflare Workers
+- **Testing**: Vitest, Playwright, Deno Test
+- **Language**: JavaScript with JSDoc (TypeScript 미사용)
+- **Package Manager**: pnpm (npm 사용 금지)
+- **i18n**: Paraglide.js
+
+## Essential Commands
+
+### Development
+
+```bash
+pnpm dev         # Dev server on http://localhost:7777
+pnpm build       # Production build
+pnpm preview     # Preview build on http://localhost:17777
+```
+
+### Code Quality
+
+```bash
+pnpm check       # Svelte + JS checks (via jsconfig)
+pnpm format      # Prettier write
+pnpm lint        # ESLint + Prettier check
+```
+
+### Testing
+
+```bash
+pnpm test        # All tests (unit + E2E)
+pnpm test:unit   # Vitest unit/component tests
+pnpm test:e2e    # Playwright E2E tests
+```
+
+### Deployment
+
+```bash
+pnpm deploy      # Deploy to Cloudflare Workers (zheon.xiyo.dev)
+```
+
+### Edge Functions (Supabase)
+
+```bash
+pnpm edge:test:all   # Run all Deno tests
+pnpm edge:deploy     # Deploy functions to Supabase
+pnpm edge:format     # Format Deno code
+pnpm edge:lint       # Lint Deno code
+pnpm edge:check      # Type-check Deno code
+```
+
+## Architecture & Key Patterns
+
+### Authentication Flow
+
+- Supabase Auth (email/password)
+- Sessions via cookies using `@supabase/ssr`
+- Protected routes validated in `hooks.server.js`
+- `safeGetSession()` validates JWT via `getUser()` (never use `session.user` directly)
+
+### Supabase Configuration
+
+- **Schema**: `zheon` (not public)
+- **Connection**: 모든 연결은 리모트 서버와 한다 (로컬 테스트 불필요)
+- **Admin Client**: Available via `event.locals.adminSupabase` in server hooks
+- **MCP**: supabase 관련은 supabase MCP를 꼭 사용하기
+
+### Error Handling (Go-style)
 
 ```js
+// Supabase Go 스타일 명시적 에러 처리
 const { data, error: dbError } = await supabase.from('table').select('*');
-
-if (dbError) throw error(500, dbError.message);
-return data;
+if (dbError) throw error(500, dbError.message); // SvelteKit이 +error.svelte 자동 렌더링
+return data; // 조회 결과 없음: 빈 배열 [] 반환 (null 아님)
 ```
 
-### 이유
+### Remote Functions (SvelteKit Experimental)
 
-- **명시적**: try-catch 없이도 에러를 명시적으로 확인 가능
-- **가독성**: 들여쓰기 지옥 방지, 한 줄로 에러 처리
-- **타입 안전**: error가 null이면 data가 유효함을 보장
-- **조회 결과 없음**: 빈 배열 `[]` 반환 (null 아님), `?? []` 폴백 불필요
+- **SSR 데이터 로딩**: 이 앱은 SSR 앱으로, 데이터를 채워서 제공해야 함
+  - 예전: universal load에서 데이터를 채워서 제공
+  - 현재: remote functions로 데이터를 채워서 제공 (필수)
 
-### SvelteKit 에러 처리
+- **올바른 SSR await 패턴** (컴포넌트에서 직접 데이터 로드):
 
-`throw error()`는 자동으로 `+error.svelte`를 렌더링:
+  ```js
+  // 패턴 1: $derived + await (권장)
+  import { getSubscriptions } from './data.remote';
+  let data = $derived(await getSubscriptions({}));
+
+  // 패턴 2: 마크업에서 직접 await
+  {#each await getSubscriptions() as subscription}
+
+  // 패턴 3: 동적 파라미터 (자동 리페치)
+  import { page } from '$app/state';
+  let post = $derived(await getPost({ id: page.params.id }));
+  ```
+
+- **잘못된 패턴** (사용 금지):
+
+  ```js
+  // ❌ load 함수 없이 data props 사용
+  let { data } = $props(); // data가 undefined
+
+  // ❌ $effect에서 query 호출 (SSR 동작 안함)
+  $effect(() => {
+  	getPost(params.id).then((data) => (summary = data));
+  });
+  ```
+
+- **Query 캐싱**: 같은 쿼리는 자동 캐시 `getPosts() === getPosts()`, 수동 리프레시 `getPosts().refresh()`
+- **query.batch**: 같은 macrotask 내 여러 호출을 자동으로 하나의 쿼리로 배칭 (n+1 해결)
+- **서버-서버 호출**: Remote Functions는 서버에서 다른 Remote Function 호출 가능
+- **waitUntil 패턴**: Cloudflare Workers에서 응답 후 백그라운드 처리
+  - command: 프로그래매틱 호출용
+  - form: HTML form 제출용
+
+### Valibot Schema Validation
 
 ```js
-if (dbError) throw error(500, dbError.message);
-// 1. 개발 환경: 콘솔에 스택 트레이스 자동 출력
-// 2. SvelteKit: +error.svelte 자동 렌더링
-// 3. 사용자: 500 에러 페이지와 메시지 표시
+// undefined 사용 원칙
+v.optional(); // undefined만 허용, null 거부
+v.nullable(); // null만 허용, undefined 거부
+v.nullish(); // null + undefined 모두 허용
+
+// Supabase upsert 시:
+// - undefined: JSON에서 제거되어 기존 값 유지
+// - null: JSON에 포함되어 기존 값을 NULL로 덮어씀
 ```
 
-`console.error()` 불필요 - SvelteKit이 자동 처리
-
-- npm 사용 금지 무조건 pnpm만 사용
-- 이 프로제트는 다국어를 지원해야한다 paraglidejs를 다구거용으로쓴다.
-
-## Remote Functions
-
-### 서버-서버 호출
-
-- Remote Functions는 서버에서 다른 Remote Function 호출 가능
-- 서버에서는 일반 함수처럼 동작
-
-### query.batch
-
-- 같은 macrotask 내 여러 호출을 자동으로 하나의 쿼리로 배칭
-- n+1 문제 자동 해결
-- 클라이언트는 단일 호출, 서버는 자동 배칭
-
-### command/form + waitUntil 패턴
-
-- Cloudflare Workers: waitUntil로 응답 후 백그라운드 처리
-- 일반 환경: Promise로 비동기 실행
-- 프론트엔드는 즉시 응답 받음, 실패해도 에러 전달 안됨
-- command: 프로그래매틱 호출용
-- form: HTML form 제출용
-
-## Valibot 스키마
-
-### optional vs nullable vs nullish
-
-- `v.optional()`: undefined만 허용, null 거부
-- `v.nullable()`: null만 허용, undefined 거부
-- `v.nullish()`: null + undefined 모두 허용
-
-### undefined 사용 원칙
-
-- falsy 값 처리 시 `|| null` 대신 undefined 사용 (명시적 또는 암묵적)
-- undefined는 JSON에서 제거되어 Supabase upsert 시 기존 값 유지
-- null은 JSON에 포함되어 기존 값을 NULL로 강제 덮어씀
-
-### 스키마 검증
+### 스키마 검증 원칙
 
 - 스키마에 정의된 필드만 전달
-- 함수 내부에서 자동 생성되는 필드는 스키마에서 제외하고 전달하지 않음
+- 함수 내부에서 자동 생성되는 필드는 스키마에서 제외
 - 예: `updated_at`은 함수 내부에서 생성하므로 스키마와 호출 데이터에서 제외
 
-## Supabase 인증
+### Async Components (Svelte 5)
 
-### session.user 사용 금지
+- `svelte.config.js`에서 `experimental.async: true` 활성화
+- 컴포넌트에서 top-level await 사용 가능
 
-- `session.user`는 쿠키에서 직접 읽은 검증되지 않은 데이터
-- 클라이언트: session 반환 시 user 속성 제거
-- 검증된 `user` 객체만 사용 (`supabase.auth.getUser()` 결과)
-- 서버: `safeGetSession()` 사용 (getUser()로 JWT 검증)
-- supabase 관련은 supabase mcp를 꼭 사용하기
+## Project Structure
+
+```
+src/
+├─ routes/              # SvelteKit pages + API routes
+│  ├─ (main)/           # Routes with header layout
+│  └─ (non-header)/     # Routes without header (auth)
+├─ lib/
+│  ├─ components/       # Reusable Svelte components (PascalCase)
+│  ├─ server/           # Server utilities (kebab-case)
+│  ├─ types/            # TypeScript type definitions
+│  │  └─ database.types.ts  # Supabase generated types
+│  └─ paraglide/        # i18n runtime (auto-generated)
+└─ hooks.server.js      # Auth middleware + Supabase clients
+
+supabase/
+├─ migrations/          # Database migrations
+├─ functions/           # Deno Edge Functions (if any)
+├─ tests/              # Deno tests
+└─ config.toml         # Local Supabase config
+
+messages/              # i18n message files (ko.json, en.json)
+```
+
+## Deployment Configuration
+
+- **Platform**: Cloudflare Workers
+- **Domain**: zheon.xiyo.dev
+- **Adapter**: @sveltejs/adapter-cloudflare
+- **Config**: `wrangler.toml` (routes, vars, assets)
+- **Compatibility**: `nodejs_compat` flag enabled
+
+## Development Ports
+
+- Dev server: 7777
+- Preview server: 17777
+- Wrangler dev: 5170
+
+## Important Notes
+
+- Internationalization: Paraglide.js를 다국어용으로 사용 (messages/\*.json)
+- Lucide icons: `@lucide/svelte` 사용 (lucide-svelte 금지)
+- Performance measurement: `console.time()/timeEnd()` 사용 (performance.now() 금지)
+- Chrome debugging (MCP): 크롬 실행 시 `--remote-debugging-port=9222` 필요
