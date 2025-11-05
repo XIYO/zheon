@@ -7,8 +7,8 @@ import { getAllSubscriptions, getChannels } from '$lib/server/youtubeApi.js';
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
  */
-const chunk = (items, size) => {
-	const result = [];
+const chunk = <T,>(items: T[], size: number): T[][] => {
+	const result: T[][] = [];
 	for (let i = 0; i < items.length; i += size) {
 		result.push(items.slice(i, i + size));
 	}
@@ -26,13 +26,19 @@ export const getSubscriptions = query(
 			sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest')
 		})
 	),
-	async (params = {}) => {
-		const { cursor, limit = 20, sortBy = 'newest' } = params;
+	async (
+		params?: {
+			cursor?: string;
+			limit?: number;
+			sortBy?: 'newest' | 'oldest';
+		}
+	) => {
+		const { cursor, limit = 20, sortBy = 'newest' } = params || {};
 		const { locals } = getRequestEvent();
 		const { supabase, safeGetSession } = locals;
 		const { session, user } = await safeGetSession();
 
-		if (!session) throw error(401, 'Unauthorized');
+		if (!session || !user) throw error(401, 'Unauthorized');
 
 		const userId = user.id;
 		const ascending = sortBy === 'oldest';
@@ -84,7 +90,7 @@ async function performSubscriptionsSync() {
 	const { supabase, safeGetSession } = locals;
 	const { session, user } = await safeGetSession();
 
-	if (!session) throw error(401, '로그인이 필요합니다');
+	if (!session || !user) throw error(401, '로그인이 필요합니다');
 
 	const userId = user.id;
 
@@ -329,34 +335,42 @@ async function performSubscriptionsSync() {
 /**
  * Form: 구독 동기화
  */
-export const syncSubscriptions = form(v.object({}), async (data, invalid) => {
-	const { locals } = getRequestEvent();
-	const { supabase, safeGetSession } = locals;
-	const { session, user } = await safeGetSession();
+export const syncSubscriptions = form(
+	v.object({}),
+	async (
+		_data: Record<string, unknown>,
+		invalid: (message: string) => void
+	) => {
+		const { locals } = getRequestEvent();
+		const { supabase, safeGetSession } = locals;
+		const { session, user } = await safeGetSession();
 
-	if (!session) throw error(401, '로그인이 필요합니다');
+		if (!session || !user) throw error(401, '로그인이 필요합니다');
 
-	const userId = user.id;
+		const userId = user.id;
 
-	const { data: profile, error: profileError } = await supabase
-		.from('profiles')
-		.select('youtube_subscription_sync_status')
-		.eq('id', userId)
-		.single();
+		const { data: profile, error: profileError } = await supabase
+			.from('profiles')
+			.select('youtube_subscription_sync_status')
+			.eq('id', userId)
+			.single();
 
-	if (profileError) throw error(500, profileError.message);
+		if (profileError) throw error(500, profileError.message);
 
-	if (['processing', 'pending'].includes(profile?.youtube_subscription_sync_status)) {
-		invalid('이미 동기화가 진행 중입니다');
-		return;
+		if (['processing', 'pending'].includes(profile?.youtube_subscription_sync_status)) {
+			invalid('이미 동기화가 진행 중입니다');
+			return;
+		}
+
+		return await performSubscriptionsSync();
 	}
-
-	return await performSubscriptionsSync();
-});
+);
 
 /**
  * Command: 구독 동기화
  */
-export const syncSubscriptionsCommand = command(async () => {
-	return await performSubscriptionsSync();
-});
+export const syncSubscriptionsCommand = command(
+	async () => {
+		return await performSubscriptionsSync();
+	}
+);

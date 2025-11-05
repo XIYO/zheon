@@ -11,8 +11,8 @@ import { getYouTubeThumbnail } from '$lib/utils/youtube.js';
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
  */
-const chunk = (items, size) => {
-	const result = [];
+const chunk = <T,>(items: T[], size: number): T[][] => {
+	const result: T[][] = [];
 	for (let i = 0; i < items.length; i += size) {
 		result.push(items.slice(i, i + size));
 	}
@@ -30,36 +30,48 @@ export const getChannelVideos = query(
 		sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest'),
 		search: v.optional(v.string())
 	}),
-	async ({ channelId, cursor, limit, sortBy, search }) => {
+	async ({
+		channelId,
+		cursor,
+		limit,
+		sortBy,
+		search
+	}: {
+		channelId: string;
+		cursor?: string;
+		limit: number;
+		sortBy: 'newest' | 'oldest';
+		search?: string;
+	}) => {
 		if (!channelId) throw error(400, 'channelId is required');
 
 		const { locals } = getRequestEvent();
 		const { supabase } = locals;
 
-		let query = supabase.from('channel_videos').select('*').eq('channel_id', channelId);
+		let queryBuilder = supabase.from('channel_videos').select('*').eq('channel_id', channelId);
 
-		if (search) query = query.ilike('title', `%${search}%`);
+		if (search) queryBuilder = queryBuilder.ilike('title', `%${search}%`);
 
 		if (cursor) {
 			if (sortBy === 'oldest') {
-				query = query.gt('published_at', cursor);
+				queryBuilder = queryBuilder.gt('published_at', cursor);
 			} else {
-				query = query.lt('published_at', cursor);
+				queryBuilder = queryBuilder.lt('published_at', cursor);
 			}
 		}
 
-		query = query.order('published_at', {
+		queryBuilder = queryBuilder.order('published_at', {
 			ascending: sortBy === 'oldest',
-			nullsLast: true
+			nullsFirst: false
 		});
 
-		query = query.limit(limit);
+		queryBuilder = queryBuilder.limit(limit);
 
-		const { data: videos, error: dbError } = await query;
+		const { data: videos, error: dbError } = await queryBuilder;
 
 		if (dbError) throw error(500, dbError.message);
 
-		let nextCursor = null;
+		let nextCursor: string | null = null;
 		if (videos && videos.length > 0) {
 			const lastVideo = videos[videos.length - 1];
 			nextCursor = lastVideo.published_at;
@@ -114,7 +126,7 @@ export const upsertChannelVideos = command(
 /**
  * 채널 비디오 목록 동기화 공통 로직
  */
-async function performChannelVideosSync(channelId) {
+async function performChannelVideosSync(channelId: string) {
 	const { locals } = getRequestEvent();
 	const { adminSupabase: supabase } = locals;
 
@@ -201,10 +213,9 @@ async function performChannelVideosSync(channelId) {
 			.update({ video_sync_status: 'failed' })
 			.eq('channel_id', channelId);
 
-		const errorMessage = err.message || String(err);
+		const errorMessage =
+			err instanceof Error ? err.message : String(err);
 		const enhancedError = new Error(`[채널: ${channelId}] ${errorMessage}`);
-		enhancedError.channelId = channelId;
-		enhancedError.originalError = err;
 		throw enhancedError;
 	}
 }
@@ -216,7 +227,10 @@ export const syncChannelVideos = form(
 	v.object({
 		channelId: v.string()
 	}),
-	async ({ channelId }, invalid) => {
+	async (
+		{ channelId }: { channelId: string },
+		invalid: (key: string, message: string) => void
+	) => {
 		if (!channelId) {
 			invalid('channelId', '채널 ID가 필요합니다');
 			return;
@@ -247,11 +261,14 @@ export const syncChannelVideos = form(
 /**
  * Command: 채널 비디오 목록 동기화
  */
-export const syncChannelVideosCommand = command(v.string(), async (channelId) => {
-	if (!channelId) throw error(400, 'channelId is required');
+export const syncChannelVideosCommand = command(
+	v.string(),
+	async (channelId: string) => {
+		if (!channelId) throw error(400, 'channelId is required');
 
-	return await performChannelVideosSync(channelId);
-});
+		return await performChannelVideosSync(channelId);
+	}
+);
 
 /**
  * Command: 영상 정보 가져오기 및 저장
@@ -260,7 +277,7 @@ export const getVideoInfo = command(
 	v.object({
 		videoId: v.string()
 	}),
-	async ({ videoId }) => {
+	async ({ videoId }: { videoId: string }) => {
 		const { locals } = getRequestEvent();
 		const { supabase } = locals;
 
