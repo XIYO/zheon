@@ -2,7 +2,7 @@ name = "zheon"
 # SvelteKit이 빌드한 Worker entry-point
 main = ".svelte-kit/cloudflare/_worker.js"
 # Workers 런타임 호환성 날짜
-compatibility_date = "2025-08-15"
+compatibility_date = "2025-08-13"
 # Node.js 내장 API(예: async_hooks) 사용을 허용하려면 추가
 compatibility_flags = ["nodejs_compat"]
 
@@ -20,9 +20,8 @@ directory = ".svelte-kit/cloudflare"  # 빌드된 client 파일 위치
 PUBLIC_SUPABASE_URL = "https://iefgdhwmgljjacafqomd.supabase.co"
 PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2DSwr9dKHxpA4WOEEOYkww_AMIhsiUb"
 
-#[build]
-#command = "pnpm build"
-#watch_dirs = ["src/routes", "src/lib/components", "src/lib/server", "src/lib/utils", "static", "project.inlang"]
+[build]
+command = "pnpm build"
 
 [observability.logs]
 enabled = true

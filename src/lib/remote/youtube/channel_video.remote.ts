@@ -5,7 +5,7 @@ import {
 	getChannelVideos as getChannelVideosFromAPI,
 	getChannels
 } from '$lib/server/youtubeApi.js';
-import Innertube from 'youtubei.js';
+import { getYouTubeClient } from '$lib/server/youtube-proxy.js';
 import { getYouTubeThumbnail } from '$lib/utils/youtube.js';
 
 /**
@@ -298,7 +298,7 @@ export const getVideoInfo = command(
 			};
 		}
 
-		const youtube = await Innertube.create();
+		const youtube = await getYouTubeClient();
 		const videoInfo = await youtube.getBasicInfo(videoId);
 
 		const title = videoInfo.basic_info.title || '제목 없음';
