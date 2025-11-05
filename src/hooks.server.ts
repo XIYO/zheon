@@ -30,9 +30,6 @@ const supabase: Handle = async ({ event, resolve }) => {
 						event.cookies.set(name, value, { ...options, path: '/' });
 					});
 				}
-			},
-			db: {
-				schema: 'zheon'
 			}
 		}
 	);
@@ -92,9 +89,6 @@ const adminSupabase: Handle = async ({ event, resolve }) => {
 				auth: {
 					persistSession: false,
 					autoRefreshToken: false
-				},
-				db: {
-					schema: 'zheon'
 				}
 			}
 		);

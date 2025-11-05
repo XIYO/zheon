@@ -13,8 +13,7 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 		console.log(`[transcript] 수집 시작 videoId=${videoId}`);
 
 		const { data: existing, error: checkError } = await adminSupabase
-			.schema('zheon')
-			.from('transcripts')
+						.from('transcripts')
 			.select('id, data')
 			.eq('video_id', videoId)
 			.maybeSingle();
@@ -59,7 +58,7 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 			}))
 		};
 
-		const { error: insertError } = await adminSupabase.schema('zheon').from('transcripts').insert({
+		const { error: insertError } = await adminSupabase.from('transcripts').insert({
 			video_id: videoId,
 			data: transcriptData
 		});
@@ -97,8 +96,7 @@ export const getTranscriptFromDB = command(
 			console.log(`[transcript] DB 조회 시작 videoId=${videoId}`);
 
 			const { data: transcript, error: fetchError } = await supabase
-				.schema('zheon')
-				.from('transcripts')
+								.from('transcripts')
 				.select('id, video_id, data, updated_at')
 				.eq('video_id', videoId)
 				.maybeSingle();

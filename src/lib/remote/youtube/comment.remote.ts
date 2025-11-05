@@ -14,8 +14,7 @@ export const collectComments = command(CollectCommentsInputSchema, async (input)
 
 		// 1단계: 최근 댓글 ID 3개 조회
 		const { data: recentComments } = await supabase
-			.schema('zheon')
-			.from('comments')
+						.from('comments')
 			.select('comment_id')
 			.eq('video_id', videoId)
 			.order('updated_at', { ascending: false })
@@ -59,8 +58,7 @@ export const collectComments = command(CollectCommentsInputSchema, async (input)
 			console.log(`[comments] 저장할 rows 샘플:`, JSON.stringify(rows[0], null, 2));
 
 			const { error: insertError } = await adminSupabase
-				.schema('zheon')
-				.from('comments')
+								.from('comments')
 				.insert(rows);
 
 			if (insertError) {
@@ -122,8 +120,7 @@ export const getCommentsFromDB = command(
 			console.log(`[comments] DB 조회 시작 videoId=${videoId}`);
 
 			const { data: comments, error: fetchError } = await supabase
-				.schema('zheon')
-				.from('comments')
+								.from('comments')
 				.select('comment_id, data, updated_at')
 				.eq('video_id', videoId)
 				.order('updated_at', { ascending: false });

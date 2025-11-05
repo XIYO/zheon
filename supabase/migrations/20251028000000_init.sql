@@ -1,46 +1,13 @@
--- Zheon Database Schema Safe Init Migration
--- Safe migration: checks existence before dropping and recreating
+-- Zheon Database Schema - Public Schema Only
+-- Uses public schema (default PostgreSQL schema)
 -- PowerSync Compatible: No DB-level foreign key constraints
-
--- ============================================================================
--- 0. DROP EXISTING POLICIES (Safe)
--- ============================================================================
-
--- Drop all existing policies on all tables
-DO $$
-DECLARE
-    pol RECORD;
-BEGIN
-    FOR pol IN
-        SELECT schemaname, tablename, policyname
-        FROM pg_policies
-        WHERE schemaname = 'zheon'
-    LOOP
-        EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I',
-            pol.policyname, pol.schemaname, pol.tablename);
-    END LOOP;
-END $$;
-
--- ============================================================================
--- 1. SCHEMA
--- ============================================================================
-
-CREATE SCHEMA IF NOT EXISTS zheon;
-
-GRANT USAGE ON SCHEMA zheon TO authenticated;
-GRANT USAGE ON SCHEMA zheon TO anon;
-GRANT USAGE ON SCHEMA zheon TO service_role;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA zheon GRANT ALL ON TABLES TO authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA zheon GRANT ALL ON TABLES TO service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA zheon GRANT SELECT ON TABLES TO anon;
 
 -- ============================================================================
 -- 2. TABLES
 -- ============================================================================
 
 -- 2.1 channels
-CREATE TABLE IF NOT EXISTS zheon.channels (
+CREATE TABLE IF NOT EXISTS public.channels (
   channel_id text PRIMARY KEY,
   title text NOT NULL,
   custom_url text,
@@ -64,7 +31,7 @@ CREATE TABLE IF NOT EXISTS zheon.channels (
 );
 
 -- 2.2 videos
-CREATE TABLE IF NOT EXISTS zheon.videos (
+CREATE TABLE IF NOT EXISTS public.videos (
   video_id text PRIMARY KEY,
   channel_id text NOT NULL,
   title text NOT NULL,
@@ -97,7 +64,7 @@ CREATE TABLE IF NOT EXISTS zheon.videos (
 );
 
 -- 2.3 profiles
-CREATE TABLE IF NOT EXISTS zheon.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY,
   display_name text,
   avatar_url text,
@@ -111,7 +78,7 @@ CREATE TABLE IF NOT EXISTS zheon.profiles (
 );
 
 -- 2.4 summaries
-CREATE TABLE IF NOT EXISTS zheon.summaries (
+CREATE TABLE IF NOT EXISTS public.summaries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   url text NOT NULL UNIQUE,
   title text,
@@ -177,7 +144,7 @@ CREATE TABLE IF NOT EXISTS zheon.summaries (
 );
 
 -- 2.5 subscriptions
-CREATE TABLE IF NOT EXISTS zheon.subscriptions (
+CREATE TABLE IF NOT EXISTS public.subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   channel_id text NOT NULL,
@@ -194,7 +161,7 @@ CREATE TABLE IF NOT EXISTS zheon.subscriptions (
 );
 
 -- 2.6 comments
-CREATE TABLE IF NOT EXISTS zheon.comments (
+CREATE TABLE IF NOT EXISTS public.comments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   comment_id text NOT NULL UNIQUE,
   video_id text NOT NULL,
@@ -206,7 +173,7 @@ CREATE TABLE IF NOT EXISTS zheon.comments (
 );
 
 -- 2.7 transcripts
-CREATE TABLE IF NOT EXISTS zheon.transcripts (
+CREATE TABLE IF NOT EXISTS public.transcripts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   video_id text NOT NULL UNIQUE,
   data jsonb NOT NULL,
@@ -218,214 +185,214 @@ CREATE TABLE IF NOT EXISTS zheon.transcripts (
 -- ============================================================================
 
 -- 3.1 channels indexes
-CREATE INDEX IF NOT EXISTS idx_channels_handle ON zheon.channels(custom_url);
-CREATE INDEX IF NOT EXISTS idx_channels_title_search ON zheon.channels USING gin(to_tsvector('english', title));
-CREATE INDEX IF NOT EXISTS idx_channels_updated_at ON zheon.channels(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_channels_uploads_playlist ON zheon.channels(uploads_playlist_id);
+CREATE INDEX IF NOT EXISTS idx_channels_handle ON public.channels(custom_url);
+CREATE INDEX IF NOT EXISTS idx_channels_title_search ON public.channels USING gin(to_tsvector('english', title));
+CREATE INDEX IF NOT EXISTS idx_channels_updated_at ON public.channels(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_channels_uploads_playlist ON public.channels(uploads_playlist_id);
 
 -- 3.2 videos indexes
-CREATE INDEX IF NOT EXISTS idx_videos_channel_published ON zheon.videos(channel_id, published_at DESC);
-CREATE INDEX IF NOT EXISTS idx_videos_needs_sync ON zheon.videos(channel_id, basic_info_synced_at) WHERE basic_info_synced_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_videos_published ON zheon.videos(published_at DESC);
-CREATE INDEX IF NOT EXISTS idx_videos_sort_order ON zheon.videos(channel_id, sort_order DESC);
-CREATE INDEX IF NOT EXISTS idx_videos_title_search ON zheon.videos USING gin(to_tsvector('english', title));
-CREATE INDEX IF NOT EXISTS idx_videos_video_id ON zheon.videos(video_id);
-CREATE INDEX IF NOT EXISTS idx_videos_channel ON zheon.videos(channel_id);
+CREATE INDEX IF NOT EXISTS idx_videos_channel_published ON public.videos(channel_id, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_needs_sync ON public.videos(channel_id, basic_info_synced_at) WHERE basic_info_synced_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_videos_published ON public.videos(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_sort_order ON public.videos(channel_id, sort_order DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_title_search ON public.videos USING gin(to_tsvector('english', title));
+CREATE INDEX IF NOT EXISTS idx_videos_video_id ON public.videos(video_id);
+CREATE INDEX IF NOT EXISTS idx_videos_channel ON public.videos(channel_id);
 
 -- 3.3 summaries indexes
-CREATE INDEX IF NOT EXISTS idx_summaries_channel_id ON zheon.summaries(channel_id) WHERE channel_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_processing_status ON zheon.summaries(processing_status);
-CREATE INDEX IF NOT EXISTS idx_summaries_url ON zheon.summaries(url);
-CREATE INDEX IF NOT EXISTS idx_summaries_audio_status ON zheon.summaries(summary_audio_status) WHERE summary_audio_status IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_insights_audio_status ON zheon.summaries(insights_audio_status) WHERE insights_audio_status IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_content_quality ON zheon.summaries(content_quality_score DESC) WHERE content_quality_score IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_sentiment ON zheon.summaries(sentiment_overall_score DESC) WHERE sentiment_overall_score IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_community_quality ON zheon.summaries(community_quality_score DESC) WHERE community_quality_score IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_analysis_status ON zheon.summaries(analysis_status) WHERE analysis_status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_channel_id ON public.summaries(channel_id) WHERE channel_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_processing_status ON public.summaries(processing_status);
+CREATE INDEX IF NOT EXISTS idx_summaries_url ON public.summaries(url);
+CREATE INDEX IF NOT EXISTS idx_summaries_audio_status ON public.summaries(summary_audio_status) WHERE summary_audio_status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_insights_audio_status ON public.summaries(insights_audio_status) WHERE insights_audio_status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_content_quality ON public.summaries(content_quality_score DESC) WHERE content_quality_score IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_sentiment ON public.summaries(sentiment_overall_score DESC) WHERE sentiment_overall_score IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_community_quality ON public.summaries(community_quality_score DESC) WHERE community_quality_score IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_summaries_analysis_status ON public.summaries(analysis_status) WHERE analysis_status IS NOT NULL;
 
 -- 3.4 subscriptions indexes
-CREATE INDEX IF NOT EXISTS idx_subscriptions_channel ON zheon.subscriptions(channel_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON zheon.subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_channel ON public.subscriptions(channel_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON public.subscriptions(user_id);
 
 -- 3.5 comments indexes
-CREATE INDEX IF NOT EXISTS idx_comments_video_id ON zheon.comments(video_id);
-CREATE INDEX IF NOT EXISTS idx_comments_comment_id ON zheon.comments(comment_id);
+CREATE INDEX IF NOT EXISTS idx_comments_video_id ON public.comments(video_id);
+CREATE INDEX IF NOT EXISTS idx_comments_comment_id ON public.comments(comment_id);
 
 -- 3.6 transcripts indexes
-CREATE INDEX IF NOT EXISTS idx_transcripts_video_id ON zheon.transcripts(video_id);
+CREATE INDEX IF NOT EXISTS idx_transcripts_video_id ON public.transcripts(video_id);
 
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY (RLS)
 -- ============================================================================
 
 -- 4.1 Enable RLS on all tables
-ALTER TABLE zheon.channels ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.summaries ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zheon.transcripts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.channels ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.summaries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transcripts ENABLE ROW LEVEL SECURITY;
 
 -- 4.2 channels RLS policies
 CREATE POLICY "Anyone can view channels"
-  ON zheon.channels FOR SELECT
+  ON public.channels FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Authenticated users can upsert channels"
-  ON zheon.channels FOR INSERT
+  ON public.channels FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
 CREATE POLICY "Authenticated users can update channels"
-  ON zheon.channels FOR UPDATE
+  ON public.channels FOR UPDATE
   TO authenticated
   USING (true);
 
 CREATE POLICY "Service role can manage channels"
-  ON zheon.channels FOR ALL
+  ON public.channels FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
 
 -- 4.3 videos RLS policies
 CREATE POLICY "Anyone can view videos"
-  ON zheon.videos FOR SELECT
+  ON public.videos FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Service role can manage videos"
-  ON zheon.videos FOR ALL
+  ON public.videos FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
 
 -- 4.4 profiles RLS policies
 CREATE POLICY "Profiles are viewable by everyone"
-  ON zheon.profiles FOR SELECT
+  ON public.profiles FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Users can insert their own profile"
-  ON zheon.profiles FOR INSERT
+  ON public.profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update their own profile"
-  ON zheon.profiles FOR UPDATE
+  ON public.profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id);
 
 -- 4.5 summaries RLS policies
 CREATE POLICY "Allow public read"
-  ON zheon.summaries FOR SELECT
+  ON public.summaries FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Allow public insert"
-  ON zheon.summaries FOR INSERT
+  ON public.summaries FOR INSERT
   TO authenticated, anon
   WITH CHECK (true);
 
 CREATE POLICY "Allow service role update"
-  ON zheon.summaries FOR UPDATE
+  ON public.summaries FOR UPDATE
   TO service_role
   USING (true);
 
 CREATE POLICY "Allow service role delete"
-  ON zheon.summaries FOR DELETE
+  ON public.summaries FOR DELETE
   TO service_role
   USING (true);
 
 -- 4.5.1 summaries 테이블 권한
-GRANT SELECT, INSERT ON zheon.summaries TO anon;
-GRANT ALL ON zheon.summaries TO authenticated;
+GRANT SELECT, INSERT ON public.summaries TO anon;
+GRANT ALL ON public.summaries TO authenticated;
 
 -- 4.6 subscriptions RLS policies
 CREATE POLICY "Users can view own subscriptions"
-  ON zheon.subscriptions FOR SELECT
+  ON public.subscriptions FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can manage own subscriptions"
-  ON zheon.subscriptions FOR ALL
+  ON public.subscriptions FOR ALL
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Service role can manage all subscriptions"
-  ON zheon.subscriptions FOR ALL
+  ON public.subscriptions FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
 
 -- 4.7 comments RLS policies
 CREATE POLICY "Anyone can view comments"
-  ON zheon.comments FOR SELECT
+  ON public.comments FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Anyone can insert comments"
-  ON zheon.comments FOR INSERT
+  ON public.comments FOR INSERT
   TO authenticated, anon
   WITH CHECK (true);
 
 CREATE POLICY "Service role can manage comments"
-  ON zheon.comments FOR ALL
+  ON public.comments FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
 
 -- 4.7.1 comments 테이블 권한
-GRANT SELECT, INSERT ON zheon.comments TO anon;
-GRANT ALL ON zheon.comments TO authenticated;
+GRANT SELECT, INSERT ON public.comments TO anon;
+GRANT ALL ON public.comments TO authenticated;
 
 -- 4.8 transcripts RLS policies
 CREATE POLICY "Anyone can view transcripts"
-  ON zheon.transcripts FOR SELECT
+  ON public.transcripts FOR SELECT
   TO authenticated, anon
   USING (true);
 
 CREATE POLICY "Anyone can insert transcripts"
-  ON zheon.transcripts FOR INSERT
+  ON public.transcripts FOR INSERT
   TO authenticated, anon
   WITH CHECK (true);
 
 CREATE POLICY "Service role can manage transcripts"
-  ON zheon.transcripts FOR ALL
+  ON public.transcripts FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
 
 -- 4.8.1 transcripts 테이블 권한
-GRANT SELECT, INSERT ON zheon.transcripts TO anon;
-GRANT ALL ON zheon.transcripts TO authenticated;
+GRANT SELECT, INSERT ON public.transcripts TO anon;
+GRANT ALL ON public.transcripts TO authenticated;
 
 -- ============================================================================
 -- 5. COMMENTS
 -- ============================================================================
 
-COMMENT ON TABLE zheon.channels IS 'YouTube 채널 메타데이터';
-COMMENT ON TABLE zheon.videos IS '비디오 메타데이터';
-COMMENT ON TABLE zheon.profiles IS '사용자 프로필 및 구독 동기화 상태';
-COMMENT ON TABLE zheon.summaries IS 'AI 생성 비디오 요약 및 인사이트';
-COMMENT ON TABLE zheon.subscriptions IS '사용자 구독 채널 목록';
-COMMENT ON TABLE zheon.comments IS 'YouTube 비디오 댓글 (증분 수집용)';
-COMMENT ON TABLE zheon.transcripts IS '비디오 자막 원본 데이터 (1회 소비용)';
+COMMENT ON TABLE public.channels IS 'YouTube 채널 메타데이터';
+COMMENT ON TABLE public.videos IS '비디오 메타데이터';
+COMMENT ON TABLE public.profiles IS '사용자 프로필 및 구독 동기화 상태';
+COMMENT ON TABLE public.summaries IS 'AI 생성 비디오 요약 및 인사이트';
+COMMENT ON TABLE public.subscriptions IS '사용자 구독 채널 목록';
+COMMENT ON TABLE public.comments IS 'YouTube 비디오 댓글 (증분 수집용)';
+COMMENT ON TABLE public.transcripts IS '비디오 자막 원본 데이터 (1회 소비용)';
 
-COMMENT ON COLUMN zheon.summaries.content_quality_score IS 'Overall content quality score (0-100) based on transcript analysis';
-COMMENT ON COLUMN zheon.summaries.sentiment_overall_score IS 'Overall sentiment score (0-100) based on top 100 comments';
-COMMENT ON COLUMN zheon.summaries.community_quality_score IS 'Overall community quality score (0-100) based on comment tone/attitude';
-COMMENT ON COLUMN zheon.summaries.ai_key_insights IS 'JSON array of key findings from AI analysis';
-COMMENT ON COLUMN zheon.summaries.ai_recommendations IS 'JSON array of improvement suggestions';
+COMMENT ON COLUMN public.summaries.content_quality_score IS 'Overall content quality score (0-100) based on transcript analysis';
+COMMENT ON COLUMN public.summaries.sentiment_overall_score IS 'Overall sentiment score (0-100) based on top 100 comments';
+COMMENT ON COLUMN public.summaries.community_quality_score IS 'Overall community quality score (0-100) based on comment tone/attitude';
+COMMENT ON COLUMN public.summaries.ai_key_insights IS 'JSON array of key findings from AI analysis';
+COMMENT ON COLUMN public.summaries.ai_recommendations IS 'JSON array of improvement suggestions';
 
 -- ============================================================================
 -- 6. REALTIME
 -- ============================================================================
 
 -- Enable Realtime for summaries table
-ALTER PUBLICATION supabase_realtime ADD TABLE zheon.summaries;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.summaries;
 
 -- Set replica identity to full for better change tracking
-ALTER TABLE zheon.summaries REPLICA IDENTITY FULL;
+ALTER TABLE public.summaries REPLICA IDENTITY FULL;

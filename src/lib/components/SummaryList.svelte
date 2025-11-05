@@ -81,7 +81,6 @@
 					'postgres_changes',
 					{
 						event: '*',
-						schema: 'zheon',
 						table: 'summaries'
 					},
 					async (payload) => {

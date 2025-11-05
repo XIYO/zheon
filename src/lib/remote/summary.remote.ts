@@ -22,7 +22,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 		const thumbnailUrl = videoInfo.thumbnail_url;
 
 		const { data: existing } = await supabase
-			.schema('zheon')
 			.from('summaries')
 			.select('id, analysis_status')
 			.eq('url', `https://www.youtube.com/watch?v=${videoId}`)
@@ -32,7 +31,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 
 		if (!summaryId) {
 			const { data: created, error: createError } = await adminSupabase
-				.schema('zheon')
 				.from('summaries')
 				.insert({
 					url: `https://www.youtube.com/watch?v=${videoId}`,
@@ -51,7 +49,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 			console.log(`[Summaries] 기존 요약 사용 summaryId=${summaryId}`);
 
 			await adminSupabase
-				.schema('zheon')
 				.from('summaries')
 				.update({
 					title,
@@ -61,7 +58,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 		}
 
 		await adminSupabase
-			.schema('zheon')
 			.from('summaries')
 			.update({
 				analysis_status: 'processing',
@@ -93,7 +89,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 			.trim();
 
 		const { data: commentRecords, error: commentError } = await supabase
-			.schema('zheon')
 			.from('comments')
 			.select('data')
 			.eq('video_id', videoId)
@@ -134,7 +129,6 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 
 		console.log(`[Summaries] 3단계: DB 저장 시작`);
 		const { error: updateError } = await adminSupabase
-			.schema('zheon')
 			.from('summaries')
 			.update({
 				transcript,
@@ -219,7 +213,6 @@ export const getSummaries = query(GetSummariesSchema, async (params = {}) => {
 	const ascending = sortBy === 'oldest';
 
 	let queryBuilder = supabase
-		.schema('zheon')
 		.from('summaries')
 		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
 		.order('updated_at', { ascending })
@@ -252,7 +245,6 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 	const { supabase } = locals;
 
 	const { data, error: sbError } = await supabase
-		.schema('zheon')
 		.from('summaries')
 		.select('*')
 		.eq('id', id)
