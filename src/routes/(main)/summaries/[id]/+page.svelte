@@ -113,7 +113,8 @@
 
 {#if summary}
 	{@const videoId = extractVideoId(summary.url)}
-	{@const thumbnailUrl = summary.thumbnail_url || (videoId && getYouTubeThumbnail(videoId, 'maxresdefault'))}
+	{@const thumbnailUrl =
+		summary.thumbnail_url || (videoId && getYouTubeThumbnail(videoId, 'maxresdefault'))}
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
 		<header>
 			<a href={summary.url} target="_blank" rel="noopener noreferrer">
@@ -246,7 +247,9 @@
 
 					{#if summary.ai_audience_reaction}
 						<div>
-							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">청중 반응</p>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+								청중 반응
+							</p>
 							<p class="text-sm text-surface-600 dark:text-surface-400">
 								{summary.ai_audience_reaction}
 							</p>
@@ -255,7 +258,9 @@
 
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">커뮤니티 특성</p>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+								커뮤니티 특성
+							</p>
 							<div class="space-y-1">
 								<div class="flex justify-between text-sm">
 									<span>친절도</span>
@@ -273,7 +278,9 @@
 						</div>
 
 						<div>
-							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">연령대 분포</p>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+								연령대 분포
+							</p>
 							<div class="space-y-1">
 								<div class="flex justify-between text-sm">
 									<span>10대</span>

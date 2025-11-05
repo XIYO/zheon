@@ -6,6 +6,7 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import svelteConfig from './svelte.config.js';
+import tseslint from 'typescript-eslint';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
@@ -13,6 +14,7 @@ export default [
 	{ ignores: ['**/database.types.ts', '**/database.ts', '**/*.d.ts'] },
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
+	...tseslint.configs.recommended,
 	...svelte.configs.recommended,
 	prettier,
 	...svelte.configs.prettier,
@@ -22,11 +24,21 @@ export default [
 		}
 	},
 	{
+		files: ['**/*.ts', '**/*.tsx'],
+		languageOptions: {
+			parser: tseslint.parser,
+			parserOptions: {
+				project: true
+			}
+		}
+	},
+	{
 		files: ['**/*.js', '**/*.ts', '**/*.jsx', '**/*.tsx'],
 		plugins: { 'unused-imports': unusedImports },
 		rules: {
 			'unused-imports/no-unused-imports': 'error',
-			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
 		}
 	},
 	{

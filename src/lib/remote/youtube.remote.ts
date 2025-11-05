@@ -3,19 +3,6 @@ import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { getYouTubeClient } from '$lib/server/youtube-proxy.js';
 
-const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
-
-/**
- * 배열을 지정한 크기만큼 잘라서 반환
- */
-const chunk = (items, size) => {
-	const result = [];
-	for (let i = 0; i < items.length; i += size) {
-		result.push(items.slice(i, i + size));
-	}
-	return result;
-};
-
 /**
  * Form: YouTube 채널 동기화 요청
  * - URL 파라미터에서 채널 ID 추출

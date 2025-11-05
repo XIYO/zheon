@@ -136,7 +136,8 @@
 									</div>
 									{#if summary.thumbnail_url || extractVideoId(summary.url)}
 										<img
-											src={summary.thumbnail_url || getYouTubeThumbnail(extractVideoId(summary.url) || '')}
+											src={summary.thumbnail_url ||
+												getYouTubeThumbnail(extractVideoId(summary.url) || '')}
 											alt=""
 											width="80"
 											height="45"
