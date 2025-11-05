@@ -419,3 +419,13 @@ COMMENT ON COLUMN zheon.summaries.sentiment_overall_score IS 'Overall sentiment 
 COMMENT ON COLUMN zheon.summaries.community_quality_score IS 'Overall community quality score (0-100) based on comment tone/attitude';
 COMMENT ON COLUMN zheon.summaries.ai_key_insights IS 'JSON array of key findings from AI analysis';
 COMMENT ON COLUMN zheon.summaries.ai_recommendations IS 'JSON array of improvement suggestions';
+
+-- ============================================================================
+-- 6. REALTIME
+-- ============================================================================
+
+-- Enable Realtime for summaries table
+ALTER PUBLICATION supabase_realtime ADD TABLE zheon.summaries;
+
+-- Set replica identity to full for better change tracking
+ALTER TABLE zheon.summaries REPLICA IDENTITY FULL;
