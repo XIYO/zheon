@@ -10,7 +10,9 @@ async function getAudioDir(): Promise<FileSystemDirectoryHandle> {
 	return await root.getDirectoryHandle(AUDIO_DIR, { create: true });
 }
 
-async function handleHas(id: string): Promise<{ success: boolean; data?: boolean; error?: string }> {
+async function handleHas(
+	id: string
+): Promise<{ success: boolean; data?: boolean; error?: string }> {
 	try {
 		const dir = await getAudioDir();
 		await dir.getFileHandle(id);
@@ -222,6 +224,7 @@ async function handleList(): Promise<any> {
 						savedAt: meta.savedAt
 					});
 				} catch {
+					// metadata 없으면 건너뛰기
 				}
 			}
 		}

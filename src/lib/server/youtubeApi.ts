@@ -66,9 +66,9 @@ interface SubscriptionsResult {
 
 async function fetchYouTube(
 	endpoint: string,
-	params: Record<string, any> | Map<string, any>,
+	params: Record<string, unknown> | Map<string, unknown>,
 	init: RequestInit = {}
-): Promise<any> {
+): Promise<unknown> {
 	const url = new URL(`${YOUTUBE_API_BASE}/${endpoint}`);
 
 	if (params instanceof Map) {
@@ -85,7 +85,10 @@ async function fetchYouTube(
 		});
 	}
 
-	const hasAuthHeader = init.headers instanceof Headers ? init.headers.has('Authorization') : (init.headers as any)?.Authorization;
+	const hasAuthHeader =
+		init.headers instanceof Headers
+			? init.headers.has('Authorization')
+			: (init.headers as any)?.Authorization;
 
 	if (!hasAuthHeader) {
 		const apiKey = env.YOUTUBE_API_KEY;
@@ -173,7 +176,7 @@ export async function getChannels(channelIds: string | string[]): Promise<Channe
 
 	console.log(`[YouTube API] 채널 정보 요청 완료: 총 ${allChannels.length}개`);
 
-	return allChannels.map((item) => ({
+	return allChannels.map((item: unknown) => ({
 		channel_id: item.id,
 		title: item.snippet?.title,
 		description: item.snippet?.description,
@@ -205,7 +208,7 @@ export async function getPlaylistItems(
 		pageToken
 	});
 
-	const items: PlaylistItem[] = (data.items || []).map((item: any) => ({
+	const items: PlaylistItem[] = (data.items || []).map((item: unknown) => ({
 		channel_id: item.snippet?.channelId,
 		video_id: item.contentDetails?.videoId,
 		title: item.snippet?.title,
@@ -298,7 +301,7 @@ export async function getSubscriptions(
 		totalResults: data.pageInfo?.totalResults
 	});
 
-	const items: SubscriptionItem[] = (data.items || []).map((item: any) => ({
+	const items: SubscriptionItem[] = (data.items || []).map((item: unknown) => ({
 		channel_id: item.snippet?.resourceId?.channelId,
 		title: item.snippet?.title,
 		description: item.snippet?.description,

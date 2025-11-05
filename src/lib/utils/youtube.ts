@@ -15,7 +15,10 @@ export function extractVideoId(url: string | null): string | null {
 	return null;
 }
 
-export function getYouTubeThumbnail(videoId: string | null, quality: string = 'maxresdefault'): string | null {
+export function getYouTubeThumbnail(
+	videoId: string | null,
+	quality: string = 'maxresdefault'
+): string | null {
 	if (!videoId) return null;
 	return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 }

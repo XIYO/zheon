@@ -43,7 +43,7 @@ async function createYouTubeClient() {
 	});
 }
 
-let ytPromise: Promise<any>;
+let ytPromise: Promise<unknown>;
 
 export async function getYouTubeClient() {
 	if (!ytPromise) {

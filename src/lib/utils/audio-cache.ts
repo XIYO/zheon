@@ -1,11 +1,14 @@
 let worker: Worker | null = null;
 let messageId = 0;
-const pendingMessages = new Map<number, { resolve: Function; reject: Function }>();
+const pendingMessages = new Map<
+	number,
+	{ resolve: (_value: unknown) => void; reject: (_reason?: unknown) => void }
+>();
 
 interface WorkerMessage {
 	messageId: number;
 	success: boolean;
-	data?: any;
+	data?: unknown;
 	error?: string;
 }
 
@@ -30,14 +33,14 @@ function getWorker(): Worker {
 		}
 	};
 
-	worker.onerror = (error: ErrorEvent) => {
+	worker.onerror = (error: Event | ErrorEvent) => {
 		console.error('[Audio Cache] Worker error:', error);
 	};
 
 	return worker;
 }
 
-function postMessage(action: string, data: Record<string, any> = {}): Promise<any> {
+function postMessage(action: string, data: Record<string, unknown> = {}): Promise<unknown> {
 	return new Promise((resolve, reject) => {
 		const id = messageId++;
 		const w = getWorker();
@@ -60,7 +63,11 @@ function formatBytes(bytes: number): string {
 	return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
-async function streamingDownload(cacheKey: string, signedUrl: string, startOffset: number = 0): Promise<void> {
+async function streamingDownload(
+	cacheKey: string,
+	signedUrl: string,
+	startOffset = 0
+): Promise<void> {
 	const headers: Record<string, string> = {};
 	if (startOffset > 0) {
 		headers['Range'] = `bytes=${startOffset}-`;
@@ -131,8 +138,9 @@ async function streamingDownload(cacheKey: string, signedUrl: string, startOffse
 
 export async function getSummaryAudio(
 	summaryId: string,
-	getSignedUrlFn: (params: { summaryId: string }) => Promise<{ url: string }>
+	_getSignedUrlFn: (_params: { summaryId: string }) => Promise<{ url: string }>
 ): Promise<string> {
+	const getSignedUrlFn = _getSignedUrlFn;
 	const cacheKey = `${summaryId}-summary`;
 
 	const progress = await postMessage('getProgress', { id: cacheKey });
