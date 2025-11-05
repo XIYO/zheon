@@ -67,3 +67,17 @@ export function normalizeYouTubeUrl(videoId) {
 	}
 	return `https://www.youtube.com/watch?v=${videoId}`;
 }
+
+/**
+ * YouTube 썸네일 URL 생성
+ *
+ * @param {string} videoId
+ * @param {string} quality - 'default' | 'mqdefault' | 'hqdefault' | 'sddefault' | 'maxresdefault'
+ * @returns {string} - YouTube 썸네일 URL
+ */
+export function getYouTubeThumbnail(videoId, quality = 'mqdefault') {
+	if (!isValidVideoId(videoId)) {
+		return null;
+	}
+	return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
+}

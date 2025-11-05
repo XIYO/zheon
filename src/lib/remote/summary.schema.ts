@@ -16,6 +16,7 @@ const isYouTubeUrl = (input) => {
 };
 
 export const SummarySchema = v.object({
+	id: v.optional(v.pipe(v.string(), v.uuid())),
 	url: v.pipe(
 		v.string('URL을 입력해주세요'),
 		v.trim(),

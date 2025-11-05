@@ -7,6 +7,7 @@ import { analyzeAndSummarizeVideo } from './ai.remote.ts';
 import { SummarySchema } from './summary.schema';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
 import { AnalyzeVideoInputSchema, GetSummariesSchema } from './summary.schema.ts';
+import { getVideoInfo } from './youtube/channel_video.remote.ts';
 
 export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 	try {
@@ -15,6 +16,10 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 		const { supabase, adminSupabase } = locals;
 
 		console.log(`[Summaries] 영상 분석 시작 videoId=${videoId}`);
+
+		const videoInfo = await getVideoInfo({ videoId });
+		const title = videoInfo.title;
+		const thumbnailUrl = videoInfo.thumbnail_url;
 
 		const { data: existing } = await supabase
 			.schema('zheon')
@@ -31,6 +36,8 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 				.from('summaries')
 				.insert({
 					url: `https://www.youtube.com/watch?v=${videoId}`,
+					title,
+					thumbnail_url: thumbnailUrl,
 					processing_status: 'pending',
 					analysis_status: 'pending'
 				})
@@ -39,9 +46,18 @@ export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 
 			if (createError) throw error(500, `요약 레코드 생성 실패: ${createError.message}`);
 			summaryId = created.id;
-			console.log(`[Summaries] 요약 레코드 생성 summaryId=${summaryId}`);
+			console.log(`[Summaries] 요약 레코드 생성 summaryId=${summaryId}, title=${title}`);
 		} else {
 			console.log(`[Summaries] 기존 요약 사용 summaryId=${summaryId}`);
+
+			await adminSupabase
+				.schema('zheon')
+				.from('summaries')
+				.update({
+					title,
+					thumbnail_url: thumbnailUrl
+				})
+				.eq('id', summaryId);
 		}
 
 		await adminSupabase
@@ -248,7 +264,7 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 	return data;
 });
 
-export const createSummary = form(SummarySchema, async ({ url }) => {
+export const createSummary = form(SummarySchema, async ({ id, url }) => {
 	const { locals } = getRequestEvent();
 	const { supabase } = locals;
 
@@ -278,7 +294,7 @@ export const createSummary = form(SummarySchema, async ({ url }) => {
 	} else {
 		const { data: newData, error: insertError } = await supabase
 			.from('summaries')
-			.insert({ url: normalizedUrl, processing_status: 'pending' })
+			.insert({ id, url: normalizedUrl, processing_status: 'pending' })
 			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
 			.single();
 

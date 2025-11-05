@@ -23,7 +23,7 @@ const VideoAnalysisWithSummarySchema = valibotSchema(
 			positive_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 			neutral_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 			negative_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-			overall_score: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+			overall_score: v.pipe(v.number(), v.minValue(-100), v.maxValue(100), v.integer()),
 			intensity: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
 		}),
 		community: v.object({
@@ -81,9 +81,9 @@ ${commentsText}
 
 Provide:
 1. Summary: 200-1000 character summary of the video content in Korean
-2. Content Quality: Educational value, entertainment, accuracy, clarity, depth, category, target audience
-3. Sentiment: Positive/neutral/negative ratios (must sum to 100), overall score, intensity
-4. Community: Politeness, rudeness, kindness, toxicity, constructive, self-centered, off-topic scores
+2. Content Quality: Educational value, entertainment, accuracy, clarity, depth (all 0-100), category, target audience
+3. Sentiment: Positive/neutral/negative ratios (must sum to 100), overall score (-100 to 100, negative=부정적, 0=중립, positive=긍정적), intensity (0-100)
+4. Community: Politeness, rudeness, kindness, toxicity, constructive, self-centered, off-topic scores (all 0-100)
 5. Age Groups: Estimated viewer age distribution (teens, 20s, 30s, 40+, must sum to 100)
 6. Insights: Content summary, audience reaction, key insights, recommendations
 

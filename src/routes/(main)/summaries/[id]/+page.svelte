@@ -4,6 +4,7 @@
 	import { generateTTS } from '$lib/remote/audio.remote';
 	import { getAudioSignedUrl } from '$lib/remote/audio.remote';
 	import { getSummaryAudio } from '$lib/utils/audio-cache.js';
+	import { extractVideoId, getYouTubeThumbnail } from '$lib/utils/youtube';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Loader from '@lucide/svelte/icons/loader';
 	import Play from '@lucide/svelte/icons/play';
@@ -111,15 +112,21 @@
 </script>
 
 {#if summary}
+	{@const videoId = extractVideoId(summary.url)}
+	{@const thumbnailUrl = summary.thumbnail_url || (videoId && getYouTubeThumbnail(videoId, 'maxresdefault'))}
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
 		<header>
 			<a href={summary.url} target="_blank" rel="noopener noreferrer">
-				<img
-					src={summary.thumbnail_url || ''}
-					alt={summary.title}
-					width="1280"
-					height="720"
-					class="rounded-xl starting:opacity-0 aspect-video" />
+				{#if thumbnailUrl}
+					<img
+						src={thumbnailUrl}
+						alt={summary.title}
+						width="1280"
+						height="720"
+						class="rounded-xl starting:opacity-0 aspect-video" />
+				{:else}
+					<div class="w-full aspect-video rounded-xl bg-surface-200-800 animate-pulse"></div>
+				{/if}
 			</a>
 			<div class="mt-8 mb-12">
 				<h1 class="h1 mb-2">{summary.title}</h1>
@@ -166,7 +173,7 @@
 			</p>
 		</section>
 
-		{#if summary.video_insight}
+		{#if summary.analysis_status === 'completed'}
 			<section class="card preset-filled-surface-50-900 p-4 mt-6">
 				<header class="mb-4">
 					<h2 class="h2">커뮤니티 신뢰도 분석</h2>
@@ -176,20 +183,18 @@
 					<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
 						<p class="text-sm text-surface-600 dark:text-surface-400 mb-1">감정 점수</p>
 						<p class="h3">
-							{Math.round(
-								summary.video_insight.comment_analysis.current_emotion.community_emotion_score
-							)}%
+							{#if summary.sentiment_overall_score > 0}
+								+{summary.sentiment_overall_score}%
+							{:else}
+								{summary.sentiment_overall_score || 0}%
+							{/if}
 						</p>
 					</div>
 
 					<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
-						<p class="text-sm text-surface-600 dark:text-surface-400 mb-1">신뢰도</p>
-						<p class="h3 capitalize">
-							{summary.video_insight.combined_credibility.overall_trust_level === 'high'
-								? '높음'
-								: summary.video_insight.combined_credibility.overall_trust_level === 'medium'
-									? '중간'
-									: '낮음'}
+						<p class="text-sm text-surface-600 dark:text-surface-400 mb-1">커뮤니티 품질</p>
+						<p class="h3">
+							{summary.community_quality_score || 0}%
 						</p>
 					</div>
 				</div>
@@ -205,14 +210,11 @@
 								<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
 									<div
 										class="h-full bg-green-500"
-										style="width: {summary.video_insight.comment_analysis.current_emotion.percentage
-											.positive}%">
+										style="width: {summary.sentiment_positive_ratio || 0}%">
 									</div>
 								</div>
 								<span class="text-sm w-12 text-right">
-									{Math.round(
-										summary.video_insight.comment_analysis.current_emotion.percentage.positive
-									)}%
+									{summary.sentiment_positive_ratio || 0}%
 								</span>
 							</div>
 							<div class="flex items-center gap-2">
@@ -220,14 +222,11 @@
 								<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
 									<div
 										class="h-full bg-gray-500"
-										style="width: {summary.video_insight.comment_analysis.current_emotion.percentage
-											.neutral}%">
+										style="width: {summary.sentiment_neutral_ratio || 0}%">
 									</div>
 								</div>
 								<span class="text-sm w-12 text-right">
-									{Math.round(
-										summary.video_insight.comment_analysis.current_emotion.percentage.neutral
-									)}%
+									{summary.sentiment_neutral_ratio || 0}%
 								</span>
 							</div>
 							<div class="flex items-center gap-2">
@@ -235,35 +234,69 @@
 								<div class="flex-1 bg-surface-200 dark:bg-surface-700 rounded h-6 overflow-hidden">
 									<div
 										class="h-full bg-red-500"
-										style="width: {summary.video_insight.comment_analysis.current_emotion.percentage
-											.negative}%">
+										style="width: {summary.sentiment_negative_ratio || 0}%">
 									</div>
 								</div>
 								<span class="text-sm w-12 text-right">
-									{Math.round(
-										summary.video_insight.comment_analysis.current_emotion.percentage.negative
-									)}%
+									{summary.sentiment_negative_ratio || 0}%
 								</span>
 							</div>
 						</div>
 					</div>
 
-					<div>
-						<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">트렌드</p>
-						<p class="text-sm text-surface-600 dark:text-surface-400">
-							{summary.video_insight.comment_analysis.trend.insights}
-						</p>
-					</div>
+					{#if summary.ai_audience_reaction}
+						<div>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">청중 반응</p>
+							<p class="text-sm text-surface-600 dark:text-surface-400">
+								{summary.ai_audience_reaction}
+							</p>
+						</div>
+					{/if}
 
-					<div>
-						<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">평가</p>
-						<p class="text-sm text-surface-600 dark:text-surface-400">
-							{summary.video_insight.combined_credibility.recommendation}
-						</p>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">커뮤니티 특성</p>
+							<div class="space-y-1">
+								<div class="flex justify-between text-sm">
+									<span>친절도</span>
+									<span>{summary.community_kindness || 0}%</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span>독성도</span>
+									<span>{summary.community_toxicity || 0}%</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span>건설적</span>
+									<span>{summary.community_constructive || 0}%</span>
+								</div>
+							</div>
+						</div>
+
+						<div>
+							<p class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">연령대 분포</p>
+							<div class="space-y-1">
+								<div class="flex justify-between text-sm">
+									<span>10대</span>
+									<span>{summary.age_group_teens || 0}%</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span>20대</span>
+									<span>{summary.age_group_20s || 0}%</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span>30대</span>
+									<span>{summary.age_group_30s || 0}%</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span>40대+</span>
+									<span>{summary.age_group_40plus || 0}%</span>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<div class="text-xs text-surface-500 dark:text-surface-500">
-						분석된 댓글: {summary.video_insight.comment_analysis.metadata.total_comments_analyzed}개
+						분석된 댓글: {summary.total_comments_analyzed || 0}개
 					</div>
 				</div>
 			</section>

@@ -2,7 +2,7 @@
 	import { createSummary, getSummaries } from '$lib/remote/summary.remote.ts';
 	import { SummarySchema } from '$lib/remote/summary.schema';
 
-	const { url } = createSummary.fields;
+	const { id, url } = createSummary.fields;
 
 	const enhancedForm = createSummary.preflight(SummarySchema).enhance(async ({ form, submit }) => {
 		try {
@@ -35,8 +35,9 @@
 			}
 
 			// 낙관적 업데이트
+			const newId = crypto.randomUUID();
 			const optimisticSummary = {
-				id: crypto.randomUUID(),
+				id: newId,
 				url: newUrl,
 				title: null,
 				summary: null,
@@ -50,6 +51,9 @@
 				summaries: [optimisticSummary, ...current.summaries]
 			});
 			console.log('[SummaryForm] 낙관적 업데이트:', optimisticSummary);
+
+			// form에 ID 추가
+			id.value(newId);
 
 			// 서버 제출 (form은 반환값 없음)
 			await submit();

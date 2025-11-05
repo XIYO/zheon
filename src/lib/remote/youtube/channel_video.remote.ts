@@ -5,6 +5,8 @@ import {
 	getChannelVideos as getChannelVideosFromAPI,
 	getChannels
 } from '$lib/server/youtubeApi.js';
+import Innertube from 'youtubei.js';
+import { getYouTubeThumbnail } from '$lib/utils/youtube.js';
 
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
@@ -250,3 +252,59 @@ export const syncChannelVideosCommand = command(v.string(), async (channelId) =>
 
 	return await performChannelVideosSync(channelId);
 });
+
+/**
+ * Command: 영상 정보 가져오기 및 저장
+ */
+export const getVideoInfo = command(
+	v.object({
+		videoId: v.string()
+	}),
+	async ({ videoId }) => {
+		const { locals } = getRequestEvent();
+		const { supabase } = locals;
+
+		const { data: existing } = await supabase
+			.from('channel_videos')
+			.select('video_id, title, thumbnail_url, channel_id, channel_title, published_at')
+			.eq('video_id', videoId)
+			.single();
+
+		if (existing && existing.title) {
+			return {
+				video_id: existing.video_id,
+				title: existing.title,
+				thumbnail_url: existing.thumbnail_url || getYouTubeThumbnail(videoId, 'maxresdefault'),
+				channel_id: existing.channel_id,
+				channel_title: existing.channel_title,
+				published_at: existing.published_at
+			};
+		}
+
+		const youtube = await Innertube.create();
+		const videoInfo = await youtube.getBasicInfo(videoId);
+
+		const title = videoInfo.basic_info.title || '제목 없음';
+		const channelId = videoInfo.basic_info.channel_id;
+		const channelTitle = videoInfo.basic_info.channel?.name || videoInfo.basic_info.author;
+		const thumbnailUrl = getYouTubeThumbnail(videoId, 'maxresdefault');
+		const publishedAt = videoInfo.basic_info.start_timestamp
+			? new Date(videoInfo.basic_info.start_timestamp * 1000).toISOString()
+			: new Date().toISOString();
+
+		const videoData = {
+			video_id: videoId,
+			channel_id: channelId,
+			title,
+			channel_title: channelTitle,
+			thumbnail_url: thumbnailUrl,
+			published_at: publishedAt
+		};
+
+		await supabase.from('channel_videos').upsert(videoData, {
+			onConflict: 'channel_id,video_id'
+		});
+
+		return videoData;
+	}
+);

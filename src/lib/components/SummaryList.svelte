@@ -1,9 +1,11 @@
 <!-- 요약 결과 리스트 컴포넌트 -->
 <script>
 	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { getSummaries } from '$lib/remote/summary.remote';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { innerHeight } from 'svelte/reactivity/window';
+	import { extractVideoId, getYouTubeThumbnail } from '$lib/utils/youtube';
 
 	const { supabase } = page.data;
 
@@ -59,72 +61,48 @@
 		return () => observer.disconnect();
 	});
 
-	// pending/processing 상태 추적
-	let hasPending = $derived(
-		summaries.some((s) => ['pending', 'processing'].includes(s.processing_status))
-	);
+	// Realtime updates
+	let channel = $state(/** @type {any} */ (null));
 
-	// Realtime updates - pending/processing이 있을 때만 구독
 	$effect(() => {
-		if (!hasPending) {
-			console.log('[SummaryList] pending/processing 없음, 구독 안 함');
-			return;
-		}
+		const hasPending = summaries.some(
+			(s) => s.processing_status === 'pending' || s.processing_status === 'processing'
+		);
 
-		console.log('[SummaryList] Realtime 구독 시작');
-		const channel = supabase
-			.channel('summary-updates')
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'zheon',
-					table: 'summaries'
-				},
-				async (payload) => {
-					console.log('[SummaryList] Realtime 이벤트 수신:', payload.eventType, payload);
-
-					const summary = payload.new;
-
-					// 현재 query 결과 가져오기
-					const currentResult = await getSummaries({});
-
-					if (payload.eventType === 'INSERT') {
-						// INSERT는 맨 앞에 추가
-						const exists = currentResult.summaries.some((s) => s.id === summary.id);
-						if (!exists) {
-							getSummaries({}).set({
-								...currentResult,
-								summaries: [summary, ...currentResult.summaries]
-							});
-							console.log('[SummaryList] INSERT 추가:', summary.url);
-						}
-					} else if (payload.eventType === 'UPDATE') {
-						// UPDATE는 URL 또는 ID 기반으로 교체
-						const index = currentResult.summaries.findIndex(
-							(s) => s.id === summary.id || s.url === summary.url
-						);
-
-						if (index !== -1) {
-							const updatedSummaries = [...currentResult.summaries];
-							updatedSummaries[index] = summary;
-
-							getSummaries({}).set({
-								...currentResult,
-								summaries: updatedSummaries
-							});
-							console.log('[SummaryList] UPDATE 교체:', summary.url);
-						}
+		if (hasPending && !channel) {
+			console.log('[SummaryList] Realtime 구독 시작');
+			channel = supabase
+				.channel('summary-updates', {
+					config: {
+						broadcast: { self: true }
 					}
-				}
-			)
-			.subscribe((status, err) => {
-				if (err) console.error('[SummaryList] 구독 에러:', status, err);
-			});
-
-		return () => {
+				})
+				.on(
+					'postgres_changes',
+					{
+						event: '*',
+						schema: 'zheon',
+						table: 'summaries'
+					},
+					async (payload) => {
+						console.log('[SummaryList] Realtime 이벤트 수신:', payload.eventType);
+						await invalidateAll();
+					}
+				)
+				.subscribe();
+		} else if (!hasPending && channel) {
 			console.log('[SummaryList] Realtime 구독 해제');
 			channel.unsubscribe();
+			channel = null;
+		}
+	});
+
+	$effect(() => {
+		return () => {
+			if (channel) {
+				console.log('[SummaryList] 컴포넌트 언마운트 - 구독 해제');
+				channel.unsubscribe();
+			}
 		};
 	});
 </script>
@@ -147,27 +125,18 @@
 						<tr class="border-b border-surface-200-800 hover:opacity-80">
 							<td class="px-4 py-3">
 								<a href={localizeHref(`/summaries/${summary.id}/`)} class="flex items-center gap-3">
-									<div class="flex items-center gap-2">
-										<div
-											class="w-2 h-2 rounded-full {summary.processing_status === 'pending'
-												? 'bg-warning-500 animate-pulse'
-												: summary.processing_status === 'processing'
-													? 'bg-primary-500 animate-pulse'
-													: summary.processing_status === 'failed'
-														? 'bg-error-500'
-														: 'bg-success-500'}">
-										</div>
-										{#if summary.processing_status === 'pending'}
-											<span class="text-xs text-warning-500">대기 중</span>
-										{:else if summary.processing_status === 'processing'}
-											<span class="text-xs text-primary-500">처리 중</span>
-										{:else if summary.processing_status === 'failed'}
-											<span class="text-xs text-error-500">실패</span>
-										{/if}
+									<div
+										class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
+											? 'bg-warning-500 animate-pulse'
+											: summary.processing_status === 'processing'
+												? 'bg-primary-500 animate-pulse'
+												: summary.processing_status === 'failed'
+													? 'bg-error-500'
+													: 'bg-success-500'}">
 									</div>
-									{#if summary.thumbnail_url}
+									{#if summary.thumbnail_url || extractVideoId(summary.url)}
 										<img
-											src={summary.thumbnail_url}
+											src={summary.thumbnail_url || getYouTubeThumbnail(extractVideoId(summary.url) || '')}
 											alt=""
 											width="80"
 											height="45"
