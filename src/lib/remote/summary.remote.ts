@@ -8,6 +8,7 @@ import { SummarySchema } from './summary.schema';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
 import { AnalyzeVideoInputSchema, GetSummariesSchema } from './summary.schema.ts';
 import { getVideoInfo } from './youtube/channel_video.remote.ts';
+import { analyzeVideoBackground } from '$lib/server/analyze-video.js';
 
 export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
 	try {
@@ -258,7 +259,7 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 
 export const createSummary = form(SummarySchema, async ({ id, url }) => {
 	const { locals } = getRequestEvent();
-	const { supabase } = locals;
+	const { supabase, adminSupabase } = locals;
 
 	const videoId = extractVideoId(url);
 	const normalizedUrl = normalizeYouTubeUrl(videoId);
@@ -290,7 +291,7 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 	} else {
 		const { data: newData, error: insertError } = await supabase
 			.from('summaries')
-			.insert({ id, url: normalizedUrl, processing_status: 'pending' })
+			.insert({ id, url: normalizedUrl, processing_status: 'processing' })
 			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
 			.single();
 
@@ -298,11 +299,42 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 		summaryData = newData;
 	}
 
+	await adminSupabase
+		.from('summaries')
+		.update({ processing_status: 'processing', analysis_status: 'processing' })
+		.eq('id', summaryData.id);
+
+	summaryData.processing_status = 'processing';
+
 	try {
 		const { waitUntil } = await import('cloudflare:workers');
-		waitUntil(analyzeVideo({ videoId }).catch(() => {}));
+		waitUntil(
+			analyzeVideoBackground(
+				videoId,
+				100,
+				supabase,
+				adminSupabase,
+				collectTranscript,
+				collectComments,
+				analyzeAndSummarizeVideo,
+				getVideoInfo
+			).catch((err) => {
+				console.error('[createSummary] 백그라운드 분석 실패:', err);
+			})
+		);
 	} catch {
-		analyzeVideo({ videoId }).catch(() => {});
+		analyzeVideoBackground(
+			videoId,
+			100,
+			supabase,
+			adminSupabase,
+			collectTranscript,
+			collectComments,
+			analyzeAndSummarizeVideo,
+			getVideoInfo
+		).catch((err) => {
+			console.error('[createSummary] 백그라운드 분석 실패:', err);
+		});
 	}
 
 	return summaryData;

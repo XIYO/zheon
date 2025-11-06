@@ -32,22 +32,18 @@ function createProxyFetch(proxyUrl: string) {
 	};
 }
 
-async function createYouTubeClient() {
-	const proxyUrl = env.HTTP_PROXY_URL;
-	if (!proxyUrl) {
-		throw new Error('HTTP_PROXY_URL not configured');
+let ytClient: Innertube | null = null;
+
+export async function getYouTubeClient(): Promise<Innertube> {
+	if (!ytClient) {
+		const proxyUrl = env.HTTP_PROXY_URL;
+		if (!proxyUrl) {
+			throw new Error('HTTP_PROXY_URL not configured');
+		}
+
+		ytClient = await Innertube.create({
+			fetch: createProxyFetch(proxyUrl)
+		});
 	}
-
-	return await Innertube.create({
-		fetch: createProxyFetch(proxyUrl)
-	});
-}
-
-let ytPromise: Promise<unknown>;
-
-export async function getYouTubeClient() {
-	if (!ytPromise) {
-		ytPromise = createYouTubeClient();
-	}
-	return await ytPromise;
+	return ytClient;
 }
