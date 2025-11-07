@@ -23,7 +23,7 @@ export interface CollectTranscriptOptions {
 export class TranscriptionService {
 	constructor(private supabase: SupabaseClient<Database>) {}
 
-	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}) {
+	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}): Promise<void> {
 		const { force = false } = options;
 		console.log(`[transcript] 수집 시작 videoId=${videoId} force=${force}`);
 
@@ -31,25 +31,14 @@ export class TranscriptionService {
 			const existing = await this.checkExisting(videoId);
 			if (existing) {
 				console.log(`[transcript] 이미 존재 videoId=${videoId}`);
-				return {
-					success: true,
-					videoId,
-					status: 'exists' as const,
-					data: existing.data as unknown as TranscriptData,
-					message: '이미 수집된 자막입니다'
-				};
+				return;
 			}
 		}
 
 		const transcriptData = await this.fetchFromYouTube(videoId);
 		if (!transcriptData) {
 			console.log(`[transcript] 자막 없음 videoId=${videoId}`);
-			return {
-				success: false,
-				videoId,
-				status: 'no_transcript' as const,
-				message: '자막을 사용할 수 없습니다'
-			};
+			throw error(404, '자막을 사용할 수 없습니다');
 		}
 
 		await this.saveTranscript(videoId, transcriptData);
@@ -57,14 +46,6 @@ export class TranscriptionService {
 		console.log(
 			`[transcript] 저장 완료 videoId=${videoId} segments=${transcriptData.segments.length}개`
 		);
-
-		return {
-			success: true,
-			videoId,
-			status: 'created' as const,
-			data: transcriptData,
-			message: `자막 수집 완료 (${transcriptData.segments.length}개 세그먼트)`
-		};
 	}
 
 	async getTranscriptFromDB(videoId: string) {
@@ -80,24 +61,10 @@ export class TranscriptionService {
 			throw error(500, `자막 조회 실패: ${fetchError.message}`);
 		}
 
-		if (!transcript) {
-			console.log(`[transcript] 자막 없음 videoId=${videoId}`);
-			return {
-				success: false,
-				videoId,
-				message: '저장된 자막이 없습니다'
-			};
-		}
-
-		const segments = (transcript.data as any)?.segments || [];
+		const segments = (transcript?.data as any)?.segments || [];
 		console.log(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
 
-		return {
-			success: true,
-			videoId,
-			transcript: transcript as any,
-			segmentCount: segments.length
-		};
+		return transcript;
 	}
 
 	private async checkExisting(videoId: string) {
@@ -124,7 +91,8 @@ export class TranscriptionService {
 				return null;
 			}
 
-			const segments = transcript.transcript.content.body.initial_segments as YTNodes.TranscriptSegment[];
+			const segments = transcript.transcript.content.body
+				.initial_segments as YTNodes.TranscriptSegment[];
 			return {
 				title: info.basic_info?.title,
 				duration: info.basic_info?.duration,
@@ -141,17 +109,15 @@ export class TranscriptionService {
 	}
 
 	private async saveTranscript(videoId: string, transcriptData: TranscriptData): Promise<void> {
-		const { error: insertError } = await this.supabase
-			.from('transcripts')
-			.upsert(
-				{
-					video_id: videoId,
-					data: transcriptData as any
-				},
-				{
-					onConflict: 'video_id'
-				}
-			);
+		const { error: insertError } = await this.supabase.from('transcripts').upsert(
+			{
+				video_id: videoId,
+				data: transcriptData as any
+			},
+			{
+				onConflict: 'video_id'
+			}
+		);
 
 		if (insertError) {
 			console.error(`[transcript] 저장 실패:`, insertError);

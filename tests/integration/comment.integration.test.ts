@@ -41,14 +41,14 @@ describe('CommentService Integration Test', () => {
 	it(
 		'1배치 수집 (약 20개)',
 		async () => {
-			const result = await service.collectComments(TEST_VIDEO_ID, { maxBatches: 1 });
+			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 1, force: true });
 
-			expect(result.success).toBe(true);
-			expect(result.videoId).toBe(TEST_VIDEO_ID);
-			expect(result.collected).toBeGreaterThan(0);
-			expect(result.batches).toBe(1);
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 
-			console.log(`✅ 1배치 수집: ${result.collected}개`);
+			expect(Array.isArray(comments)).toBe(true);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 1배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -56,12 +56,13 @@ describe('CommentService Integration Test', () => {
 	it(
 		'5배치 수집 (약 100개)',
 		async () => {
-			const result = await service.collectComments(TEST_VIDEO_ID, { maxBatches: 5 });
+			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 5 });
 
-			expect(result.success).toBe(true);
-			expect(result.batches).toBeLessThanOrEqual(5);
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 
-			console.log(`✅ 5배치 수집: ${result.batches}배치, ${result.collected}개`);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 5배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -69,12 +70,13 @@ describe('CommentService Integration Test', () => {
 	it(
 		'10배치 수집 (약 200개)',
 		async () => {
-			const result = await service.collectComments(TEST_VIDEO_ID, { maxBatches: 10 });
+			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 10 });
 
-			expect(result.success).toBe(true);
-			expect(result.batches).toBeLessThanOrEqual(10);
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 
-			console.log(`✅ 10배치 수집: ${result.batches}배치, ${result.collected}개`);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 10배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -82,12 +84,13 @@ describe('CommentService Integration Test', () => {
 	it(
 		'20배치 수집 (약 400개)',
 		async () => {
-			const result = await service.collectComments(TEST_VIDEO_ID, { maxBatches: 20 });
+			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 20 });
 
-			expect(result.success).toBe(true);
-			expect(result.batches).toBeLessThanOrEqual(20);
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 
-			console.log(`✅ 20배치 수집: ${result.batches}배치, ${result.collected}개`);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 20배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -97,14 +100,71 @@ describe('CommentService Integration Test', () => {
 		async () => {
 			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 1 });
 
-			const result = await service.getCommentsFromDB(TEST_VIDEO_ID);
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 
-			expect(result.success).toBe(true);
-			expect(result.videoId).toBe(TEST_VIDEO_ID);
-			expect(result.count).toBeGreaterThan(0);
-			expect(Array.isArray(result.comments)).toBe(true);
+			expect(Array.isArray(comments)).toBe(true);
+			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ DB 조회 성공: ${result.count}개`);
+			console.log(`✅ DB 조회 성공: ${comments.length}개`);
+		},
+		TIMEOUT
+	);
+
+	it(
+		'증분 수집: 이미 댓글이 있으면 중지 (force=false)',
+		async () => {
+			await supabase.from('comments').delete().eq('video_id', TEST_VIDEO_ID);
+
+			await service.collectComments(TEST_VIDEO_ID, {
+				maxBatches: 1,
+				force: true
+			});
+
+			const firstComments = await service.getCommentsFromDB(TEST_VIDEO_ID);
+			const firstCount = firstComments.length;
+
+			await service.collectComments(TEST_VIDEO_ID, {
+				maxBatches: 5,
+				force: false
+			});
+
+			const secondComments = await service.getCommentsFromDB(TEST_VIDEO_ID);
+			expect(secondComments.length).toBe(firstCount);
+
+			console.log(`✅ 증분 수집: 기존 댓글 확인 후 중지 (${secondComments.length}개)`);
+		},
+		TIMEOUT
+	);
+
+	it(
+		'강제 재수집: force=true이면 기존 댓글 무시하고 새로 수집',
+		async () => {
+			await service.collectComments(TEST_VIDEO_ID, { maxBatches: 1, force: true });
+
+			await service.collectComments(TEST_VIDEO_ID, {
+				maxBatches: 5,
+				force: true
+			});
+
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 강제 재수집: ${comments.length}개`);
+		},
+		TIMEOUT
+	);
+
+	it(
+		'기본값 테스트: maxBatches=5, force=false',
+		async () => {
+			await supabase.from('comments').delete().eq('video_id', TEST_VIDEO_ID);
+
+			await service.collectComments(TEST_VIDEO_ID);
+
+			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
+			expect(comments.length).toBeGreaterThan(0);
+
+			console.log(`✅ 기본값: ${comments.length}개`);
 		},
 		TIMEOUT
 	);

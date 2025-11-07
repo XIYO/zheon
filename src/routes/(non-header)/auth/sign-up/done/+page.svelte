@@ -2,7 +2,6 @@
 <script>
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	
 
 	const isEmailVerificationPending = $derived(
 		page.url.searchParams.get('email-verification') === 'pending'

@@ -2,16 +2,16 @@ import { command, getRequestEvent } from '$app/server';
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { CommentService } from '$lib/server/services/youtube/comment.service';
-import { CollectCommentsInputSchema } from './comment.schema.ts';
+import { CollectCommentsInputSchema } from './comment.schema';
 
 export const collectComments = command(CollectCommentsInputSchema, async (input) => {
 	try {
-		const { videoId, maxBatches = 5 } = v.parse(CollectCommentsInputSchema, input);
+		const { videoId, maxBatches = 5, force = false } = v.parse(CollectCommentsInputSchema, input);
 		const { locals } = getRequestEvent();
 		const { adminSupabase } = locals;
 
 		const service = new CommentService(adminSupabase);
-		return await service.collectComments(videoId, { maxBatches });
+		return await service.collectComments(videoId, { maxBatches, force });
 	} catch (err) {
 		console.error('[comments] 수집 실패:', err);
 		throw error(500, err instanceof Error ? err.message : '알 수 없는 오류');

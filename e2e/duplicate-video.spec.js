@@ -23,9 +23,9 @@ test.describe('중복 비디오 분석 처리', () => {
 		// 상태 표시기가 유효한 상태 중 하나를 가지는지 확인
 		const classList = await statusIndicator.getAttribute('class');
 		const hasValidStatus =
-			classList?.includes('bg-warning-500') ||  // pending
-			classList?.includes('bg-primary-500') ||   // processing
-			classList?.includes('bg-success-500');     // completed
+			classList?.includes('bg-warning-500') || // pending
+			classList?.includes('bg-primary-500') || // processing
+			classList?.includes('bg-success-500'); // completed
 
 		expect(hasValidStatus).toBeTruthy();
 		console.log('첫 번째 제출 상태 표시 확인:', classList);
@@ -63,7 +63,7 @@ test.describe('중복 비디오 분석 처리', () => {
 		await page.waitForTimeout(2000);
 
 		// 상태 표시기나 요약 페이지 중 하나가 나타나야 함
-		const hasStatusIndicator = await page.locator('.w-2.h-2.rounded-full').count() > 0;
+		const hasStatusIndicator = (await page.locator('.w-2.h-2.rounded-full').count()) > 0;
 		const isOnSummaryPage = page.url().includes('/summaries/');
 
 		expect(hasStatusIndicator || isOnSummaryPage).toBeTruthy();

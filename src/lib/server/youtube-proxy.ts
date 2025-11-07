@@ -1,34 +1,19 @@
 import { env } from '$env/dynamic/private';
 import { Innertube } from 'youtubei.js/cf-worker';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
 type FetchInput = Request | string | URL;
 type FetchInit = RequestInit;
 
-function createProxyFetch(proxyUrl: string) {
+function createSocks5Fetch(socksProxy: string) {
+	const proxyAgent = new SocksProxyAgent(socksProxy);
+
 	return async (input: FetchInput, init?: FetchInit): Promise<Response> => {
-		let targetUrl: string;
-		let proxyInit: FetchInit;
-
-		if (input instanceof Request) {
-			targetUrl = input.url;
-			proxyInit = {
-				method: input.method,
-				headers: input.headers,
-				body: input.body,
-				redirect: input.redirect,
-				signal: input.signal,
-				...init
-			};
-		} else {
-			targetUrl = typeof input === 'string' ? input : input.href || String(input);
-			proxyInit = init ? { ...init } : {};
-		}
-
-		const newHeaders = new Headers(proxyInit.headers);
-		newHeaders.append('target-url', targetUrl);
-		proxyInit.headers = newHeaders;
-
-		return fetch(proxyUrl, proxyInit);
+		return fetch(input, {
+			...init,
+			// @ts-ignore Node.js fetch agent support
+			agent: proxyAgent
+		});
 	};
 }
 
@@ -36,14 +21,17 @@ let ytClient: Innertube | null = null;
 
 export async function getYouTubeClient(): Promise<Innertube> {
 	if (!ytClient) {
-		const proxyUrl = env.HTTP_PROXY_URL;
-		if (!proxyUrl) {
-			throw new Error('HTTP_PROXY_URL not configured');
+		const socksProxy = env.TOR_SOCKS5_PROXY;
+
+		if (!socksProxy) {
+			throw new Error('TOR_SOCKS5_PROXY not configured');
 		}
 
 		ytClient = await Innertube.create({
-			fetch: createProxyFetch(proxyUrl)
+			fetch: createSocks5Fetch(socksProxy)
 		});
+
+		console.log(`[YouTube] SOCKS5 프록시 사용: ${socksProxy}`);
 	}
 	return ytClient;
 }

@@ -17,8 +17,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const supabase: Handle = async ({ event, resolve }) => {
-	console.log('[hooks.server.ts] SUPABASE_URL:', publicEnv.PUBLIC_SUPABASE_URL);
-	console.log('[hooks.server.ts] SUPABASE_KEY:', publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	event.locals.supabase = createServerClient(
 		publicEnv.PUBLIC_SUPABASE_URL,
 		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,

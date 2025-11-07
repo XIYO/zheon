@@ -287,18 +287,9 @@ async function runGenerateTts({ summaryId }: { summaryId: string }) {
 	const speechText = summaryRecord.summary;
 	if (!speechText) throw error(400, '아직 요약된 정보가 없습니다.');
 
-	try {
-		const { waitUntil } = await import('cloudflare:workers');
-		waitUntil(
-			generateTtsAudioInternal(summaryId, speechText).catch((err) => {
-				console.error('[TTS] Background processing failed:', err);
-			})
-		);
-	} catch {
-		generateTtsAudioInternal(summaryId, speechText).catch((err) => {
-			console.error('[TTS] Background processing failed:', err);
-		});
-	}
+	generateTtsAudioInternal(summaryId, speechText).catch((err) => {
+		console.error('[TTS] Background processing failed:', err);
+	});
 }
 
 export const generateTtsAudio = command(GenerateTtsCommandSchema, runGenerateTts);

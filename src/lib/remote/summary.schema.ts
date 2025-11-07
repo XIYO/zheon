@@ -28,7 +28,7 @@ export const SummarySchema = v.object({
 
 export const AnalyzeVideoInputSchema = v.object({
 	videoId: v.pipe(v.string(), v.minLength(1)),
-	maxComments: v.optional(v.number(), 100)
+	maxBatches: v.optional(v.number(), 5)
 });
 
 export const GetSummariesSchema = v.optional(

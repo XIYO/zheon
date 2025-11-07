@@ -70,17 +70,15 @@ export async function findTranscriptInDB(supabase, videoId) {
  * DB에 자막 저장
  */
 export async function saveTranscriptToDB(supabase, videoId, transcriptData) {
-	const { error: insertError } = await supabase
-		.from('transcripts')
-		.upsert(
-			{
-				video_id: videoId,
-				data: transcriptData
-			},
-			{
-				onConflict: 'video_id'
-			}
-		);
+	const { error: insertError } = await supabase.from('transcripts').upsert(
+		{
+			video_id: videoId,
+			data: transcriptData
+		},
+		{
+			onConflict: 'video_id'
+		}
+	);
 
 	if (insertError) {
 		throw new Error(`자막 저장 실패: ${insertError.message}`);

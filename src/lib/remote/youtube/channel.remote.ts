@@ -54,12 +54,7 @@ export const upsertChannel = command(
 			if (upsertError) console.error('Channel upsert failed:', upsertError);
 		};
 
-		try {
-			const { waitUntil } = await import('cloudflare:workers');
-			waitUntil(task());
-		} catch {
-			task();
-		}
+		task();
 	}
 );
 
@@ -89,11 +84,6 @@ export const updateChannelStatus = command(
 			if (updateError) console.error('Status update failed:', updateError);
 		};
 
-		try {
-			const { waitUntil } = await import('cloudflare:workers');
-			waitUntil(task());
-		} catch {
-			task();
-		}
+		task();
 	}
 );

@@ -1,7 +1,6 @@
 <script>
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	
 
 	function getProviderName(user) {
 		const provider = user?.app_metadata?.provider;

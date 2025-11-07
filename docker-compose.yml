@@ -1,0 +1,30 @@
+name: zheon
+
+services:
+  tor-proxy:
+    image: xiyo/tor-proxy:latest
+    container_name: zheon-tor-proxy
+    ports:
+      - '9050:9050'
+      - '8118:8118'
+    environment:
+      PROXY_PORT: 8118
+      TOR_SOCKS_HOST: 127.0.0.1
+      TOR_SOCKS_PORT: 9050
+      READ_TIMEOUT: 30s
+      WRITE_TIMEOUT: 30s
+      CLIENT_TIMEOUT: 60s
+      MAX_HEADER_BYTES: 1048576
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'nc', '-z', 'localhost', '8118']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - zheon-network
+
+networks:
+  zheon-network:
+    driver: bridge

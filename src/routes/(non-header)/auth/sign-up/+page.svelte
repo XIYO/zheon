@@ -1,7 +1,6 @@
 <script>
 	import { signUpEmail, signUpGoogle } from '$lib/remote/auth.remote';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
-	
 </script>
 
 <div class="h-screen w-screen flex items-center justify-center">

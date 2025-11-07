@@ -65,11 +65,9 @@
 	let channel = $state(/** @type {any} */ (null));
 
 	$effect(() => {
-		const hasPending = summaries.some(
-			(s) => s.processing_status === 'pending' || s.processing_status === 'processing'
-		);
+		const hasProcessing = summaries.some((s) => s.processing_status === 'processing');
 
-		if (hasPending && !channel) {
+		if (hasProcessing && !channel) {
 			console.log('[SummaryList] Realtime 구독 시작');
 			channel = supabase
 				.channel('summary-updates', {
@@ -89,7 +87,7 @@
 					}
 				)
 				.subscribe();
-		} else if (!hasPending && channel) {
+		} else if (!hasProcessing && channel) {
 			console.log('[SummaryList] Realtime 구독 해제');
 			channel.unsubscribe();
 			channel = null;
@@ -123,7 +121,7 @@
 					{#each summaries as summary (summary.url)}
 						<tr class="border-b border-surface-200-800 hover:opacity-80">
 							<td class="px-4 py-3">
-								<a href={resolve('/summaries/[id]', { id: summary.id })} class="flex items-center gap-3">
+								<a href={resolve('/[id]', { id: summary.id })} class="flex items-center gap-3">
 									<div
 										class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
 											? 'bg-warning-500 animate-pulse'

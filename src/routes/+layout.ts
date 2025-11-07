@@ -11,8 +11,7 @@ export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 				global: {
 					fetch
 				},
-				db: {
-									}
+				db: {}
 			})
 		: createServerClient<Database>(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 				global: {
@@ -21,8 +20,7 @@ export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 				cookies: {
 					getAll: () => data.cookies
 				},
-				db: {
-									}
+				db: {}
 			});
 
 	let user = null;

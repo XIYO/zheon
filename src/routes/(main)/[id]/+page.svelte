@@ -11,19 +11,15 @@
 	import Pause from '@lucide/svelte/icons/pause';
 	import CircleX from '@lucide/svelte/icons/circle-x';
 
-	let summary = $state(null);
+	let { params } = $props();
+
+	let summary = $derived(await getSummaryById({ id: params.id }));
 	const { summaryId } = generateTTS.fields;
 
 	let isLoadingAudio = $state(false);
 	let isPlaying = $state(false);
 	let audioElement = $state(null);
 	let currentAudioUrl = $state(null);
-
-	$effect(() => {
-		getSummaryById({ id: page.params.id }).then((data) => {
-			summary = data;
-		});
-	});
 
 	async function playAudio() {
 		if (!summary) return;
@@ -303,7 +299,7 @@
 					</div>
 
 					<div class="text-xs text-surface-500 dark:text-surface-500">
-						분석된 댓글: {summary.total_comments_analyzed || 0}개
+						최근 댓글 {summary.total_comments_analyzed || 0}개 분석
 					</div>
 				</div>
 			</section>

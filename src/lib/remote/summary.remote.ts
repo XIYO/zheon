@@ -1,247 +1,51 @@
-import { command, query, form, getRequestEvent } from '$app/server';
+import { query, form, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
-import { collectTranscript } from './youtube/transcription.remote.ts';
-import { collectComments } from './youtube/comment.remote.ts';
-import { analyzeAndSummarizeVideo } from './ai.remote.ts';
 import { SummarySchema } from './summary.schema';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
-import { AnalyzeVideoInputSchema, GetSummariesSchema } from './summary.schema.ts';
-import { getVideoInfo } from './youtube/channel_video.remote.ts';
-import { analyzeVideoBackground } from '$lib/server/analyze-video.js';
+import { GetSummariesSchema } from './summary.schema';
+import { SummaryService } from '$lib/server/services/summary.service';
 
-export const analyzeVideo = command(AnalyzeVideoInputSchema, async (input) => {
-	try {
-		const { videoId, maxComments = 100 } = v.parse(AnalyzeVideoInputSchema, input);
+export const getSummaries = query(
+	GetSummariesSchema,
+	async (params = { limit: 20, sortBy: 'newest' as const }) => {
+		const { cursor, limit = 20, sortBy = 'newest' } = params;
 		const { locals } = getRequestEvent();
-		const { supabase, adminSupabase } = locals;
+		const { supabase } = locals;
 
-		console.log(`[Summaries] 영상 분석 시작 videoId=${videoId}`);
+		const ascending = sortBy === 'oldest';
 
-		const videoInfo = await getVideoInfo({ videoId });
-		const title = videoInfo.title;
-		const thumbnailUrl = videoInfo.thumbnail_url;
-
-		const { data: existing } = await supabase
+		let queryBuilder = supabase
 			.from('summaries')
-			.select('id, analysis_status')
-			.eq('url', `https://www.youtube.com/watch?v=${videoId}`)
-			.maybeSingle();
+			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+			.order('updated_at', { ascending })
+			.limit(limit + 1);
 
-		let summaryId = existing?.id;
-
-		if (!summaryId) {
-			const { data: created, error: createError } = await adminSupabase
-				.from('summaries')
-				.insert({
-					url: `https://www.youtube.com/watch?v=${videoId}`,
-					title,
-					thumbnail_url: thumbnailUrl,
-					processing_status: 'pending',
-					analysis_status: 'pending'
-				})
-				.select('id')
-				.single();
-
-			if (createError) throw error(500, `요약 레코드 생성 실패: ${createError.message}`);
-			summaryId = created.id;
-			console.log(`[Summaries] 요약 레코드 생성 summaryId=${summaryId}, title=${title}`);
-		} else {
-			console.log(`[Summaries] 기존 요약 사용 summaryId=${summaryId}`);
-
-			await adminSupabase
-				.from('summaries')
-				.update({
-					title,
-					thumbnail_url: thumbnailUrl
-				})
-				.eq('id', summaryId);
+		if (cursor) {
+			if (ascending) queryBuilder = queryBuilder.gt('updated_at', cursor);
+			else queryBuilder = queryBuilder.lt('updated_at', cursor);
 		}
 
-		await adminSupabase
-			.from('summaries')
-			.update({
-				analysis_status: 'processing',
-				processing_status: 'processing'
-			})
-			.eq('id', summaryId);
+		const { data, error: sbError } = await queryBuilder;
 
-		console.log(`[Summaries] 1단계: 자막/댓글 병렬 수집 시작`);
-		const [transcriptResult, commentsResult] = await Promise.all([
-			collectTranscript({ videoId }),
-			collectComments({ videoId, maxComments })
-		]);
+		if (sbError) throw error(500, sbError.message);
 
-		if (!transcriptResult.success || !transcriptResult.data) {
-			throw error(400, '자막을 사용할 수 없습니다');
-		}
-
-		if (!commentsResult.success) {
-			throw error(400, '댓글을 수집할 수 없습니다');
-		}
-
-		console.log(
-			`[Summaries] 수집 완료 - 자막: ${transcriptResult.data.segments?.length || 0}개, 댓글: ${commentsResult.collected}개`
-		);
-
-		const transcript = transcriptResult.data.segments
-			.map((seg) => seg.text || '')
-			.join(' ')
-			.trim();
-
-		const { data: commentRecords, error: commentError } = await supabase
-			.from('comments')
-			.select('data')
-			.eq('video_id', videoId)
-			.order('updated_at', { ascending: false })
-			.limit(100);
-
-		if (commentError) {
-			throw error(500, `댓글 조회 실패: ${commentError.message}`);
-		}
-
-		const comments = commentRecords
-			.map((record) => {
-				const commentData = record.data;
-				return commentData?.content?.text || commentData?.text || '';
-			})
-			.filter((text) => text.length > 0);
-
-		console.log(`[Summaries] 2단계: AI 요약 + 분석 시작`);
-		const result = await analyzeAndSummarizeVideo({
-			videoId,
-			transcript,
-			comments
-		});
-
-		if (!result.success) {
-			throw error(500, 'AI 분석 실패');
-		}
-
-		const {
-			summary,
-			content_quality,
-			sentiment,
-			community,
-			age_groups,
-			insights,
-			total_comments_analyzed
-		} = result;
-
-		console.log(`[Summaries] 3단계: DB 저장 시작`);
-		const { error: updateError } = await adminSupabase
-			.from('summaries')
-			.update({
-				transcript,
-				summary,
-				processing_status: 'completed',
-
-				content_quality_score: content_quality.overall_score,
-				content_educational_value: content_quality.educational_value,
-				content_entertainment_value: content_quality.entertainment_value,
-				content_information_accuracy: content_quality.information_accuracy,
-				content_clarity: content_quality.clarity,
-				content_depth: content_quality.depth,
-				content_category: content_quality.category,
-				content_target_audience: content_quality.target_audience,
-
-				sentiment_overall_score: sentiment.overall_score,
-				sentiment_positive_ratio: sentiment.positive_ratio,
-				sentiment_neutral_ratio: sentiment.neutral_ratio,
-				sentiment_negative_ratio: sentiment.negative_ratio,
-				sentiment_intensity: sentiment.intensity,
-
-				community_quality_score: community.overall_score,
-				community_politeness: community.politeness,
-				community_rudeness: community.rudeness,
-				community_kindness: community.kindness,
-				community_toxicity: community.toxicity,
-				community_constructive: community.constructive,
-				community_self_centered: community.self_centered,
-				community_off_topic: community.off_topic,
-
-				age_group_teens: age_groups.teens,
-				age_group_20s: age_groups.twenties,
-				age_group_30s: age_groups.thirties,
-				age_group_40plus: age_groups.forty_plus,
-
-				ai_content_summary: insights.content_summary,
-				ai_audience_reaction: insights.audience_reaction,
-				ai_key_insights: insights.key_insights,
-				ai_recommendations: insights.recommendations,
-
-				total_comments_analyzed,
-				analysis_status: 'completed',
-				analyzed_at: new Date().toISOString(),
-				analysis_model: 'gemini-2.0-flash-exp',
-				updated_at: new Date().toISOString()
-			})
-			.eq('id', summaryId);
-
-		if (updateError) {
-			throw error(500, `분석 결과 저장 실패: ${updateError.message}`);
-		}
-
-		console.log(`[Summaries] 완료 summaryId=${summaryId}`);
+		const hasMore = data.length > limit;
+		const summaries = hasMore ? data.slice(0, limit) : data;
 
 		return {
-			success: true,
-			summaryId,
-			videoId,
-			summary,
-			transcript_segments: transcriptResult.data.segments.length,
-			comments_collected: commentsResult.collected,
-			comments_analyzed: total_comments_analyzed,
-			scores: {
-				content_quality: content_quality.overall_score,
-				sentiment: sentiment.overall_score,
-				community_quality: community.overall_score
-			}
+			summaries,
+			nextCursor: hasMore ? summaries[summaries.length - 1]?.updated_at : undefined
 		};
-	} catch (err) {
-		console.error('[Summaries] 분석 실패:', err);
-
-		const errorMessage = err instanceof Error ? err.message : String(err);
-		throw error(500, `영상 분석 실패: ${errorMessage}`);
 	}
-});
-
-export const getSummaries = query(GetSummariesSchema, async (params = {}) => {
-	const { cursor, limit = 20, sortBy = 'newest' } = params;
-	const { locals } = getRequestEvent();
-	const { supabase } = locals;
-
-	const ascending = sortBy === 'oldest';
-
-	let queryBuilder = supabase
-		.from('summaries')
-		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
-		.order('updated_at', { ascending })
-		.limit(limit + 1);
-
-	if (cursor) {
-		if (ascending) queryBuilder = queryBuilder.gt('updated_at', cursor);
-		else queryBuilder = queryBuilder.lt('updated_at', cursor);
-	}
-
-	const { data, error: sbError } = await queryBuilder;
-
-	if (sbError) throw error(500, sbError.message);
-
-	const hasMore = data.length > limit;
-	const summaries = hasMore ? data.slice(0, limit) : data;
-
-	return {
-		summaries,
-		nextCursor: hasMore ? summaries[summaries.length - 1]?.updated_at : undefined
-	};
-});
+);
 
 const GetSummaryByIdSchema = v.object({
 	id: v.string()
 });
 
 export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
+	console.log('[remote/getSummaryById] called', { id });
 	const { locals } = getRequestEvent();
 	const { supabase } = locals;
 
@@ -251,8 +55,20 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 		.eq('id', id)
 		.single();
 
-	if (sbError) throw error(404, 'Summary not found');
-	if (!data) throw error(404, 'Summary not found');
+	if (sbError) {
+		console.error('[remote/getSummaryById] supabase error', { id, message: sbError.message });
+		throw error(404, 'Summary not found');
+	}
+	if (!data) {
+		console.warn('[remote/getSummaryById] no data returned', { id });
+		throw error(404, 'Summary not found');
+	}
+
+	console.log('[remote/getSummaryById] success', {
+		id: data.id,
+		analysis_status: data.analysis_status,
+		summary_audio_status: data.summary_audio_status
+	});
 
 	return data;
 });
@@ -266,76 +82,83 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 
 	const { data: existing, error: selectError } = await supabase
 		.from('summaries')
-		.select('analysis_status')
+		.select('id, analysis_status')
 		.eq('url', normalizedUrl)
 		.maybeSingle();
 
 	if (selectError) throw error(500, selectError);
 
-	let summaryData;
+	let summaryId;
 
 	if (existing) {
-		const { data: updated, error: updateError } = await supabase
-			.from('summaries')
-			.update({ updated_at: new Date().toISOString() })
-			.eq('id', existing.id)
-			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
-			.single();
-
-		if (updateError) throw error(500, updateError);
-		summaryData = updated;
+		summaryId = existing.id;
+		console.log(`[createSummary] 기존 레코드, status=${existing.analysis_status}`);
 
 		if (existing.analysis_status === 'completed') {
-			return summaryData;
+			await adminSupabase
+				.from('summaries')
+				.update({ updated_at: new Date().toISOString() })
+				.eq('id', summaryId);
+
+			const { data: current } = await supabase
+				.from('summaries')
+				.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+				.eq('id', summaryId)
+				.single();
+
+			return current;
 		}
+
+		await adminSupabase
+			.from('summaries')
+			.update({
+				processing_status: 'processing',
+				analysis_status: 'processing',
+				updated_at: new Date().toISOString()
+			})
+			.eq('id', summaryId);
 	} else {
 		const { data: newData, error: insertError } = await supabase
 			.from('summaries')
-			.insert({ id, url: normalizedUrl, processing_status: 'processing' })
-			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+			.insert({
+				id,
+				url: normalizedUrl,
+				processing_status: 'processing',
+				analysis_status: 'processing'
+			})
+			.select('id')
 			.single();
 
 		if (insertError) throw error(500, insertError);
-		summaryData = newData;
+		summaryId = newData.id;
 	}
 
-	await adminSupabase
+	const { data: summaryData } = await supabase
 		.from('summaries')
-		.update({ processing_status: 'processing', analysis_status: 'processing' })
-		.eq('id', summaryData.id);
+		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+		.eq('id', summaryId)
+		.single();
 
-	summaryData.processing_status = 'processing';
+	if (!videoId) throw error(400, 'Invalid video ID');
 
-	try {
-		const { waitUntil } = await import('cloudflare:workers');
-		waitUntil(
-			analyzeVideoBackground(
-				videoId,
-				100,
-				supabase,
-				adminSupabase,
-				collectTranscript,
-				collectComments,
-				analyzeAndSummarizeVideo,
-				getVideoInfo
-			).catch((err) => {
-				console.error('[createSummary] 백그라운드 분석 실패:', err);
-			})
-		);
-	} catch {
-		analyzeVideoBackground(
-			videoId,
-			100,
-			supabase,
-			adminSupabase,
-			collectTranscript,
-			collectComments,
-			analyzeAndSummarizeVideo,
-			getVideoInfo
-		).catch((err) => {
+	const summaryService = new SummaryService(adminSupabase);
+	summaryService
+		.analyzeSummary(videoId, {
+			maxBatches: 5,
+			force: true,
+			geminiApiKey: process.env.GEMINI_API_KEY || ''
+		})
+		.catch(async (err) => {
 			console.error('[createSummary] 백그라운드 분석 실패:', err);
+			await adminSupabase
+				.from('summaries')
+				.update({
+					analysis_status: 'failed',
+					processing_status: 'failed',
+					updated_at: new Date().toISOString()
+				})
+				.eq('id', summaryId);
 		});
-	}
 
 	return summaryData;
 });

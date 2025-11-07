@@ -11,7 +11,7 @@ import { getYouTubeThumbnail } from '$lib/utils/youtube.js';
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
  */
-const chunk = <T,>(items: T[], size: number): T[][] => {
+const chunk = <T>(items: T[], size: number): T[][] => {
 	const result: T[][] = [];
 	for (let i = 0; i < items.length; i += size) {
 		result.push(items.slice(i, i + size));
@@ -213,8 +213,7 @@ async function performChannelVideosSync(channelId: string) {
 			.update({ video_sync_status: 'failed' })
 			.eq('channel_id', channelId);
 
-		const errorMessage =
-			err instanceof Error ? err.message : String(err);
+		const errorMessage = err instanceof Error ? err.message : String(err);
 		const enhancedError = new Error(`[채널: ${channelId}] ${errorMessage}`);
 		throw enhancedError;
 	}
@@ -227,10 +226,7 @@ export const syncChannelVideos = form(
 	v.object({
 		channelId: v.string()
 	}),
-	async (
-		{ channelId }: { channelId: string },
-		invalid: (key: string, message: string) => void
-	) => {
+	async ({ channelId }: { channelId: string }, invalid: (key: string, message: string) => void) => {
 		if (!channelId) {
 			invalid('channelId', '채널 ID가 필요합니다');
 			return;
@@ -261,14 +257,11 @@ export const syncChannelVideos = form(
 /**
  * Command: 채널 비디오 목록 동기화
  */
-export const syncChannelVideosCommand = command(
-	v.string(),
-	async (channelId: string) => {
-		if (!channelId) throw error(400, 'channelId is required');
+export const syncChannelVideosCommand = command(v.string(), async (channelId: string) => {
+	if (!channelId) throw error(400, 'channelId is required');
 
-		return await performChannelVideosSync(channelId);
-	}
-);
+	return await performChannelVideosSync(channelId);
+});
 
 /**
  * Command: 영상 정보 가져오기 및 저장

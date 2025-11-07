@@ -29,9 +29,7 @@
 			);
 
 			if (isDuplicate) {
-				console.log('[SummaryForm] 중복 URL 감지:', newUrl);
-				form.reset();
-				return;
+				console.log('[SummaryForm] 중복 URL 감지, 서버 제출하여 updated_at 갱신:', newUrl);
 			}
 
 			// 낙관적 업데이트
@@ -55,14 +53,9 @@
 			// form에 ID 추가
 			id.value(newId);
 
-			// 서버 제출 (form은 반환값 없음)
-			await submit();
-			console.log('[SummaryForm] 서버 제출 완료');
-
-			// 서버에서 데이터 다시 가져오기
-			const updated = await getSummaries({});
-			getSummaries({}).set(updated);
-			console.log('[SummaryForm] 서버 데이터 리프레시 완료');
+			// 서버 제출 및 쿼리 리프레시
+			await submit().updates(getSummaries({}));
+			console.log('[SummaryForm] 서버 제출 및 리프레시 완료');
 
 			form.reset();
 			console.log('[SummaryForm] 제출 완료');

@@ -7,7 +7,7 @@ import { getAllSubscriptions, getChannels } from '$lib/server/youtubeApi.js';
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
  */
-const chunk = <T,>(items: T[], size: number): T[][] => {
+const chunk = <T>(items: T[], size: number): T[][] => {
 	const result: T[][] = [];
 	for (let i = 0; i < items.length; i += size) {
 		result.push(items.slice(i, i + size));
@@ -26,13 +26,7 @@ export const getSubscriptions = query(
 			sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest')
 		})
 	),
-	async (
-		params?: {
-			cursor?: string;
-			limit?: number;
-			sortBy?: 'newest' | 'oldest';
-		}
-	) => {
+	async (params?: { cursor?: string; limit?: number; sortBy?: 'newest' | 'oldest' }) => {
 		const { cursor, limit = 20, sortBy = 'newest' } = params || {};
 		const { locals } = getRequestEvent();
 		const { supabase, safeGetSession } = locals;
@@ -337,10 +331,7 @@ async function performSubscriptionsSync() {
  */
 export const syncSubscriptions = form(
 	v.object({}),
-	async (
-		_data: Record<string, unknown>,
-		invalid: (message: string) => void
-	) => {
+	async (_data: Record<string, unknown>, invalid: (message: string) => void) => {
 		const { locals } = getRequestEvent();
 		const { supabase, safeGetSession } = locals;
 		const { session, user } = await safeGetSession();
@@ -369,8 +360,6 @@ export const syncSubscriptions = form(
 /**
  * Command: 구독 동기화
  */
-export const syncSubscriptionsCommand = command(
-	async () => {
-		return await performSubscriptionsSync();
-	}
-);
+export const syncSubscriptionsCommand = command(async () => {
+	return await performSubscriptionsSync();
+});

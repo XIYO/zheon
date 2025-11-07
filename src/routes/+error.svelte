@@ -1,7 +1,6 @@
 <script>
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-
 </script>
 
 <div class="min-h-screen preset-tonal-surface flex items-center justify-center p-6">
