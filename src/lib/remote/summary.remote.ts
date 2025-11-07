@@ -1,6 +1,7 @@
 import { query, form, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
+import { env } from '$env/dynamic/private';
 import { SummarySchema } from './summary.schema';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
 import { GetSummariesSchema } from './summary.schema';
@@ -141,12 +142,12 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 
 	if (!videoId) throw error(400, 'Invalid video ID');
 
-	const summaryService = new SummaryService(adminSupabase);
+	const summaryService = new SummaryService(adminSupabase, locals.youtube);
 	summaryService
 		.analyzeSummary(videoId, {
 			maxBatches: 5,
 			force: true,
-			geminiApiKey: process.env.GEMINI_API_KEY || ''
+			geminiApiKey: env.GEMINI_API_KEY
 		})
 		.catch(async (err) => {
 			console.error('[createSummary] 백그라운드 분석 실패:', err);

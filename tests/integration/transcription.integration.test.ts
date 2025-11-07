@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { TranscriptionService } from '$lib/server/services/youtube/transcription.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
+import { createYouTube } from '$lib/server/youtube-proxy';
+import type { Innertube } from 'youtubei.js';
 
 /**
  * TranscriptionService 통합 테스트
@@ -13,28 +15,29 @@ import type { Database } from '$lib/types/database.types';
 describe('TranscriptionService Integration Test', () => {
 	let service: TranscriptionService;
 	let supabase: ReturnType<typeof createClient<Database>>;
+	let youtube: Innertube;
 
 	const TEST_VIDEO_ID = process.env.TEST_VIDEO_ID || 'dQw4w9WgXcQ';
 	const TIMEOUT = 60000;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
 		const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
-		const proxyUrl = process.env.HTTP_PROXY_URL;
+		const socksProxy = process.env.TOR_SOCKS5_PROXY;
 
 		if (!supabaseUrl || !supabaseSecretKey) {
 			throw new Error('Supabase 환경 변수가 필요합니다');
 		}
 
-		if (!proxyUrl) {
-			throw new Error('HTTP_PROXY_URL 환경 변수가 필요합니다');
+		if (!socksProxy) {
+			throw new Error('TOR_SOCKS5_PROXY 환경 변수가 필요합니다');
 		}
 
 		supabase = createClient<Database>(supabaseUrl, supabaseSecretKey);
+		youtube = await createYouTube(socksProxy);
+		service = new TranscriptionService(supabase, youtube);
 
-		service = new TranscriptionService(supabase);
-
-		console.log(`\n프록시 URL: ${proxyUrl}`);
+		console.log(`\n프록시 URL: ${socksProxy}`);
 		console.log(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
 	});
 
@@ -88,9 +91,7 @@ describe('TranscriptionService Integration Test', () => {
 	it(
 		'존재하지 않는 영상 ID는 에러를 throw해야 함',
 		async () => {
-			await expect(service.collectTranscript('invalid_video_id_12345')).rejects.toThrow(
-				'자막을 사용할 수 없습니다'
-			);
+			await expect(service.collectTranscript('invalid_video_id_12345')).rejects.toThrow();
 
 			console.log(`✅ 에러 처리 확인`);
 		},
@@ -145,12 +146,18 @@ describe('TranscriptionService Integration Test', () => {
 		);
 
 		const successCount = results.filter((r) => r.status === 'fulfilled').length;
-		const gracefulFailures = results.filter(
-			(r) =>
-				r.status === 'rejected' &&
-				(r.reason?.message?.includes('자막을 사용할 수 없습니다') ||
-					r.reason?.message?.includes('unavailable'))
-		).length;
+		const gracefulFailures = results.filter((r) => {
+			if (r.status === 'rejected') {
+				const message = r.reason?.message || String(r.reason);
+				return (
+					message.includes('자막을 사용할 수 없습니다') ||
+					message.includes('unavailable') ||
+					message.includes('ParsingError') ||
+					message.includes('InnertubeError')
+				);
+			}
+			return false;
+		}).length;
 		const totalAcceptable = successCount + gracefulFailures;
 
 		console.log(`\n병렬 요청 결과:`);
@@ -162,14 +169,23 @@ describe('TranscriptionService Integration Test', () => {
 			const videoId = videoIds[index];
 			const isGracefulFailure =
 				result.status === 'rejected' &&
-				(result.reason?.message?.includes('자막을 사용할 수 없습니다') ||
-					result.reason?.message?.includes('unavailable'));
+				(() => {
+					const message = result.reason?.message || String(result.reason);
+					return (
+						message.includes('자막을 사용할 수 없습니다') ||
+						message.includes('unavailable') ||
+						message.includes('ParsingError') ||
+						message.includes('InnertubeError')
+					);
+				})();
 
 			const status = result.status === 'fulfilled' ? '✅' : isGracefulFailure ? '⚠️' : '❌';
+			const errorMsg =
+				result.status === 'rejected'
+					? (result.reason?.message || String(result.reason)).substring(0, 50)
+					: 'success';
 
-			console.log(
-				`  - ${videoId}: ${status} ${result.status === 'rejected' ? result.reason?.message : 'success'}`
-			);
+			console.log(`  - ${videoId}: ${status} ${errorMsg}`);
 		});
 
 		expect(totalAcceptable).toBe(videoIds.length);

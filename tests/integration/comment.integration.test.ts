@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { CommentService } from '$lib/server/services/youtube/comment.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
+import { createYouTube } from '$lib/server/youtube-proxy';
+import type { Innertube } from 'youtubei.js';
 
 /**
  * CommentService 통합 테스트
@@ -13,28 +15,29 @@ import type { Database } from '$lib/types/database.types';
 describe('CommentService Integration Test', () => {
 	let service: CommentService;
 	let supabase: ReturnType<typeof createClient<Database>>;
+	let youtube: Innertube;
 
 	const TEST_VIDEO_ID = process.env.TEST_VIDEO_ID || 'dQw4w9WgXcQ';
 	const TIMEOUT = 60000;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
 		const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
-		const proxyUrl = process.env.HTTP_PROXY_URL;
+		const socksProxy = process.env.TOR_SOCKS5_PROXY;
 
 		if (!supabaseUrl || !supabaseSecretKey) {
 			throw new Error('Supabase 환경 변수가 필요합니다');
 		}
 
-		if (!proxyUrl) {
-			throw new Error('HTTP_PROXY_URL 환경 변수가 필요합니다');
+		if (!socksProxy) {
+			throw new Error('TOR_SOCKS5_PROXY 환경 변수가 필요합니다');
 		}
 
 		supabase = createClient<Database>(supabaseUrl, supabaseSecretKey);
+		youtube = await createYouTube(socksProxy);
+		service = new CommentService(supabase, youtube);
 
-		service = new CommentService(supabase);
-
-		console.log(`\n프록시 URL: ${proxyUrl}`);
+		console.log(`\n프록시 URL: ${socksProxy}`);
 		console.log(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
 	});
 

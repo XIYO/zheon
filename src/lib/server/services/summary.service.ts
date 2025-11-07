@@ -9,7 +9,7 @@ import { jsonSchema } from 'ai';
 import * as v from 'valibot';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { env } from '$env/dynamic/private';
-import { getYouTubeClient } from '$lib/server/youtube-proxy';
+import type { Innertube } from 'youtubei.js';
 
 const VideoAnalysisSchema = {
 	type: 'object' as const,
@@ -149,9 +149,12 @@ export class SummaryService {
 	private transcriptionService: TranscriptionService;
 	private commentService: CommentService;
 
-	constructor(private supabase: SupabaseClient<Database>) {
-		this.transcriptionService = new TranscriptionService(supabase);
-		this.commentService = new CommentService(supabase);
+	constructor(
+		private supabase: SupabaseClient<Database>,
+		private youtube: Innertube
+	) {
+		this.transcriptionService = new TranscriptionService(supabase, youtube);
+		this.commentService = new CommentService(supabase, youtube);
 	}
 
 	async analyzeSummary(videoId: string, options: AnalyzeSummaryOptions): Promise<void> {
@@ -165,8 +168,7 @@ export class SummaryService {
 
 		const url = `https://www.youtube.com/watch?v=${videoId}`;
 
-		const yt = await getYouTubeClient();
-		const video = await yt.getBasicInfo(videoId);
+		const video = await this.youtube.getBasicInfo(videoId);
 		const title = video.basic_info.title || '';
 		const thumbnailUrl =
 			video.basic_info.thumbnail?.at(0)?.url || `https://i.ytimg.com/vi/${videoId}/default.jpg`;

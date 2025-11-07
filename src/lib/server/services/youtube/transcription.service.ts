@@ -1,8 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
-import { getYouTubeClient } from '$lib/server/youtube-proxy';
 import { error } from '@sveltejs/kit';
-import { YTNodes } from 'youtubei.js';
+import { YTNodes, type Innertube } from 'youtubei.js';
 
 export interface TranscriptSegmentData {
 	start_ms: number;
@@ -21,7 +20,10 @@ export interface CollectTranscriptOptions {
 }
 
 export class TranscriptionService {
-	constructor(private supabase: SupabaseClient<Database>) {}
+	constructor(
+		private supabase: SupabaseClient<Database>,
+		private youtube: Innertube
+	) {}
 
 	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}): Promise<void> {
 		const { force = false } = options;
@@ -83,8 +85,7 @@ export class TranscriptionService {
 
 	private async fetchFromYouTube(videoId: string): Promise<TranscriptData | null> {
 		try {
-			const yt = await getYouTubeClient();
-			const info = await yt.getInfo(videoId);
+			const info = await this.youtube.getInfo(videoId);
 			const transcript = await info.getTranscript();
 
 			if (!transcript?.transcript?.content?.body?.initial_segments) {

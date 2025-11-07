@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '$lib/types/database.types';
-import { getYouTubeClient } from '$lib/server/youtube-proxy';
 import { error } from '@sveltejs/kit';
+import type { Innertube } from 'youtubei.js';
 
 export interface CollectCommentsOptions {
 	maxBatches?: number;
@@ -9,7 +9,10 @@ export interface CollectCommentsOptions {
 }
 
 export class CommentService {
-	constructor(private _supabase: SupabaseClient<Database>) {}
+	constructor(
+		private _supabase: SupabaseClient<Database>,
+		private youtube: Innertube
+	) {}
 
 	async collectComments(
 		videoId: string,
@@ -43,8 +46,7 @@ export class CommentService {
 			}
 		}
 
-		const yt = await getYouTubeClient();
-		let commentsData = await yt.getComments(videoId, 'NEWEST_FIRST');
+		let commentsData = await this.youtube.getComments(videoId, 'NEWEST_FIRST');
 
 		console.log(`[comments] 1단계: continuation 토큰 수집 중...`);
 		const batches = [commentsData];

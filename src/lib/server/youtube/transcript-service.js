@@ -3,19 +3,19 @@
  * Remote Function과 분리하여 테스트 가능하게 설계
  */
 
-import { getYouTubeClient } from '$lib/server/youtube-proxy';
-
 /**
- * YouTube 자막 추출 (순수 함수)
+ * YouTube 자막 추출
  * @param {string} videoId - YouTube 영상 ID
- * @param {object} options - YouTube 클라이언트 (테스트용 주입 가능)
+ * @param {import('youtubei.js').Innertube} youtube - YouTube 클라이언트
  */
-export async function extractTranscript(videoId, options = {}) {
-	const yt = options.youtubeClient || (await getYouTubeClient());
+export async function extractTranscript(videoId, youtube) {
+	if (!youtube) {
+		throw new Error('YouTube client is required');
+	}
 
 	console.log(`[transcript] YouTube API 호출 시작 videoId=${videoId}`);
 
-	const info = await yt.getInfo(videoId);
+	const info = await youtube.getInfo(videoId);
 	const transcript = await info.getTranscript();
 
 	if (!transcript || !transcript.transcript?.content?.body?.initial_segments) {

@@ -2,18 +2,25 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { SummaryService } from '$lib/server/services/summary.service';
+import { createYouTube } from '$lib/server/youtube-proxy';
+import type { Innertube } from 'youtubei.js';
 
 describe.sequential('SummaryService Integration Test', () => {
 	let adminSupabase: ReturnType<typeof createClient<Database>>;
 	let summaryService: SummaryService;
+	let youtube: Innertube;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		if (!process.env.PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) {
 			throw new Error('환경변수가 로드되지 않았습니다. .env.test 파일을 확인하세요.');
 		}
 
 		if (!process.env.GEMINI_API_KEY) {
 			throw new Error('GEMINI_API_KEY 환경변수가 필요합니다.');
+		}
+
+		if (!process.env.TOR_SOCKS5_PROXY) {
+			throw new Error('TOR_SOCKS5_PROXY 환경변수가 필요합니다.');
 		}
 
 		console.log('\n환경:', process.env.PUBLIC_SUPABASE_URL);
@@ -23,7 +30,9 @@ describe.sequential('SummaryService Integration Test', () => {
 			process.env.PUBLIC_SUPABASE_URL,
 			process.env.SUPABASE_SECRET_KEY
 		);
-		summaryService = new SummaryService(adminSupabase);
+
+		youtube = await createYouTube(process.env.TOR_SOCKS5_PROXY);
+		summaryService = new SummaryService(adminSupabase, youtube);
 	});
 
 	it('전체 분석 파이프라인이 정상 작동해야 함', async () => {

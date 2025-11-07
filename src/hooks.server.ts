@@ -6,6 +6,7 @@ import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { createClient } from '@supabase/supabase-js';
 import type { Handle } from '@sveltejs/kit';
+import { createYouTube } from '$lib/server/youtube-proxy';
 
 process.on('unhandledRejection', (reason, promise) => {
 	console.error('=== UNHANDLED REJECTION ===');
@@ -117,4 +118,14 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(supabase, adminSupabase, authGuard);
+const youtube: Handle = async ({ event, resolve }) => {
+	try {
+		event.locals.youtube = await createYouTube(env.TOR_SOCKS5_PROXY);
+	} catch (error) {
+		console.error('[youtube] Error creating YouTube client:', error);
+	}
+
+	return resolve(event);
+};
+
+export const handle = sequence(supabase, adminSupabase, authGuard, youtube);
