@@ -1,5 +1,5 @@
 <!-- Google Icon Component -->
-<script>
+<script lang="ts">
 	/** @type {{ size?: number, class?: string }} */
 	const { size = 20, class: className = '' } = $props();
 </script>

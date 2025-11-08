@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import SummaryForm from '$lib/components/SummaryForm.svelte';
 	import SummaryList from '$lib/components/SummaryList.svelte';
 </script>

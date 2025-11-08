@@ -1,5 +1,5 @@
 <!-- 🙈 Sign-out page with clean monochromatic design -->
-<script>
+<script lang="ts">
 	import SignOutForm from '$lib/components/SignOutForm.svelte';
 </script>
 

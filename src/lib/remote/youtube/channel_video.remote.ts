@@ -225,7 +225,10 @@ export const syncChannelVideos = form(
 	v.object({
 		channelId: v.string()
 	}),
-	async ({ channelId }: { channelId: string }, invalid: (key: string, message: string) => void) => {
+	async (
+		{ channelId }: { channelId: string },
+		invalid: (_key: string, _message: string) => void
+	) => {
 		if (!channelId) {
 			invalid('channelId', '채널 ID가 필요합니다');
 			return;

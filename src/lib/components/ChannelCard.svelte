@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { Avatar } from '@skeletonlabs/skeleton-svelte';
 	import { resolve } from '$app/paths';
 

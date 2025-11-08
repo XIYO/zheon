@@ -331,7 +331,7 @@ async function performSubscriptionsSync() {
  */
 export const syncSubscriptions = form(
 	v.object({}),
-	async (_data: Record<string, unknown>, invalid: (message: string) => void) => {
+	async (_data: Record<string, unknown>, invalid: (_message: string) => void) => {
 		const { locals } = getRequestEvent();
 		const { supabase, safeGetSession } = locals;
 		const { session, user } = await safeGetSession();

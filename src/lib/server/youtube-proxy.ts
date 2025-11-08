@@ -15,7 +15,7 @@ export async function createYouTube(socksProxy?: string): Promise<Innertube> {
 		fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
 			return fetch(input, {
 				...init,
-				// @ts-ignore Node.js fetch agent support
+				// @ts-expect-error Node.js fetch agent support
 				agent: proxyAgent
 			});
 		}

@@ -11,6 +11,19 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 import { env } from '$env/dynamic/private';
 import type { Innertube } from 'youtubei.js';
 
+interface TranscriptData {
+	segments: Array<{
+		text?: string;
+		start_ms?: string;
+		end_ms?: string;
+	}>;
+}
+
+interface CommentData {
+	content?: { text?: string };
+	text?: string;
+}
+
 const VideoAnalysisSchema = {
 	type: 'object' as const,
 	properties: {
@@ -212,7 +225,7 @@ export class SummaryService {
 				throw error(500, `자막 조회 실패: ${transcriptError.message}`);
 			}
 
-			const segments = (transcriptData.data as any)?.segments || [];
+			const segments = (transcriptData.data as TranscriptData)?.segments || [];
 			if (segments.length === 0) {
 				throw error(400, '자막 세그먼트가 없습니다');
 			}
@@ -230,7 +243,7 @@ export class SummaryService {
 
 			const comments = commentRecords
 				.map((record) => {
-					const commentData = record.data as any;
+					const commentData = record.data as CommentData;
 					return commentData?.content?.text || commentData?.text || '';
 				})
 				.filter((text) => text.length > 0);
@@ -238,7 +251,7 @@ export class SummaryService {
 			console.log(`[summary] 수집 완료 - 자막: ${segments.length}개, 댓글: ${comments.length}개`);
 
 			const transcript = segments
-				.map((seg: any) => seg.text || '')
+				.map((seg) => seg.text || '')
 				.join(' ')
 				.trim();
 
@@ -353,7 +366,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 			try {
 				const response = await fetch(url, {
 					...options,
-					// @ts-ignore Node.js fetch agent support
+					// @ts-expect-error Node.js fetch agent support
 					agent: proxyAgent
 				});
 				console.timeEnd(label);
@@ -385,7 +398,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 			prompt
 		});
 
-		const rawAnalysis = result.object as any;
+		const rawAnalysis = result.object as Record<string, unknown>;
 		const validationResult = v.safeParse(VideoAnalysisValidationSchema, rawAnalysis);
 
 		let analysis;
@@ -439,7 +452,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 		url: string,
 		transcript: string,
 		totalComments: number,
-		analysis: any
+		analysis: v.InferOutput<typeof VideoAnalysisValidationSchema>
 	): Promise<void> {
 		const { error: upsertError } = await this.supabase.from('summaries').upsert(
 			{

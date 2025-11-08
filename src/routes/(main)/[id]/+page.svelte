@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
 	import { getSummaryById } from '$lib/remote/summary.remote';
 	import { generateTTS } from '$lib/remote/audio.remote';
@@ -11,6 +11,11 @@
 	import Pause from '@lucide/svelte/icons/pause';
 	import CircleX from '@lucide/svelte/icons/circle-x';
 
+	$inspect(page.params.id);
+
+	$effect(() => {
+		$inspect(page.params);
+	})
 	let summary = $derived(await getSummaryById({ id: page.params.id }));
 	const { summaryId } = generateTTS.fields;
 

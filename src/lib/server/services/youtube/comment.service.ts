@@ -11,7 +11,7 @@ export interface CollectCommentsOptions {
 export class CommentService {
 	constructor(
 		private _supabase: SupabaseClient<Database>,
-		private youtube: Innertube
+		private _youtube: Innertube
 	) {}
 
 	async collectComments(
@@ -46,7 +46,7 @@ export class CommentService {
 			}
 		}
 
-		let commentsData = await this.youtube.getComments(videoId, 'NEWEST_FIRST');
+		let commentsData = await this._youtube.getComments(videoId, 'NEWEST_FIRST');
 
 		console.log(`[comments] 1단계: continuation 토큰 수집 중...`);
 		const batches = [commentsData];

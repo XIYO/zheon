@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { signInEmail, signInGoogle } from '$lib/remote/auth.remote';
 	import GoogleIcon from '$lib/icons/GoogleIcon.svelte';
 </script>

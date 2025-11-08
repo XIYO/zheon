@@ -11,14 +11,5 @@ export default defineConfig({
 	preview: {
 		port: 17777,
 		strictPort: true
-	},
-	build: {
-		rollupOptions: {
-			external: ['cloudflare:workers']
-		}
-	},
-	ssr: {
-		external: ['cloudflare:workers'],
-		noExternal: []
 	}
 });

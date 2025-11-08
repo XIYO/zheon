@@ -1,5 +1,5 @@
 <!-- 요약 결과 리스트 컴포넌트 -->
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -121,7 +121,7 @@
 					{#each summaries as summary (summary.url)}
 						<tr class="border-b border-surface-200-800 hover:opacity-80">
 							<td class="px-4 py-3">
-								<a href={resolve('/[id]', { id: summary.id })} class="flex items-center gap-3">
+								<a href={resolve('/(main)/[id]', { id: summary.id })} class="flex items-center gap-3">
 									<div
 										class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
 											? 'bg-warning-500 animate-pulse'

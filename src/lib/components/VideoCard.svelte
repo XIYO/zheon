@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	/**
 	 * @typedef {Object} Video
 	 * @property {string} video_id

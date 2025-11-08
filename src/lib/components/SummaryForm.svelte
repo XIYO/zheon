@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { createSummary, getSummaries } from '$lib/remote/summary.remote.ts';
 	import { SummarySchema } from '$lib/remote/summary.schema';
 

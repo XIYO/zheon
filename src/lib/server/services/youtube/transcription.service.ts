@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { error } from '@sveltejs/kit';
 import { YTNodes, type Innertube } from 'youtubei.js';
+import type { Json } from '$lib/types/database.types';
 
 export interface TranscriptSegmentData {
 	start_ms: number;
@@ -21,8 +22,8 @@ export interface CollectTranscriptOptions {
 
 export class TranscriptionService {
 	constructor(
-		private supabase: SupabaseClient<Database>,
-		private youtube: Innertube
+		private _supabase: SupabaseClient<Database>,
+		private _youtube: Innertube
 	) {}
 
 	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}): Promise<void> {
@@ -63,7 +64,7 @@ export class TranscriptionService {
 			throw error(500, `자막 조회 실패: ${fetchError.message}`);
 		}
 
-		const segments = (transcript?.data as any)?.segments || [];
+		const segments = (transcript?.data as TranscriptData)?.segments || [];
 		console.log(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
 
 		return transcript;
@@ -113,7 +114,7 @@ export class TranscriptionService {
 		const { error: insertError } = await this.supabase.from('transcripts').upsert(
 			{
 				video_id: videoId,
-				data: transcriptData as any
+				data: transcriptData as unknown as Json
 			},
 			{
 				onConflict: 'video_id'

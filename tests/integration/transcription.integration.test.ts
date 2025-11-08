@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { TranscriptionService } from '$lib/server/services/youtube/transcription.service';
+import {
+	TranscriptionService,
+	type TranscriptData
+} from '$lib/server/services/youtube/transcription.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { createYouTube } from '$lib/server/youtube-proxy';
@@ -51,7 +54,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(transcript).toBeDefined();
 			expect(transcript?.video_id).toBe(TEST_VIDEO_ID);
 
-			const segments = (transcript?.data as any)?.segments || [];
+			const segments = (transcript?.data as TranscriptData)?.segments || [];
 			expect(Array.isArray(segments)).toBe(true);
 			expect(segments.length).toBeGreaterThan(0);
 
@@ -62,7 +65,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(typeof firstSegment.text).toBe('string');
 
 			console.log(`✅ 자막 수집 성공:`);
-			console.log(`  - 제목: ${(transcript?.data as any)?.title}`);
+			console.log(`  - 제목: ${(transcript?.data as TranscriptData)?.title}`);
 			console.log(`  - 세그먼트: ${segments.length}개`);
 		},
 		TIMEOUT
@@ -79,7 +82,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(transcript?.video_id).toBe(TEST_VIDEO_ID);
 			expect(transcript?.data).toBeDefined();
 
-			const segments = (transcript?.data as any)?.segments || [];
+			const segments = (transcript?.data as TranscriptData)?.segments || [];
 			expect(segments.length).toBeGreaterThan(0);
 
 			console.log(`✅ DB 조회 성공:`);
