@@ -12,6 +12,13 @@ const config = {
 		experimental: {
 			async: true
 		}
+	},
+	vitePlugin: {
+		inspector: {
+			toggleKeyCombo: 'meta-shift',
+			showToggleButton: 'active',
+			toggleButtonPos: 'bottom-right'
+		}
 	}
 };
 

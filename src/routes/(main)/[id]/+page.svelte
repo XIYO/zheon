@@ -11,9 +11,7 @@
 	import Pause from '@lucide/svelte/icons/pause';
 	import CircleX from '@lucide/svelte/icons/circle-x';
 
-	let { params } = $props();
-
-	let summary = $derived(await getSummaryById({ id: params.id }));
+	let summary = $derived(await getSummaryById({ id: page.params.id }));
 	const { summaryId } = generateTTS.fields;
 
 	let isLoadingAudio = $state(false);
@@ -73,12 +71,10 @@
 		}
 	});
 
-	$effect.pre(() => {
-		if (!summary) return;
-
+	$effect(() => {
 		const { supabase } = page.data;
 
-		const needsUpdate = ['pending', 'processing'].includes(summary.summary_audio_status);
+		const needsUpdate = ['pending', 'processing'].includes(summary?.summary_audio_status);
 
 		if (!needsUpdate) return;
 
