@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -43,6 +38,7 @@ export type Database = {
         Row: {
           channel_data: Json | null
           channel_id: string
+          created_at: string
           custom_url: string | null
           description: string | null
           published_at: string | null
@@ -62,6 +58,7 @@ export type Database = {
         Insert: {
           channel_data?: Json | null
           channel_id: string
+          created_at?: string
           custom_url?: string | null
           description?: string | null
           published_at?: string | null
@@ -81,6 +78,7 @@ export type Database = {
         Update: {
           channel_data?: Json | null
           channel_id?: string
+          created_at?: string
           custom_url?: string | null
           description?: string | null
           published_at?: string | null
@@ -102,6 +100,7 @@ export type Database = {
       comments: {
         Row: {
           comment_id: string
+          created_at: string
           data: Json
           id: string
           sentiment: string | null
@@ -112,6 +111,7 @@ export type Database = {
         }
         Insert: {
           comment_id: string
+          created_at?: string
           data: Json
           id?: string
           sentiment?: string | null
@@ -122,6 +122,7 @@ export type Database = {
         }
         Update: {
           comment_id?: string
+          created_at?: string
           data?: Json
           id?: string
           sentiment?: string | null
@@ -136,6 +137,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          created_at: string
           display_name: string | null
           id: string
           updated_at: string | null
@@ -145,6 +147,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          created_at?: string
           display_name?: string | null
           id: string
           updated_at?: string | null
@@ -154,6 +157,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          created_at?: string
           display_name?: string | null
           id?: string
           updated_at?: string | null
@@ -165,6 +169,7 @@ export type Database = {
       subscriptions: {
         Row: {
           channel_id: string
+          created_at: string
           description: string | null
           id: string
           published_at: string | null
@@ -178,6 +183,7 @@ export type Database = {
         }
         Insert: {
           channel_id: string
+          created_at?: string
           description?: string | null
           id?: string
           published_at?: string | null
@@ -191,6 +197,7 @@ export type Database = {
         }
         Update: {
           channel_id?: string
+          created_at?: string
           description?: string | null
           id?: string
           published_at?: string | null
@@ -235,6 +242,7 @@ export type Database = {
           content_information_accuracy: number | null
           content_quality_score: number | null
           content_target_audience: string | null
+          created_at: string
           duration: number | null
           id: string
           insights: string | null
@@ -287,6 +295,7 @@ export type Database = {
           content_information_accuracy?: number | null
           content_quality_score?: number | null
           content_target_audience?: string | null
+          created_at?: string
           duration?: number | null
           id?: string
           insights?: string | null
@@ -339,6 +348,7 @@ export type Database = {
           content_information_accuracy?: number | null
           content_quality_score?: number | null
           content_target_audience?: string | null
+          created_at?: string
           duration?: number | null
           id?: string
           insights?: string | null
@@ -365,18 +375,21 @@ export type Database = {
       }
       transcripts: {
         Row: {
+          created_at: string
           data: Json
           id: string
           updated_at: string | null
           video_id: string
         }
         Insert: {
+          created_at?: string
           data: Json
           id?: string
           updated_at?: string | null
           video_id: string
         }
         Update: {
+          created_at?: string
           data?: Json
           id?: string
           updated_at?: string | null
@@ -391,6 +404,7 @@ export type Database = {
           category: string | null
           channel_id: string
           channel_title: string | null
+          created_at: string
           description: string | null
           duration: string | null
           is_family_safe: boolean | null
@@ -420,6 +434,7 @@ export type Database = {
           category?: string | null
           channel_id: string
           channel_title?: string | null
+          created_at?: string
           description?: string | null
           duration?: string | null
           is_family_safe?: boolean | null
@@ -449,6 +464,7 @@ export type Database = {
           category?: string | null
           channel_id?: string
           channel_title?: string | null
+          created_at?: string
           description?: string | null
           duration?: string | null
           is_family_safe?: boolean | null
@@ -615,3 +631,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

@@ -18,19 +18,19 @@ export const getSummaries = query(
 
 		let queryBuilder = supabase
 			.from('summaries')
-			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
+			.select('id, url, title, summary, processing_status, thumbnail_url, created_at, updated_at')
 			.limit(limit + 1);
 
 		if (cursor) {
 			if (direction === 'after') {
-				queryBuilder = queryBuilder.gt('updated_at', cursor).order('updated_at', { ascending: true });
+				queryBuilder = queryBuilder.gt('created_at', cursor).order('created_at', { ascending: true });
 			} else {
-				if (ascending) queryBuilder = queryBuilder.gt('updated_at', cursor);
-				else queryBuilder = queryBuilder.lt('updated_at', cursor);
-				queryBuilder = queryBuilder.order('updated_at', { ascending });
+				if (ascending) queryBuilder = queryBuilder.gt('created_at', cursor);
+				else queryBuilder = queryBuilder.lt('created_at', cursor);
+				queryBuilder = queryBuilder.order('created_at', { ascending });
 			}
 		} else {
-			queryBuilder = queryBuilder.order('updated_at', { ascending });
+			queryBuilder = queryBuilder.order('created_at', { ascending });
 		}
 
 		const { data, error: sbError } = await queryBuilder;
@@ -46,7 +46,7 @@ export const getSummaries = query(
 
 		return {
 			summaries,
-			nextCursor: hasMore ? summaries[summaries.length - 1]?.updated_at : undefined
+			nextCursor: hasMore ? summaries[summaries.length - 1]?.created_at : undefined
 		};
 	}
 );
@@ -107,11 +107,6 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 		console.log(`[createSummary] 기존 레코드, status=${existing.analysis_status}`);
 
 		if (existing.analysis_status === 'completed') {
-			await adminSupabase
-				.from('summaries')
-				.update({ updated_at: new Date().toISOString() })
-				.eq('id', summaryId);
-
 			const { data: current } = await supabase
 				.from('summaries')
 				.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
@@ -162,7 +157,7 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 	summaryService
 		.analyzeSummary(videoId, {
 			maxBatches: 5,
-			force: true,
+			force: false,
 			geminiApiKey: env.GEMINI_API_KEY
 		})
 		.catch(async (err) => {

@@ -181,6 +181,19 @@ export class SummaryService {
 
 		const url = `https://www.youtube.com/watch?v=${videoId}`;
 
+		if (!force) {
+			const { data: existing } = await this.supabase
+				.from('summaries')
+				.select('id, analysis_status')
+				.eq('url', url)
+				.maybeSingle();
+
+			if (existing?.analysis_status === 'completed') {
+				console.log(`[summary] 이미 분석 완료 summaryId=${existing.id}`);
+				return;
+			}
+		}
+
 		const video = await this.youtube.getBasicInfo(videoId);
 		const title = video.basic_info.title || '';
 		const thumbnailUrl =
@@ -194,19 +207,6 @@ export class SummaryService {
 				updated_at: new Date().toISOString()
 			})
 			.eq('url', url);
-
-		if (!force) {
-			const { data: existing } = await this.supabase
-				.from('summaries')
-				.select('id, analysis_status')
-				.eq('url', url)
-				.maybeSingle();
-
-			if (existing?.analysis_status === 'completed') {
-				console.log(`[summary] 이미 분석 완료 summaryId=${existing.id}`);
-				return;
-			}
-		}
 
 		try {
 			console.log(`[summary] 1단계: 자막/댓글 병렬 수집`);

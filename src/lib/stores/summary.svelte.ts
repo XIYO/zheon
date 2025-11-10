@@ -1,15 +1,10 @@
 import { browser } from '$app/environment';
-import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
 import { createSummary, getSummaries, getSummaryById } from '$lib/remote/summary.remote';
 import { SummarySchema } from '$lib/remote/summary.schema';
 import type { Database } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext } from 'svelte';
 import { generateYouTubeUuid } from '$lib/utils/youtube';
-
-type RemoteQuery = ReturnType<typeof getSummaries>;
-type DetailQuery = ReturnType<typeof getSummaryById>;
 
 /**
  * Summary 데이터 통합 관리 스토어
@@ -18,14 +13,16 @@ type DetailQuery = ReturnType<typeof getSummaryById>;
  * - 모어 데이터: Remote Function Promise 배열
  */
 class SummaryStore {
-	#listQueries = $state<RemoteQuery[]>([]);
-	#detailQueries = new Map<string, DetailQuery>();
+	#listQueries = $state([
+		getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
+	]);
+	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
 
-	constructor() {
-		if (!browser) return;
-
-		const now = new Date().toISOString();
-		this.#listQueries.push(getSummaries({ cursor: now, direction: 'before' }));
+	/**
+	 * Query 객체 타입 가드
+	 */
+	#isQueryObject(value: ReturnType<typeof getSummaryById> | Promise<void>): value is ReturnType<typeof getSummaryById> {
+		return typeof (value as any).refresh === 'function';
 	}
 
 	/**
@@ -35,24 +32,21 @@ class SummaryStore {
 	subscribe(supabase: SupabaseClient<Database>) {
 		if (!browser) return () => {};
 
-		console.time('[SummaryStore] Realtime 구독');
+		const timerId = `[SummaryStore] Realtime 구독 ${Date.now()}`;
+		console.time(timerId);
 
 		const channel = supabase
 			.channel('summary-changes')
 			.on(
 				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'summaries'
-				},
+				{ event: '*', schema: 'public', table: 'summaries' },
 				(payload) => {
 					console.log('[SummaryStore] Realtime 변경:', payload);
-					this.#handleRealtimeChange(payload);
+					// this.#handleRealtimeChange(payload);
 				}
 			)
 			.subscribe((status) => {
-				console.timeEnd('[SummaryStore] Realtime 구독');
+				console.timeEnd(timerId);
 				console.log('[SummaryStore] Realtime 구독 상태:', status);
 			});
 
@@ -82,16 +76,15 @@ class SummaryStore {
 	}
 
 	/**
-	 * 모든 쿼리 배열 (초기 + 추가 페이지)
+	 * 모든 쿼리 배열
 	 * 각 쿼리는 개별 loading 상태를 가짐
 	 */
 	get queries() {
-		if (!browser) return [];
-		return this.#listQueries;
+		return browser ? this.#listQueries : [];
 	}
 
 	/**
-	 * 추가 페이지 로드 (무한 스크롤)
+	 * 추가 페이지 로드
 	 * 마지막 쿼리의 nextCursor를 사용하여 다음 페이지 쿼리 생성
 	 */
 	async loadMore() {
@@ -105,52 +98,67 @@ class SummaryStore {
 		this.#listQueries = [...this.#listQueries, nextQuery];
 	}
 
-	detail(id: string): DetailQuery {
-		if (this.#detailQueries.has(id)) {
-			return this.#detailQueries.get(id)!;
+	/**
+	 * Detail 쿼리 조회
+	 * - 캐시된 query 있으면 동기 반환
+	 * - submit promise 있으면 then으로 query 생성
+	 * - 없으면 바로 query 생성
+	 */
+	detail(id: string) {
+		const existing = this.#detailQueries.get(id);
+
+		if (existing && this.#isQueryObject(existing)) {
+			return existing;
 		}
-		const query = getSummaryById({ id });
-		this.#detailQueries.set(id, query);
-		return query;
+
+		const createQuery = () => {
+			const query = getSummaryById({ id });
+			this.#detailQueries.set(id, query);
+			return query;
+		};
+
+		return existing ? existing.then(createQuery) : createQuery();
 	}
 
 	/**
 	 * Summary 생성 form
-	 * 옵티미스틱 업데이트 및 서버 제출만 담당
-	 * 이후 실제 데이터는 Realtime INSERT 이벤트로 처리
+	 * - 캐시된 query 있으면 submit 건너뛰기
+	 * - 없으면 submit하고 promise 저장
 	 */
 	get form() {
-		const enhancedForm = createSummary.enhance(async ({ form, data, submit }) => {
-			try {
-				goto(resolve('/(main)/[id]', { id: data.id }));
-				await submit();
-				form.reset();
-			} catch (error) {
-				console.error('[SummaryStore] 요약 제출 실패:', error);
+		const enhancedForm = createSummary.preflight(SummarySchema).enhance(async ({ form, data, submit }) => {
+			const id = data.id!;
+			const existing = this.#detailQueries.get(id);
+
+			if (!existing || !this.#isQueryObject(existing)) {
+				this.#detailQueries.set(id, submit());
 			}
+
+			// goto(resolve('/(main)/[id]', { id }));
+			form.reset();
 		});
 
-		enhancedForm.oninput = function() {
-			try {
-				console.log('[SummaryStore] oninput 트리거됨');
-				const urlInput = this.querySelector('input[name="url"]') as HTMLInputElement;
-				const url = urlInput?.value;
+		return {
+			enhancedForm: {
+				...enhancedForm,
+				oninput: (event: Event) => {
+					try {
+						const form = event.currentTarget as HTMLFormElement;
+						const urlInput = form.elements.namedItem('url') as HTMLInputElement;
+						const url = urlInput.value;
 
-				console.log('[SummaryStore] URL 값:', url);
-
-				if (url) {
-					const uuid = generateYouTubeUuid(url);
-					console.log('[SummaryStore] 생성된 UUID:', uuid);
-					createSummary.fields.id.set(uuid);
+						if (url) {
+							const uuid = generateYouTubeUuid(url);
+							createSummary.fields.id.set(uuid);
+						}
+					} catch (error) {
+						console.error('[SummaryStore] UUID 생성 실패:', error);
+					}
 				}
-			} catch (error) {
-				console.error('[SummaryStore] UUID 생성 실패:', error);
-			}
+			},
+			fields: createSummary.fields
 		};
-
-		return { enhancedForm, fields: createSummary.fields };
 	}
-
 }
 
 /**

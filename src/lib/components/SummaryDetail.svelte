@@ -13,7 +13,7 @@
 	let { id } = $props();
 
 	const summaryStore = getSummaryStore();
-	let summaryPromise = $derived(summaryStore.detail(id));
+	const summaryPromise = summaryStore.detail(id);
 	const { summaryId } = generateTTS.fields;
 
 	let isLoadingAudio = $state(false);
@@ -33,7 +33,8 @@
 				isPlaying = false;
 			};
 		}
-	});</script>
+	});
+</script>
 
 {#await summaryPromise}
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
