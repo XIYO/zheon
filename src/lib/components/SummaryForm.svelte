@@ -3,13 +3,13 @@
 
 	const summaryStore = getSummaryStore();
 	const { enhancedForm, fields } = summaryStore.form;
-	const { url } = fields;
 </script>
 
 <form {...enhancedForm} novalidate class="flex gap-2">
 	<div class="flex-1">
-		<input {...url.as('text')} placeholder="YouTube URL을 입력하세요" class="input" />
-		{#each url.issues() as issue (issue.message)}
+		<input {...fields.id.as('text')} type='text'/>
+		<input {...fields.url.as('text')} placeholder="YouTube URL을 입력하세요" class="input" />
+		{#each fields.url.issues() as issue (issue.message)}
 			<p class="mt-1 text-xs text-error-500">{issue.message}</p>
 		{/each}
 	</div>
