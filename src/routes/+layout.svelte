@@ -1,21 +1,25 @@
 <script lang="ts">
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import { createSummaryStore } from '$lib/stores/summary.svelte';
 
 	let { data, children } = $props();
-	let { session, supabase } = $derived(data);
 
-	createSummaryStore(supabase);
+	const summaryStore = createSummaryStore();
+
+	onMount(() => summaryStore.subscribe(data.supabase));
 
 	$effect.pre(() => {
-		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
-			if (newSession?.expires_at !== session?.expires_at) {
+		const {
+			data: { subscription }
+		} = data.supabase.auth.onAuthStateChange((event) => {
+			if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
 				invalidate('supabase:auth');
 			}
 		});
 
-		return () => data.subscription.unsubscribe();
+		return () => subscription.unsubscribe();
 	});
 </script>
 
