@@ -9,8 +9,8 @@ import { SummaryService } from '$lib/server/services/summary.service';
 
 export const getSummaries = query(
 	GetSummariesSchema,
-	async (params = { limit: 20, sortBy: 'newest' as const }) => {
-		const { cursor, limit = 20, sortBy = 'newest' } = params;
+	async (params = { limit: 20, sortBy: 'newest' as const, direction: 'before' as const }) => {
+		const { cursor, limit = 20, sortBy = 'newest', direction = 'before' } = params;
 		const { locals } = getRequestEvent();
 		const { supabase } = locals;
 
@@ -19,12 +19,18 @@ export const getSummaries = query(
 		let queryBuilder = supabase
 			.from('summaries')
 			.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
-			.order('updated_at', { ascending })
 			.limit(limit + 1);
 
 		if (cursor) {
-			if (ascending) queryBuilder = queryBuilder.gt('updated_at', cursor);
-			else queryBuilder = queryBuilder.lt('updated_at', cursor);
+			if (direction === 'after') {
+				queryBuilder = queryBuilder.gt('updated_at', cursor).order('updated_at', { ascending: true });
+			} else {
+				if (ascending) queryBuilder = queryBuilder.gt('updated_at', cursor);
+				else queryBuilder = queryBuilder.lt('updated_at', cursor);
+				queryBuilder = queryBuilder.order('updated_at', { ascending });
+			}
+		} else {
+			queryBuilder = queryBuilder.order('updated_at', { ascending });
 		}
 
 		const { data, error: sbError } = await queryBuilder;
@@ -32,7 +38,11 @@ export const getSummaries = query(
 		if (sbError) throw error(500, sbError.message);
 
 		const hasMore = data.length > limit;
-		const summaries = hasMore ? data.slice(0, limit) : data;
+		let summaries = hasMore ? data.slice(0, limit) : data;
+
+		if (direction === 'after') {
+			summaries = summaries.reverse();
+		}
 
 		return {
 			summaries,

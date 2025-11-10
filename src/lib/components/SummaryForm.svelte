@@ -1,87 +1,9 @@
 <script lang="ts">
-	import { createSummary, getSummaries } from '$lib/remote/summary.remote.ts';
-	import { SummarySchema } from '$lib/remote/summary.schema';
+	import { getSummaryStore } from '$lib/stores/summary.svelte';
 
-	const { id, url } = createSummary.fields;
-
-	const enhancedForm = createSummary.preflight(SummarySchema).enhance(async ({ form, submit }) => {
-		try {
-			console.log('[SummaryForm] 제출 시작, URL:', url.value());
-
-			const newUrl = url.value();
-
-			// 중복 URL 체크: 정규화된 URL로 비교
-			const current = await getSummaries({});
-
-			// URL을 정규화하여 비교 (대소문자, 쿼리 파라미터 등 통일)
-			const normalizeUrlForComparison = (url) => {
-				try {
-					const urlObj = new URL(url);
-					return urlObj.href.toLowerCase();
-				} catch {
-					return url.toLowerCase();
-				}
-			};
-
-			const normalizedNewUrl = normalizeUrlForComparison(newUrl);
-			const isDuplicate = current.summaries.some(
-				(s) => normalizeUrlForComparison(s.url) === normalizedNewUrl
-			);
-
-			if (isDuplicate) {
-				console.log('[SummaryForm] 중복 URL 감지, 서버 제출하여 updated_at 갱신:', newUrl);
-			}
-
-			// 낙관적 업데이트
-			const newId = crypto.randomUUID();
-			const optimisticSummary = {
-				id: newId,
-				url: newUrl,
-				title: null,
-				summary: null,
-				processing_status: 'pending',
-				thumbnail_url: null,
-				updated_at: null
-			};
-
-			getSummaries({}).set({
-				...current,
-				summaries: [optimisticSummary, ...current.summaries]
-			});
-			console.log('[SummaryForm] 낙관적 업데이트:', optimisticSummary);
-
-			// form에 ID 추가
-			id.value(newId);
-
-			// 서버 제출 및 쿼리 리프레시
-			await submit().updates(getSummaries({}));
-			console.log('[SummaryForm] 서버 제출 및 리프레시 완료');
-
-			form.reset();
-			console.log('[SummaryForm] 제출 완료');
-		} catch (error) {
-			console.error('[SummaryForm] 요약 제출 실패:', error);
-			console.error(
-				'[SummaryForm] 에러 타입:',
-				typeof error,
-				Object.prototype.toString.call(error)
-			);
-			console.error('[SummaryForm] 에러 키:', Object.keys(error));
-			if (error?.body) console.error('[SummaryForm] 에러 body:', error.body);
-			if (error?.status) console.error('[SummaryForm] 에러 status:', error.status);
-			if (error?.message) console.error('[SummaryForm] 에러 message:', error.message);
-
-			// 실패 시 낙관적 항목 롤백
-			const current = await getSummaries({});
-			const rollback = current.summaries.filter((s) => s.url !== url.value());
-
-			getSummaries({}).set({
-				...current,
-				summaries: rollback
-			});
-			console.log('[SummaryForm] 롤백 완료');
-		}
-	});
+	const summaryStore = getSummaryStore();
+	const { enhancedForm, fields } = summaryStore.form;
+	const { url } = fields;
 </script>
 
 <form {...enhancedForm} novalidate class="flex gap-2">
