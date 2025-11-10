@@ -72,7 +72,7 @@ export class CommentService {
 
 		const batchResults = await Promise.all(batchPromises);
 
-		const commentsMap = new Map<string, Database['zheon']['Tables']['comments']['Insert']>();
+		const commentsMap = new Map<string, Database['public']['Tables']['comments']['Insert']>();
 
 		batchResults.flat().forEach((comment) => {
 			if (!commentsMap.has(comment.comment_id)) {
