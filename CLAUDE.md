@@ -63,15 +63,17 @@ pnpm edge:check      # Type-check Deno code
 
 - Supabase Auth (email/password)
 - Sessions via cookies using `@supabase/ssr`
-- Protected routes validated in `hooks.server.js`
+- Protected routes validated in `hooks.server.ts`
 - `safeGetSession()` validates JWT via `getUser()` (never use `session.user` directly)
+- Auth middleware redirects: `/private/*` requires auth, `/auth` redirects to `/private` when authenticated
 
 ### Supabase Configuration
 
-- **Schema**: `zheon` (not public)
+- **Schema**: `public` schema used (not custom `zheon` schema in migrations)
 - **Connection**: 모든 연결은 리모트 서버와 한다 (로컬 테스트 불필요)
 - **Admin Client**: Available via `event.locals.adminSupabase` in server hooks
-- **MCP**: supabase 관련은 supabase MCP를 꼭 사용하기
+- **User Client**: Available via `event.locals.supabase` with automatic cookie handling
+- **Type Safety**: Database types generated in `src/lib/types/database.types.ts`
 
 ### Error Handling (Go-style)
 
@@ -118,9 +120,15 @@ return data; // 조회 결과 없음: 빈 배열 [] 반환 (null 아님)
 - **Query 캐싱**: 같은 쿼리는 자동 캐시 `getPosts() === getPosts()`, 수동 리프레시 `getPosts().refresh()`
 - **query.batch**: 같은 macrotask 내 여러 호출을 자동으로 하나의 쿼리로 배칭 (n+1 해결)
 - **서버-서버 호출**: Remote Functions는 서버에서 다른 Remote Function 호출 가능
-- **waitUntil 패턴**: Cloudflare Workers에서 응답 후 백그라운드 처리
-  - command: 프로그래매틱 호출용
-  - form: HTML form 제출용
+- **백그라운드 작업 패턴**: Remote Functions에서 Promise를 반환하지 않고 `.catch()` 체이닝으로 백그라운드 실행
+  ```js
+  // 응답 후 백그라운드 처리 (Cloudflare Workers 패턴)
+  summaryService.analyzeSummary(videoId, options).catch(async (err) => {
+    console.error('백그라운드 분석 실패:', err);
+    // 에러 처리 로직
+  });
+  return summaryData; // 즉시 응답 반환
+  ```
 
 ### Valibot Schema Validation
 
@@ -146,47 +154,108 @@ v.nullish(); // null + undefined 모두 허용
 - `svelte.config.js`에서 `experimental.async: true` 활성화
 - 컴포넌트에서 top-level await 사용 가능
 
+### Svelte Stores with Context API
+
+이 앱은 Svelte Context API를 사용하여 타입 안전한 스토어 관리를 구현합니다:
+
+```ts
+// src/lib/stores/summary.svelte.ts
+class SummaryStore {
+  // 스토어 로직
+}
+
+const [getSummaryStore, setSummaryStore] = createContext<SummaryStore>();
+
+export const createSummaryStore = (): SummaryStore => {
+  const store = new SummaryStore();
+  setSummaryStore(store);
+  return store;
+};
+
+export { getSummaryStore };
+```
+
+사용 패턴:
+- Layout에서 `createSummaryStore()` 호출하여 컨텍스트 설정
+- 하위 컴포넌트에서 `getSummaryStore()` 호출하여 스토어 접근
+- 스토어는 Remote Functions와 Realtime을 통합 관리
+
+### Supabase Realtime Integration
+
+Realtime 구독은 Svelte Store 내부에서 관리하며 onMount cleanup 사용:
+
+```ts
+// 스토어 메서드
+subscribe(supabase: SupabaseClient<Database>) {
+  const channel = supabase
+    .channel('summary-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, handler)
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}
+
+// 컴포넌트에서 사용
+onMount(() => {
+  const unsubscribe = store.subscribe(supabase);
+  return unsubscribe;
+});
+```
+
 ## Project Structure
 
 ```
 src/
 ├─ routes/              # SvelteKit pages + API routes
 │  ├─ (main)/           # Routes with header layout
+│  │  ├─ +layout.svelte # Main layout with header
+│  │  ├─ +page.svelte   # Home page (SummaryForm + SummaryList)
+│  │  └─ [id]/          # Summary detail pages
 │  └─ (non-header)/     # Routes without header (auth)
+│     └─ auth/          # Auth pages (sign-in, sign-up, callback, etc)
 ├─ lib/
 │  ├─ components/       # Reusable Svelte components (PascalCase)
-│  ├─ server/           # Server utilities (kebab-case)
+│  ├─ remote/           # Remote Functions (*.remote.ts)
+│  │  ├─ summary.remote.ts    # Summary queries and forms
+│  │  ├─ summary.schema.ts    # Valibot schemas
+│  │  └─ youtube/             # YouTube-related remote functions
+│  ├─ stores/           # Svelte stores (*.svelte.ts)
+│  │  └─ summary.svelte.ts    # SummaryStore with Realtime
+│  ├─ server/           # Server-only utilities (kebab-case)
+│  │  ├─ services/            # Business logic services
+│  │  └─ youtube-proxy.ts     # YouTube proxy via Tor
 │  ├─ types/            # TypeScript type definitions
-│  │  └─ database.types.ts  # Supabase generated types
+│  │  └─ database.types.ts    # Supabase generated types
 │  └─ paraglide/        # i18n runtime (auto-generated)
-└─ hooks.server.js      # Auth middleware + Supabase clients
+└─ hooks.server.ts      # Auth middleware + Supabase clients
 
 supabase/
 ├─ migrations/          # Database migrations
-├─ functions/           # Deno Edge Functions (if any)
+├─ functions/           # Deno Edge Functions
 ├─ tests/              # Deno tests
-└─ config.toml         # Local Supabase config
+└─ config.toml         # Supabase config
 
 messages/              # i18n message files (ko.json, en.json)
 ```
 
 ## Deployment Configuration
 
-- **Platform**: Cloudflare Workers
+- **Platform**: Cloudflare Workers (production via `pnpm deploy`)
 - **Domain**: zheon.xiyo.dev
-- **Adapter**: @sveltejs/adapter-cloudflare
-- **Config**: `wrangler.toml` (routes, vars, assets)
-- **Compatibility**: `nodejs_compat` flag enabled
+- **Adapter**: @sveltejs/adapter-node (configured in svelte.config.js)
+- **Supabase Edge Functions**: Deployed separately via `pnpm edge:deploy`
 
 ## Development Ports
 
-- Dev server: 7777
+- Dev server: 7777 (configured in vite.config)
 - Preview server: 17777
 - Wrangler dev: 5170
 
 ## Important Notes
 
-- Internationalization: Paraglide.js를 다국어용으로 사용 (messages/\*.json)
-- Lucide icons: `@lucide/svelte` 사용 (lucide-svelte 금지)
-- Performance measurement: `console.time()/timeEnd()` 사용 (performance.now() 금지)
-- Chrome debugging (MCP): 크롬 실행 시 `--remote-debugging-port=9222` 필요
+- **Language**: JavaScript with JSDoc, TypeScript is only used for type definitions
+- **Internationalization**: Paraglide.js를 다국어용으로 사용 (messages/\*.json)
+- **Icons**: `@lucide/svelte` 사용 (lucide-svelte 금지)
+- **Performance**: `console.time()/timeEnd()/timeLog()` 사용 (performance.now() 금지)
+- **YouTube Proxy**: YouTube access via Tor SOCKS5 proxy (configured in hooks.server.ts)
+- **Unhandled Rejections**: Global handler in hooks.server.ts logs all unhandled promise rejections
