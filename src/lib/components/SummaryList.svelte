@@ -6,14 +6,18 @@
 
 	const summaryStore = getSummaryStore();
 
-	let sentinel = $state(/** @type {HTMLDivElement | null} */ (null));
+	let sentinel: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (!sentinel) return;
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
-				if (entries[0].isIntersecting && !summaryStore.isLoadingMore) {
+				const queries = summaryStore.queries;
+				const lastQuery = queries[queries.length - 1];
+				const isLoading = lastQuery?.loading ?? false;
+
+				if (entries[0].isIntersecting && !isLoading) {
 					await summaryStore.loadMore();
 				}
 			},
@@ -30,20 +34,23 @@
 </script>
 
 <section aria-labelledby="summaries-title" class="space-y-4">
-	{#if summaryStore.allSummaries.length === 0}
-		<div class="text-center py-12 text-surface-500-400">
-			<p>아직 정리된 인사이트가 없습니다</p>
-		</div>
-	{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full border border-surface-300-700 rounded-lg overflow-hidden">
-					<thead class="border-b border-surface-300-700">
+	<div class="overflow-x-auto">
+		<table class="w-full border border-surface-300-700 rounded-lg overflow-hidden">
+			<thead class="border-b border-surface-300-700">
+				<tr>
+					<th class="px-4 py-3 text-left font-medium text-surface-700-300">제목</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each summaryStore.queries as query}
+					{#if query.loading && !query.current}
 						<tr>
-							<th class="px-4 py-3 text-left font-medium text-surface-700-300">제목</th>
+							<td class="px-4 py-8 text-center text-surface-500-400">
+								<p>불러오는 중...</p>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each summaryStore.allSummaries as summary (summary.id)}
+					{:else if query.current?.summaries}
+						{#each query.current.summaries as summary (summary.id)}
 							<tr class="border-b border-surface-200-800 hover:opacity-80">
 								<td class="px-4 py-3">
 									<a href={resolve('/(main)/[id]', { id: summary.id })} class="flex items-center gap-3">
@@ -74,16 +81,17 @@
 								</td>
 							</tr>
 						{/each}
-					</tbody>
-				</table>
-			</div>
+					{/if}
+				{:else}
+					<tr>
+						<td class="px-4 py-8 text-center text-surface-500-400">
+							<p>불러오는 중...</p>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 
-			<div bind:this={sentinel} class="h-4"></div>
-
-			{#if summaryStore.isLoadingMore}
-				<div class="text-center py-4 text-surface-500-400">
-					<p>더 불러오는 중...</p>
-				</div>
-			{/if}
-	{/if}
+	<div bind:this={sentinel} class="h-4"></div>
 </section>
