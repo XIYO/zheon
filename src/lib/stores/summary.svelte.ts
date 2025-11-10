@@ -2,7 +2,7 @@ import { getSummaryById, getSummaries, createSummary } from '$lib/remote/summary
 import { SummarySchema } from '$lib/remote/summary.schema';
 import { untrack } from 'svelte';
 import { browser } from '$app/environment';
-import { getContext } from 'svelte';
+import { createContext } from 'svelte';
 
 /**
  * Summary 데이터 통합 관리 스토어
@@ -228,14 +228,22 @@ class SummaryStore {
 }
 
 /**
- * SummaryStore 인스턴스 생성
+ * 타입 안전한 SummaryStore Context
+ */
+const [getSummaryStore, setSummaryStore] = createContext();
+
+/**
+ * SummaryStore 인스턴스 생성 및 Context 설정
  * @param {any} supabase - Supabase 클라이언트
  * @returns {SummaryStore} SummaryStore 인스턴스
  */
-export const createSummaryStore = (supabase) => new SummaryStore(supabase);
+export const createSummaryStore = (supabase) => {
+	const store = new SummaryStore(supabase);
+	setSummaryStore(store);
+	return store;
+};
 
 /**
  * Context에서 SummaryStore 가져오기
- * @returns {SummaryStore} SummaryStore 인스턴스
  */
-export const getSummaryStore = () => getContext('summaryStore');
+export { getSummaryStore };
