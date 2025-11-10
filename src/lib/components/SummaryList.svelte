@@ -13,7 +13,7 @@
 
 		const observer = new IntersectionObserver(
 			async (entries) => {
-				const queries = summaryStore.queries;
+				const queries = summaryStore.listQueries;
 				const lastQuery = queries[queries.length - 1];
 				const isLoading = lastQuery?.loading ?? false;
 
@@ -34,64 +34,45 @@
 </script>
 
 <section aria-labelledby="summaries-title" class="space-y-4">
-	<div class="overflow-x-auto">
-		<table class="w-full border border-surface-300-700 rounded-lg overflow-hidden">
-			<thead class="border-b border-surface-300-700">
-				<tr>
-					<th class="px-4 py-3 text-left font-medium text-surface-700-300">제목</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each summaryStore.queries as query}
-					{#if query.loading && !query.current}
-						<tr>
-							<td class="px-4 py-8 text-center text-surface-500-400">
-								<p>불러오는 중...</p>
-							</td>
-						</tr>
-					{:else if query.current?.summaries}
-						{#each query.current.summaries as summary (summary.id)}
-							<tr class="border-b border-surface-200-800 hover:opacity-80">
-								<td class="px-4 py-3">
-									<a href={resolve('/(main)/[id]', { id: summary.id })} class="flex items-center gap-3">
-										<div
-											class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
-												? 'bg-warning-500 animate-pulse'
-												: summary.processing_status === 'processing'
-													? 'bg-primary-500 animate-pulse'
-													: summary.processing_status === 'failed'
-														? 'bg-error-500'
-														: 'bg-success-500'}">
-										</div>
-										{#if summary.thumbnail_url || extractVideoId(summary.url)}
-											<img
-												src={summary.thumbnail_url ||
-													getYouTubeThumbnail(extractVideoId(summary.url) || '')}
-												alt=""
-												width="80"
-												height="45"
-												class="rounded object-cover aspect-video shrink-0" />
-										{/if}
-										<div class="min-w-0 flex-1">
-											<p class="truncate">
-												{summary.title || summary.url}
-											</p>
-										</div>
-									</a>
-								</td>
-							</tr>
-						{/each}
-					{/if}
-				{:else}
-					<tr>
-						<td class="px-4 py-8 text-center text-surface-500-400">
-							<p>불러오는 중...</p>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
+	<ul class="overflow-auto border border-surface-300-700 rounded-lg divide-y divide-surface-200-800">
+		{#each summaryStore.listQueries as query, index}
+			{#each query.current?.summaries ?? [] as summary (summary.id)}
+				<li class="hover:opacity-80">
+					<a href={resolve('/(main)/[id]', { id: summary.id })} class="flex items-center gap-3 px-4 py-3">
+						<div
+							class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
+								? 'bg-warning-500 animate-pulse'
+								: summary.processing_status === 'processing'
+									? 'bg-primary-500 animate-pulse'
+									: summary.processing_status === 'failed'
+										? 'bg-error-500'
+										: 'bg-success-500'}">
+						</div>
+						{#if summary.thumbnail_url || extractVideoId(summary.url)}
+							<img
+								src={summary.thumbnail_url ||
+									getYouTubeThumbnail(extractVideoId(summary.url) || '')}
+								alt=""
+								width="80"
+								height="45"
+								class="rounded object-cover aspect-video shrink-0" />
+						{/if}
+						<div class="min-w-0 flex-1">
+							<p class="truncate">
+								{summary.title || summary.url}
+							</p>
+						</div>
+					</a>
+				</li>
+			{:else}
+				{#if query.loading && index === summaryStore.listQueries.length - 1}
+					<li class="px-4 py-8 text-center text-surface-500">
+						<p>불러오는 중...</p>
+					</li>
+				{/if}
+			{/each}
+		{/each}
+	</ul>
 
 	<div bind:this={sentinel} class="h-4"></div>
 </section>

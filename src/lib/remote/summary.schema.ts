@@ -34,7 +34,7 @@ export const AnalyzeVideoInputSchema = v.object({
 export const GetSummariesSchema = v.optional(
 	v.object({
 		cursor: v.optional(v.string()),
-		limit: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(100)), 20),
+		limit: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(100)), 20),
 		sortBy: v.optional(v.picklist(['newest', 'oldest']), 'newest'),
 		direction: v.optional(v.picklist(['before', 'after']), 'before')
 	})

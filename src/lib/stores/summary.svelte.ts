@@ -79,7 +79,7 @@ class SummaryStore {
 	 * 모든 쿼리 배열
 	 * 각 쿼리는 개별 loading 상태를 가짐
 	 */
-	get queries() {
+	get listQueries() {
 		return browser ? this.#listQueries : [];
 	}
 
@@ -88,14 +88,24 @@ class SummaryStore {
 	 * 마지막 쿼리의 nextCursor를 사용하여 다음 페이지 쿼리 생성
 	 */
 	async loadMore() {
-		const lastQuery = this.queries[this.queries.length - 1];
+		const lastQuery = this.listQueries[this.listQueries.length - 1];
 		const lastData = await lastQuery;
 		const cursor = lastData?.nextCursor;
 
-		if (!cursor) return;
+		console.log('[SummaryStore] loadMore:', {
+			totalQueries: this.listQueries.length,
+			lastDataSummaries: lastData?.summaries?.length,
+			nextCursor: cursor
+		});
+
+		if (!cursor) {
+			console.log('[SummaryStore] loadMore 중단: nextCursor 없음');
+			return;
+		}
 
 		const nextQuery = getSummaries({ cursor, direction: 'before' });
 		this.#listQueries = [...this.#listQueries, nextQuery];
+		console.log('[SummaryStore] 새 쿼리 추가 완료, 총 쿼리:', this.#listQueries.length);
 	}
 
 	/**
