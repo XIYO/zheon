@@ -15,34 +15,32 @@ export const getSummaries = query(
 		const { supabase } = locals;
 
 		const ascending = sortBy === 'oldest';
+		const isUnlimited = limit === 0;
 
 		let queryBuilder = supabase
 			.from('summaries')
-			.select('id, url, title, summary, processing_status, thumbnail_url, created_at, updated_at')
-			.limit(limit + 1);
+			.select('id, url, title, summary, processing_status, thumbnail_url, created_at, updated_at');
+
+		if (!isUnlimited) {
+			queryBuilder = queryBuilder.limit(limit + 1);
+		}
 
 		if (cursor) {
 			if (direction === 'after') {
-				queryBuilder = queryBuilder.gt('created_at', cursor).order('created_at', { ascending: true });
+				queryBuilder = queryBuilder.gt('created_at', cursor);
 			} else {
-				if (ascending) queryBuilder = queryBuilder.gt('created_at', cursor);
-				else queryBuilder = queryBuilder.lt('created_at', cursor);
-				queryBuilder = queryBuilder.order('created_at', { ascending });
+				queryBuilder = queryBuilder.lt('created_at', cursor);
 			}
-		} else {
-			queryBuilder = queryBuilder.order('created_at', { ascending });
 		}
+
+		queryBuilder = queryBuilder.order('created_at', { ascending });
 
 		const { data, error: sbError } = await queryBuilder;
 
 		if (sbError) throw error(500, sbError.message);
 
-		const hasMore = data.length > limit;
-		let summaries = hasMore ? data.slice(0, limit) : data;
-
-		if (direction === 'after') {
-			summaries = summaries.reverse();
-		}
+		const hasMore = !isUnlimited && data.length > limit;
+		const summaries = hasMore ? data.slice(0, limit) : data;
 
 		return {
 			summaries,

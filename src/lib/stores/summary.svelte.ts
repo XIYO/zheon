@@ -5,15 +5,15 @@ import type { Database } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext } from 'svelte';
 import { generateYouTubeUuid } from '$lib/utils/youtube';
+import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 
 /**
  * Summary 데이터 통합 관리 스토어
- * - 최신 데이터: 반응형 배열 (옵티미스틱 + Realtime)
- * - 당시 데이터: Remote Function Promise
- * - 모어 데이터: Remote Function Promise 배열
  */
 class SummaryStore {
 	#listQueries = $state([
+		getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
 		getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
 	]);
 	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
@@ -134,7 +134,7 @@ class SummaryStore {
 				this.#detailQueries.set(id, submit());
 			}
 
-			// goto(resolve('/(main)/[id]', { id }));
+			goto(resolve('/(main)/[id]', { id }));
 			form.reset();
 		});
 
