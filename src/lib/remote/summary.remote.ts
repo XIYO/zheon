@@ -85,6 +85,7 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 });
 
 export const createSummary = form(SummarySchema, async ({ id, url }) => {
+	console.log('[createSummary] 호출됨:', { receivedId: id, url });
 	const { locals } = getRequestEvent();
 	const { supabase, adminSupabase } = locals;
 
@@ -129,6 +130,7 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 			})
 			.eq('id', summaryId);
 	} else {
+		console.log('[createSummary] INSERT 시도:', { id, normalizedUrl });
 		const { data: newData, error: insertError } = await supabase
 			.from('summaries')
 			.insert({
@@ -140,8 +142,12 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 			.select('id')
 			.single();
 
-		if (insertError) throw error(500, insertError);
+		if (insertError) {
+			console.error('[createSummary] INSERT 실패:', insertError);
+			throw error(500, insertError);
+		}
 		summaryId = newData.id;
+		console.log('[createSummary] INSERT 성공:', { sentId: id, returnedId: summaryId });
 	}
 
 	const { data: summaryData } = await supabase
