@@ -6,14 +6,12 @@
 
 	let { data, children } = $props();
 
-	const summaryStore = createSummaryStore();
+	const { subscribe } = createSummaryStore();
 
-	onMount(() => summaryStore.subscribe(data.supabase));
+	onMount(() => subscribe(data.supabase));
 
-	$effect.pre(() => {
-		const {
-			data: { subscription }
-		} = data.supabase.auth.onAuthStateChange((event) => {
+	onMount(() => {
+		const { data: { subscription } } = data.supabase.auth.onAuthStateChange((event) => {
 			if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
 				invalidate('supabase:auth');
 			}
