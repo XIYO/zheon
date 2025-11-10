@@ -1,3 +1,7 @@
+import { v5 as uuidv5 } from 'uuid';
+
+const YOUTUBE_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
 export function extractVideoId(url: string | null): string | null {
 	if (!url) return null;
 
@@ -26,4 +30,10 @@ export function getYouTubeThumbnail(
 export function normalizeYouTubeUrl(videoId: string | null): string {
 	if (!videoId) return '';
 	return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+export function generateYouTubeUuid(url: string): string {
+	const videoId = extractVideoId(url);
+	const normalizedUrl = normalizeYouTubeUrl(videoId);
+	return uuidv5(normalizedUrl, YOUTUBE_NAMESPACE);
 }
