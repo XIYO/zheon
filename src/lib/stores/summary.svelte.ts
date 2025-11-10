@@ -1,8 +1,12 @@
 import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { createSummary, getSummaries, getSummaryById } from '$lib/remote/summary.remote';
 import { SummarySchema } from '$lib/remote/summary.schema';
+import type { Database } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext } from 'svelte';
+import { generateYouTubeUuid } from '$lib/utils/youtube';
 
 type RemoteQuery = ReturnType<typeof getSummaries>;
 type DetailQuery = ReturnType<typeof getSummaryById>;
@@ -14,18 +18,67 @@ type DetailQuery = ReturnType<typeof getSummaryById>;
  * - 모어 데이터: Remote Function Promise 배열
  */
 class SummaryStore {
-	#supabase: SupabaseClient;
-	#initialPagePromise: RemoteQuery | null = null;
 	#listQueries = $state<RemoteQuery[]>([]);
 	#detailQueries = new Map<string, DetailQuery>();
 
-	constructor(supabase: SupabaseClient) {
-		this.#supabase = supabase;
-
+	constructor() {
 		if (!browser) return;
 
 		const now = new Date().toISOString();
-		this.#initialPagePromise = getSummaries({ cursor: now, direction: 'before' });
+		this.#listQueries.push(getSummaries({ cursor: now, direction: 'before' }));
+	}
+
+	/**
+	 * Realtime 구독 시작
+	 * unsubscribe 함수를 반환하여 onMount cleanup에서 사용
+	 */
+	subscribe(supabase: SupabaseClient<Database>) {
+		if (!browser) return () => {};
+
+		console.time('[SummaryStore] Realtime 구독');
+
+		const channel = supabase
+			.channel('summary-changes')
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'summaries'
+				},
+				(payload) => {
+					console.log('[SummaryStore] Realtime 변경:', payload);
+					this.#handleRealtimeChange(payload);
+				}
+			)
+			.subscribe((status) => {
+				console.timeEnd('[SummaryStore] Realtime 구독');
+				console.log('[SummaryStore] Realtime 구독 상태:', status);
+			});
+
+		return () => {
+			console.log('[SummaryStore] Realtime 구독 해제');
+			supabase.removeChannel(channel);
+		};
+	}
+
+	/**
+	 * Realtime 변경 이벤트 처리
+	 */
+	#handleRealtimeChange(payload: { eventType: string; new: unknown; old: unknown }) {
+		const { eventType, new: newRecord, old: oldRecord } = payload;
+
+		switch (eventType) {
+			case 'INSERT':
+				console.log('[SummaryStore] 새 요약 추가:', newRecord);
+				break;
+			case 'UPDATE':
+				console.log('[SummaryStore] 요약 업데이트:', newRecord);
+				break;
+			case 'DELETE':
+				console.log('[SummaryStore] 요약 삭제:', oldRecord);
+				break;
+		}
 	}
 
 	/**
@@ -33,8 +86,8 @@ class SummaryStore {
 	 * 각 쿼리는 개별 loading 상태를 가짐
 	 */
 	get queries() {
-		if (!browser || !this.#initialPagePromise) return [];
-		return [this.#initialPagePromise, ...this.#listQueries];
+		if (!browser) return [];
+		return this.#listQueries;
 	}
 
 	/**
@@ -67,23 +120,35 @@ class SummaryStore {
 	 * 이후 실제 데이터는 Realtime INSERT 이벤트로 처리
 	 */
 	get form() {
-		const { id, url } = createSummary.fields;
-
-		const enhancedForm = createSummary.preflight(SummarySchema).enhance(async ({ form, submit }) => {
-			const newId = crypto.randomUUID();
-
+		const enhancedForm = createSummary.enhance(async ({ form, data, submit }) => {
 			try {
-				id.value(newId);
-
+				goto(resolve('/(main)/[id]', { id: data.id }));
 				await submit();
-
 				form.reset();
 			} catch (error) {
 				console.error('[SummaryStore] 요약 제출 실패:', error);
 			}
 		});
 
-		return { enhancedForm, fields: { id, url } };
+		enhancedForm.oninput = function() {
+			try {
+				console.log('[SummaryStore] oninput 트리거됨');
+				const urlInput = this.querySelector('input[name="url"]') as HTMLInputElement;
+				const url = urlInput?.value;
+
+				console.log('[SummaryStore] URL 값:', url);
+
+				if (url) {
+					const uuid = generateYouTubeUuid(url);
+					console.log('[SummaryStore] 생성된 UUID:', uuid);
+					createSummary.fields.id.set(uuid);
+				}
+			} catch (error) {
+				console.error('[SummaryStore] UUID 생성 실패:', error);
+			}
+		};
+
+		return { enhancedForm, fields: createSummary.fields };
 	}
 
 }
@@ -93,8 +158,8 @@ class SummaryStore {
  */
 const [getSummaryStore, setSummaryStore] = createContext<SummaryStore>();
 
-export const createSummaryStore = (supabase: SupabaseClient): SummaryStore => {
-	const store = new SummaryStore(supabase);
+export const createSummaryStore = (): SummaryStore => {
+	const store = new SummaryStore();
 	setSummaryStore(store);
 	return store;
 };
