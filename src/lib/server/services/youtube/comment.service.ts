@@ -10,8 +10,8 @@ export interface CollectCommentsOptions {
 
 export class CommentService {
 	constructor(
-		private _supabase: SupabaseClient<Database>,
-		private _youtube: Innertube
+		private supabase: SupabaseClient<Database>,
+		private youtube: Innertube
 	) {}
 
 	async collectComments(
@@ -23,7 +23,7 @@ export class CommentService {
 		);
 
 		if (!force) {
-			const { data: existing, error: checkError } = await this._supabase
+			const { data: existing, error: checkError } = await this.supabase
 				.from('comments')
 				.select('comment_id')
 				.eq('video_id', videoId)
@@ -35,7 +35,7 @@ export class CommentService {
 			}
 
 			if (existing) {
-				const { data: existingComments } = await this._supabase
+				const { data: existingComments } = await this.supabase
 					.from('comments')
 					.select('comment_id')
 					.eq('video_id', videoId);
@@ -46,7 +46,7 @@ export class CommentService {
 			}
 		}
 
-		let commentsData = await this._youtube.getComments(videoId, 'NEWEST_FIRST');
+		let commentsData = await this.youtube.getComments(videoId, 'NEWEST_FIRST');
 
 		console.log(`[comments] 1단계: continuation 토큰 수집 중...`);
 		const batches = [commentsData];
@@ -87,7 +87,7 @@ export class CommentService {
 		const allComments = Array.from(commentsMap.values());
 
 		if (allComments.length > 0) {
-			const { error: insertError } = await this._supabase
+			const { error: insertError } = await this.supabase
 				.from('comments')
 				.upsert(allComments, { onConflict: 'comment_id' });
 
@@ -103,11 +103,11 @@ export class CommentService {
 	async getCommentsFromDB(videoId: string) {
 		console.log(`[comments] DB 조회 시작 videoId=${videoId}`);
 
-		const { data: comments, error: fetchError } = await this._supabase
+		const { data: comments, error: fetchError } = await this.supabase
 			.from('comments')
 			.select('comment_id, data, updated_at')
 			.eq('video_id', videoId)
-			.order('updated_at', { ascending: false });
+			.order('updated_at', { ascending: false});
 
 		if (fetchError) {
 			throw error(500, `댓글 조회 실패: ${fetchError.message}`);

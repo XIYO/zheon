@@ -22,8 +22,8 @@ export interface CollectTranscriptOptions {
 
 export class TranscriptionService {
 	constructor(
-		private _supabase: SupabaseClient<Database>,
-		private _youtube: Innertube
+		private supabase: SupabaseClient<Database>,
+		private youtube: Innertube
 	) {}
 
 	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}): Promise<void> {

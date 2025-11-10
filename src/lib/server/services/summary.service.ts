@@ -383,7 +383,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 			apiKey: geminiApiKey,
 			fetch: customFetch
 		});
-		const model = google('gemini-2.0-flash-exp');
+		const model = google('gemini-2.0-flash');
 
 		console.log('[summary] AI 분석 시작');
 
@@ -498,7 +498,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 				total_comments_analyzed: Math.min(totalComments, 100),
 				analysis_status: 'completed',
 				analyzed_at: new Date().toISOString(),
-				analysis_model: 'gemini-2.0-flash-exp'
+				analysis_model: 'gemini-2.0-flash'
 			},
 			{ onConflict: 'url' }
 		);
