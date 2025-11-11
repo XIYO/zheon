@@ -50,11 +50,11 @@ class SummaryStore {
 	/**
 	 * Realtime 변경사항 처리
 	 * - 변경된 데이터의 created_at을 확인하여 해당 범위의 list 쿼리만 리프레시
-	 * - 변경된 데이터의 video_id로 detail 쿼리 리프레시
+	 * - 변경된 데이터의 video_id로 detail 쿼리 낙관적 업데이트 (리프레시 X, UX 개선)
 	 */
 	#handleRealtimeChange(payload: {
 		eventType: string;
-		new?: { id?: string; created_at?: string; video_id?: string };
+		new?: Database['public']['Tables']['summaries']['Row'];
 		old?: { id?: string; created_at?: string; video_id?: string };
 	}) {
 		const changedVideoId = payload.new?.video_id || payload.old?.video_id;
@@ -80,11 +80,17 @@ class SummaryStore {
 			});
 		}
 
-		if (changedVideoId) {
+		if (changedVideoId && payload.new) {
 			const detailQuery = this.#detailQueries.get(changedVideoId);
 			if (this.isRemoteQuery(detailQuery)) {
-				console.log(`[SummaryStore] Detail 쿼리 리프레시 [${changedVideoId}]`);
-				detailQuery.refresh();
+				console.log(`[SummaryStore] Detail 쿼리 낙관적 업데이트 [${changedVideoId}]:`, {
+					title: payload.new.title,
+					analysis_status: payload.new.analysis_status,
+					summary_audio_status: payload.new.summary_audio_status
+				});
+				detailQuery.set(payload.new);
+			} else {
+				console.log(`[SummaryStore] Detail 쿼리 없음 [${changedVideoId}]`);
 			}
 		}
 	}

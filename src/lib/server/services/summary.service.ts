@@ -192,12 +192,15 @@ export class SummaryService {
 			}
 		}
 
+		console.log(`[summary] 비디오 정보 수집 중 videoId=${videoId}`);
 		const video = await this.youtube.getBasicInfo(videoId);
 		const title = video.basic_info.title || '';
 		const thumbnailUrl =
 			video.basic_info.thumbnail?.at(0)?.url || `https://i.ytimg.com/vi/${videoId}/default.jpg`;
 
-		await this.supabase
+		console.log(`[summary] 타이틀 업데이트: "${title}" (${title.length}자)`);
+
+		const { error: updateError } = await this.supabase
 			.from('summaries')
 			.update({
 				title,
@@ -205,6 +208,13 @@ export class SummaryService {
 				updated_at: new Date().toISOString()
 			})
 			.eq('video_id', videoId);
+
+		if (updateError) {
+			console.error('[summary] 타이틀 업데이트 실패:', updateError);
+			throw error(500, `타이틀 업데이트 실패: ${updateError.message}`);
+		}
+
+		console.log(`[summary] 타이틀 업데이트 완료`);
 
 		try {
 			console.log(`[summary] 1단계: 자막/댓글 병렬 수집`);
