@@ -179,13 +179,11 @@ export class SummaryService {
 
 		console.log(`[summary] 분석 시작 videoId=${videoId}`);
 
-		const url = `https://www.youtube.com/watch?v=${videoId}`;
-
 		if (!force) {
 			const { data: existing } = await this.supabase
 				.from('summaries')
 				.select('id, analysis_status')
-				.eq('url', url)
+				.eq('video_id', videoId)
 				.maybeSingle();
 
 			if (existing?.analysis_status === 'completed') {
@@ -206,7 +204,7 @@ export class SummaryService {
 				thumbnail_url: thumbnailUrl,
 				updated_at: new Date().toISOString()
 			})
-			.eq('url', url);
+			.eq('video_id', videoId);
 
 		try {
 			console.log(`[summary] 1단계: 자막/댓글 병렬 수집`);
@@ -262,7 +260,7 @@ export class SummaryService {
 			const analysis = await this.performAIAnalysis(transcript, comments, geminiApiKey);
 
 			console.log(`[summary] 3단계: DB 저장`);
-			await this.saveSummary(videoId, url, transcript, comments.length, analysis);
+			await this.saveSummary(videoId, transcript, comments.length, analysis);
 
 			console.log(`[summary] 분석 완료 videoId=${videoId}`);
 		} catch (err) {
@@ -270,11 +268,11 @@ export class SummaryService {
 
 			await this.supabase.from('summaries').upsert(
 				{
-					url,
+					video_id: videoId,
 					analysis_status: 'failed',
 					updated_at: new Date().toISOString()
 				},
-				{ onConflict: 'url' }
+				{ onConflict: 'video_id' }
 			);
 
 			throw err;
@@ -449,14 +447,13 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 
 	private async saveSummary(
 		videoId: string,
-		url: string,
 		transcript: string,
 		totalComments: number,
 		analysis: v.InferOutput<typeof VideoAnalysisValidationSchema>
 	): Promise<void> {
 		const { error: upsertError } = await this.supabase.from('summaries').upsert(
 			{
-				url,
+				video_id: videoId,
 				transcript,
 				summary: analysis.summary,
 				processing_status: 'completed',
@@ -500,7 +497,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 				analyzed_at: new Date().toISOString(),
 				analysis_model: 'gemini-2.0-flash'
 			},
-			{ onConflict: 'url' }
+			{ onConflict: 'video_id' }
 		);
 
 		if (upsertError) {
@@ -517,7 +514,7 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 		const { data, error: fetchError } = await this.supabase
 			.from('summaries')
 			.select('*')
-			.eq('url', `https://www.youtube.com/watch?v=${videoId}`)
+			.eq('video_id', videoId)
 			.maybeSingle();
 
 		if (fetchError) {

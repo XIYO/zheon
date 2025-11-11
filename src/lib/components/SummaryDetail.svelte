@@ -3,17 +3,16 @@
 	import { generateTTS } from '$lib/remote/audio.remote';
 	import { getAudioSignedUrl } from '$lib/remote/audio.remote';
 	import { getSummaryAudio } from '$lib/utils/audio-cache.js';
-	import { extractVideoId, getYouTubeThumbnail } from '$lib/utils/youtube';
+	import { getYouTubeThumbnail } from '$lib/utils/youtube';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Loader from '@lucide/svelte/icons/loader';
 	import Play from '@lucide/svelte/icons/play';
 	import Pause from '@lucide/svelte/icons/pause';
 	import CircleX from '@lucide/svelte/icons/circle-x';
 
-	let { id } = $props();
+	let { videoId } = $props();
 
 	const summaryStore = getSummaryStore();
-	const summaryPromise = summaryStore.detail(id);
 	const { summaryId } = generateTTS.fields;
 
 	let isLoadingAudio = $state(false);
@@ -36,18 +35,85 @@
 	});
 </script>
 
-{#await summaryPromise}
+{#await summaryStore.detail(videoId)}
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
-		<div class="text-center py-12 text-surface-500-400">
-			<p>로딩 중...</p>
-		</div>
+		<header>
+			<div class="placeholder animate-pulse rounded-xl aspect-video"></div>
+			<div class="mt-8 mb-12">
+				<div class={['placeholder animate-pulse h-10 rounded', 'w-3/4']}></div>
+			</div>
+		</header>
+
+		<section class="card preset-filled-surface-50-900 p-4">
+			<header class="flex items-center justify-between mb-4">
+				<div class="placeholder animate-pulse h-8 w-32 rounded"></div>
+				<div class="placeholder-circle animate-pulse size-10"></div>
+			</header>
+			<div class="space-y-3">
+				<div class="placeholder animate-pulse h-4 rounded"></div>
+				<div class="placeholder animate-pulse h-4 rounded"></div>
+				<div class="placeholder animate-pulse h-4 w-4/5 rounded"></div>
+			</div>
+		</section>
+
+		<section class="card preset-filled-surface-50-900 p-4 mt-6">
+			<header class="mb-4">
+				<div class="placeholder animate-pulse h-8 w-48 rounded"></div>
+			</header>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+				<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
+					<div class="placeholder animate-pulse h-4 w-20 rounded mb-2"></div>
+					<div class="placeholder animate-pulse h-8 w-16 rounded"></div>
+				</div>
+
+				<div class="rounded-lg bg-surface-200 dark:bg-surface-700 p-4">
+					<div class="placeholder animate-pulse h-4 w-24 rounded mb-2"></div>
+					<div class="placeholder animate-pulse h-8 w-16 rounded"></div>
+				</div>
+			</div>
+
+			<div class="space-y-4">
+				<div>
+					<div class="placeholder animate-pulse h-4 w-20 rounded mb-2"></div>
+					<div class="space-y-2">
+						{#each Array(3) as _}
+							<div class="flex items-center gap-2">
+								<div class="placeholder animate-pulse h-4 w-16 rounded"></div>
+								<div class={{ 'flex-1 placeholder animate-pulse h-6 rounded': true }}></div>
+								<div class="placeholder animate-pulse h-4 w-12 rounded"></div>
+							</div>
+						{/each}
+					</div>
+				</div>
+
+				<div class="grid grid-cols-2 gap-4">
+					{#each Array(2) as _}
+						<div>
+							<div class="placeholder animate-pulse h-4 w-24 rounded mb-2"></div>
+							<div class="space-y-1">
+								{#each Array(4) as _}
+									<div class="flex justify-between">
+										<div class="placeholder animate-pulse h-4 w-16 rounded"></div>
+										<div class="placeholder animate-pulse h-4 w-12 rounded"></div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+		</section>
 	</main>
 {:then summary}
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
 		<header>
-			<a href={summary.url} target="_blank" rel="noopener noreferrer">
+			<a
+				href={`https://www.youtube.com/watch?v=${summary.video_id}`}
+				target="_blank"
+				rel="noopener noreferrer">
 				<img
-					src={getYouTubeThumbnail(extractVideoId(summary.url), 'maxresdefault')}
+					src={getYouTubeThumbnail(summary.video_id, 'maxresdefault')}
 					alt={summary.title}
 					width="1280"
 					height="720"

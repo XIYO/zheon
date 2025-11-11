@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { getSummaryStore } from '$lib/stores/summary.svelte';
-	import { extractVideoId, getYouTubeThumbnail } from '$lib/utils/youtube';
+	import { getYouTubeThumbnail } from '$lib/utils/youtube';
 
 	const summaryStore = getSummaryStore();
 
@@ -40,7 +40,7 @@
 			{#each query.current?.summaries as summary (summary.id)}
 				<li class="hover:opacity-80">
 					<a
-						href={resolve('/(main)/[id]', { id: summary.id })}
+						href={resolve('/(main)/[videoId]', { videoId: summary.video_id })}
 						class="flex items-center gap-3 px-4 py-3">
 						<div
 							class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
@@ -52,7 +52,7 @@
 										: 'bg-success-500'}">
 						</div>
 						<img
-							src={getYouTubeThumbnail(extractVideoId(summary.url))}
+							src={getYouTubeThumbnail(summary.video_id)}
 							alt=""
 							width="80"
 							height="45"
@@ -65,7 +65,7 @@
 					</a>
 				</li>
 			{:else}
-			<!-- 스토어가 최초 두개(신규-최초는0개, 현재)의 getSummaries 함수를 가지기때문에 초기에는 펜딩 상태가 두 개 존재한다.
+				<!-- 스토어가 최초 두개(신규-최초는0개, 현재)의 getSummaries 함수를 가지기때문에 초기에는 펜딩 상태가 두 개 존재한다.
 			 그래서 항상 마지막 배열의 펜딩만 그린다.
 			  -->
 				{#if query.loading && index === summaryStore.listQueries.length - 1}

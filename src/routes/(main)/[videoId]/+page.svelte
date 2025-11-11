@@ -3,4 +3,4 @@
 	import SummaryDetail from '$lib/components/SummaryDetail.svelte';
 </script>
 
-<SummaryDetail id={page.params.id} />
+<SummaryDetail videoId={page.params.videoId} />

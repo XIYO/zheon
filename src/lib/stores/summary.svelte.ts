@@ -4,17 +4,34 @@ import { SummarySchema } from '$lib/remote/summary.schema';
 import type { Database } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext } from 'svelte';
-import { generateYouTubeUuid } from '$lib/utils/youtube';
+import { extractVideoId } from '$lib/utils/youtube';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+
+/**
+ * List 쿼리 정보
+ */
+interface QueryInfo {
+	query: ReturnType<typeof getSummaries>;
+	cursor: string;
+	direction: 'before' | 'after';
+}
 
 /**
  * Summary 데이터 통합 관리 스토어
  */
 class SummaryStore {
-	#listQueries = $state([
-		getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
-		getSummaries({ cursor: new Date().toISOString(), direction: 'before' })
+	#listQueries = $state<QueryInfo[]>([
+		{
+			query: getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
+			cursor: new Date().toISOString(),
+			direction: 'after'
+		},
+		{
+			query: getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
+			cursor: new Date().toISOString(),
+			direction: 'before'
+		}
 	]);
 	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
 
@@ -31,10 +48,52 @@ class SummaryStore {
 	}
 
 	/**
+	 * Realtime 변경사항 처리
+	 * - 변경된 데이터의 created_at을 확인하여 해당 범위의 list 쿼리만 리프레시
+	 * - 변경된 데이터의 video_id로 detail 쿼리 리프레시
+	 */
+	#handleRealtimeChange(payload: {
+		eventType: string;
+		new?: { id?: string; created_at?: string; video_id?: string };
+		old?: { id?: string; created_at?: string; video_id?: string };
+	}) {
+		const changedVideoId = payload.new?.video_id || payload.old?.video_id;
+		const changedDate = payload.new?.created_at || payload.old?.created_at;
+
+		console.log('[SummaryStore] 변경 감지:', {
+			event: payload.eventType,
+			changedVideoId,
+			changedDate
+		});
+
+		if (changedDate) {
+			this.#listQueries.forEach((queryInfo, index) => {
+				const { cursor, direction } = queryInfo;
+				const shouldRefresh =
+					(direction === 'after' && changedDate >= cursor) ||
+					(direction === 'before' && changedDate <= cursor);
+
+				if (shouldRefresh) {
+					console.log(`[SummaryStore] List 쿼리 리프레시 [${index}]:`, { cursor, direction });
+					queryInfo.query.refresh();
+				}
+			});
+		}
+
+		if (changedVideoId) {
+			const detailQuery = this.#detailQueries.get(changedVideoId);
+			if (this.isRemoteQuery(detailQuery)) {
+				console.log(`[SummaryStore] Detail 쿼리 리프레시 [${changedVideoId}]`);
+				detailQuery.refresh();
+			}
+		}
+	}
+
+	/**
 	 * Realtime 구독 시작
 	 * unsubscribe 함수를 반환하여 onMount cleanup에서 사용
 	 */
-	subscribe(supabase: SupabaseClient<Database>) {
+	subscribe = (supabase: SupabaseClient<Database>) => {
 		if (!browser) return () => {};
 
 		const timerId = `[SummaryStore] Realtime 구독 ${Date.now()}`;
@@ -44,7 +103,7 @@ class SummaryStore {
 			.channel('summary-changes')
 			.on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, (payload) => {
 				console.log('[SummaryStore] Realtime 변경:', payload);
-				// this.#handleRealtimeChange(payload);
+				this.#handleRealtimeChange(payload);
 			})
 			.subscribe((status) => {
 				console.timeEnd(timerId);
@@ -55,14 +114,14 @@ class SummaryStore {
 			console.log('[SummaryStore] Realtime 구독 해제');
 			supabase.removeChannel(channel);
 		};
-	}
+	};
 
 	/**
 	 * 모든 쿼리 배열
 	 * 각 쿼리는 개별 loading 상태를 가짐
 	 */
 	get listQueries() {
-		return browser ? this.#listQueries : [];
+		return browser ? this.#listQueries.map((info) => info.query) : [];
 	}
 
 	/**
@@ -70,12 +129,12 @@ class SummaryStore {
 	 * 마지막 쿼리의 nextCursor를 사용하여 다음 페이지 쿼리 생성
 	 */
 	async loadMore() {
-		const lastQuery = this.listQueries[this.listQueries.length - 1];
-		const lastData = await lastQuery;
+		const lastQueryInfo = this.#listQueries[this.#listQueries.length - 1];
+		const lastData = await lastQueryInfo.query;
 		const cursor = lastData?.nextCursor;
 
 		console.log('[SummaryStore] loadMore:', {
-			totalQueries: this.listQueries.length,
+			totalQueries: this.#listQueries.length,
 			lastDataSummaries: lastData?.summaries?.length,
 			nextCursor: cursor
 		});
@@ -85,8 +144,14 @@ class SummaryStore {
 			return;
 		}
 
-		const nextQuery = getSummaries({ cursor, direction: 'before' });
-		this.#listQueries = [...this.#listQueries, nextQuery];
+		this.#listQueries = [
+			...this.#listQueries,
+			{
+				query: getSummaries({ cursor, direction: 'before' }),
+				cursor,
+				direction: 'before'
+			}
+		];
 		console.log('[SummaryStore] 새 쿼리 추가 완료, 총 쿼리:', this.#listQueries.length);
 	}
 
@@ -96,16 +161,16 @@ class SummaryStore {
 	 * - submit promise 있으면 then으로 query 생성
 	 * - 없으면 바로 query 생성
 	 */
-	detail(id: string) {
-		const existing = this.#detailQueries.get(id);
+	detail(videoId: string) {
+		const existing = this.#detailQueries.get(videoId);
 
 		if (this.isRemoteQuery(existing)) {
 			return existing;
 		}
 
 		const createQuery = () => {
-			const query = getSummaryById({ id });
-			this.#detailQueries.set(id, query);
+			const query = getSummaryById({ id: videoId });
+			this.#detailQueries.set(videoId, query);
 			return query;
 		};
 
@@ -121,13 +186,13 @@ class SummaryStore {
 		const enhancedForm = createSummary
 			.preflight(SummarySchema)
 			.enhance(async ({ form, data, submit }) => {
-				const id = data.id!;
+				const videoId = extractVideoId(data.url!);
 
-				if (!this.isRemoteQuery(this.#detailQueries.get(id))) {
-					this.#detailQueries.set(id, submit());
-				}
+				if (!this.isRemoteQuery(this.#detailQueries.get(videoId)))
+					this.#detailQueries.set(videoId, submit());
+				else submit();
 
-				goto(resolve('/(main)/[id]', { id }));
+				goto(resolve('/(main)/[videoId]', { videoId }));
 				form.reset();
 			});
 
@@ -140,8 +205,12 @@ class SummaryStore {
 					const url = urlInput.value;
 
 					if (url) {
-						const uuid = generateYouTubeUuid(url);
-						createSummary.fields.id.set(uuid);
+						try {
+							const videoId = extractVideoId(url);
+							createSummary.fields.video_id.set(videoId);
+						} catch {
+							// URL이 아직 완전하지 않을 수 있음
+						}
 					}
 				}
 			},

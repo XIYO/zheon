@@ -1,29 +1,7 @@
 import * as v from 'valibot';
 
-const isYouTubeUrl = (input: string) => {
-	try {
-		const url = new URL(input);
-		const hostname = url.hostname.toLowerCase();
-		return (
-			hostname === 'youtube.com' ||
-			hostname === 'www.youtube.com' ||
-			hostname === 'youtu.be' ||
-			hostname === 'm.youtube.com'
-		);
-	} catch {
-		return false;
-	}
-};
-
 export const SummarySchema = v.object({
-	id: v.pipe(v.string(), v.uuid()),
-	url: v.pipe(
-		v.string('URL을 입력해주세요'),
-		v.trim(),
-		v.nonEmpty('URL을 입력해주세요'),
-		v.url('올바른 URL 형식이 아닙니다'),
-		v.check(isYouTubeUrl, 'YouTube URL만 지원됩니다')
-	)
+	video_id: v.pipe(v.string(), v.minLength(1))
 });
 
 export const AnalyzeVideoInputSchema = v.object({
