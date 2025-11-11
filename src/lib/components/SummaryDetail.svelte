@@ -11,6 +11,7 @@
     import CircleX from '@lucide/svelte/icons/circle-x';
     import RadarChart from './RadarChart.svelte';
     import PieChart from './PieChart.svelte';
+    import MetricsRadarChart from './MetricsRadarChart.svelte';
 
 	let { videoId } = $props();
 
@@ -92,19 +93,68 @@
 </script>
 
 {#if !summary}
-	<main class="container mx-auto px-4 py-12 max-w-5xl">
+	<main class="container mx-auto px-4 py-12 max-w-7xl">
 		<header>
-			<a
-				href={`https://www.youtube.com/watch?v=${videoId}`}
-				target="_blank"
-				rel="noopener noreferrer">
-				<img
-					src={getYouTubeThumbnail(videoId, 'maxresdefault')}
-					alt="YouTube 썸네일"
-					width="1280"
-					height="720"
-					class="rounded-xl starting:opacity-0 aspect-video" />
-			</a>
+			<!-- 첫 번째 줄: 이미지 + 카테고리/태그 placeholder -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+				<!-- 좌: 이미지 -->
+				<a
+					href={`https://www.youtube.com/watch?v=${videoId}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="block">
+					<img
+						src={getYouTubeThumbnail(videoId, 'maxresdefault')}
+						alt="YouTube 썸네일"
+						width="1280"
+						height="720"
+						class="rounded-xl starting:opacity-0 aspect-video w-full" />
+				</a>
+
+				<!-- 우: 카테고리, 태그 placeholder -->
+				<div class="space-y-6">
+					<div>
+						<div class="placeholder animate-pulse h-5 w-20 rounded mb-2"></div>
+						<div class="flex flex-wrap gap-2">
+							<div class="placeholder animate-pulse h-8 w-24 rounded-full"></div>
+							<div class="placeholder animate-pulse h-8 w-32 rounded-full"></div>
+						</div>
+					</div>
+					<div>
+						<div class="placeholder animate-pulse h-5 w-16 rounded mb-2"></div>
+						<div class="flex flex-wrap gap-2">
+							<div class="placeholder animate-pulse h-8 w-20 rounded-full"></div>
+							<div class="placeholder animate-pulse h-8 w-28 rounded-full"></div>
+							<div class="placeholder animate-pulse h-8 w-24 rounded-full"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 두 번째 줄: 메트릭 placeholder -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+				<!-- 좌: 레이더 placeholder -->
+				<div class="flex items-center justify-center">
+					<div>
+						<div class="placeholder animate-pulse h-5 w-32 rounded mb-4 mx-auto"></div>
+						<div class="placeholder-circle animate-pulse" style="width: 300px; height: 300px;"></div>
+					</div>
+				</div>
+
+				<!-- 우: 설명 placeholder -->
+				<div class="flex flex-col justify-center">
+					<div class="placeholder animate-pulse h-5 w-24 rounded mb-4"></div>
+					<div class="space-y-3">
+						{#each Array(4) as _}
+							<div class="card preset-tonal-surface p-3">
+								<div class="placeholder animate-pulse h-4 w-32 rounded mb-2"></div>
+								<div class="placeholder animate-pulse h-3 w-full rounded"></div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+
 			<div class="mt-8 mb-12">
 				<div class="placeholder animate-pulse h-10 rounded w-3/4"></div>
 			</div>
@@ -190,21 +240,110 @@
 		</section>
 	</main>
 {:else}
-	<main class="container mx-auto px-4 py-12 max-w-5xl">
+	<main class="container mx-auto px-4 py-12 max-w-7xl">
 		<header>
-			<a
-				href={`https://www.youtube.com/watch?v=${summary.video_id}`}
-				target="_blank"
-				rel="noopener noreferrer">
-				<img
-					src={getYouTubeThumbnail(summary.video_id, 'maxresdefault')}
-					alt={summary.title}
-					width="1280"
-					height="720"
-					class="rounded-xl starting:opacity-0 aspect-video" />
-			</a>
+			<!-- 첫 번째 줄: 이미지 + 카테고리/태그 -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+				<!-- 좌: 이미지 -->
+				<a
+					href={`https://www.youtube.com/watch?v=${summary.video_id}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="block">
+					<img
+						src={getYouTubeThumbnail(summary.video_id, 'maxresdefault')}
+						alt={summary.title}
+						width="1280"
+						height="720"
+						class="rounded-xl starting:opacity-0 aspect-video w-full" />
+				</a>
+
+				<!-- 우: 카테고리, 태그 -->
+				<div class="space-y-6">
+					<!-- 카테고리 -->
+					{#if summary.categories && summary.categories.length > 0}
+						<div>
+							<h3 class="text-sm font-semibold text-surface-600-400 mb-2">카테고리</h3>
+							<div class="flex flex-wrap gap-2">
+								{#each summary.categories as category}
+									<span class="chip preset-tonal-surface text-sm">
+										{category.name_ko || category.name}
+									</span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<!-- 태그 -->
+					{#if summary.tags && summary.tags.length > 0}
+						<div>
+							<h3 class="text-sm font-semibold text-surface-600-400 mb-2">태그</h3>
+							<div class="flex flex-wrap gap-2">
+								{#each summary.tags as tag}
+									<span
+										class="chip preset-outlined text-sm"
+										style="opacity: {tag.weight}">
+										{tag.name_ko || tag.name}
+									</span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<!-- 두 번째 줄: 메트릭 레이더 + 메트릭 설명 -->
+			{#if summary.metrics && Object.keys(summary.metrics).length > 0}
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+					<!-- 좌: 메트릭 레이더 -->
+					<div class="flex items-center justify-center">
+						<div>
+							<h3 class="text-sm font-semibold text-surface-600-400 mb-4 text-center">콘텐츠 특성 분석</h3>
+							<MetricsRadarChart
+								data={Object.fromEntries(
+									Object.entries(summary.metrics).map(([key, value]) => [
+										key,
+										typeof value === 'object' && 'score' in value ? value.score : 0
+									])
+								)}
+							/>
+						</div>
+					</div>
+
+					<!-- 우: 메트릭 설명 -->
+					<div class="flex flex-col justify-center">
+						<h3 class="text-sm font-semibold text-surface-600-400 mb-4">지표 상세</h3>
+						<div class="space-y-3 text-sm">
+							{#each Object.entries(summary.metrics) as [key, value]}
+								{@const metricValue = typeof value === 'object' && 'score' in value ? value : { score: 0, reasoning: '' }}
+								{@const badgeClass =
+									metricValue.score >= 70 ? 'preset-filled-success' :
+									metricValue.score >= 40 ? 'preset-filled-warning' :
+									'preset-filled-error'}
+								{@const category =
+									metricValue.score >= 70 ? '강점' :
+									metricValue.score >= 40 ? '보통' :
+									'약점'}
+								<div class="card preset-tonal-surface p-3">
+									<div class="flex justify-between items-center mb-2">
+										<div class="flex items-center gap-2">
+											<span class="font-mono font-semibold text-surface-900-50">{key}</span>
+											<span class="text-xs text-surface-500">({category})</span>
+										</div>
+										<span class="badge {badgeClass}">{metricValue.score}</span>
+									</div>
+									{#if metricValue.reasoning}
+										<p class="text-surface-600-400 text-xs">{metricValue.reasoning}</p>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<div class="mt-8 mb-12">
-				<h1 class="h1 mb-2">{summary.title}</h1>
+				<h1 class="text-xl font-extrabold mb-2">{summary.title}</h1>
 			</div>
 		</header>
 		<section class="card preset-filled-surface-50-900 p-4">

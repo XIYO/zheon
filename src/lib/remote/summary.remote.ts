@@ -74,18 +74,46 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 		summary_audio_status: data.summary_audio_status
 	});
 
-	// 함께 커뮤니티 정규화 메타데이터 조회
-	const { data: community, error: cmError } = await supabase
-		.from('content_community_metrics')
-		.select('*')
-		.eq('video_id', id)
-		.maybeSingle();
+	const [
+		{ data: community, error: cmError },
+		{ data: categoryData, error: catError },
+		{ data: tagData, error: tagError },
+		{ data: metricsData, error: metricsError }
+	] = await Promise.all([
+		supabase.from('content_community_metrics').select('*').eq('video_id', id).maybeSingle(),
+		supabase
+			.from('video_categories')
+			.select('categories(slug, name, name_ko, description)')
+			.eq('video_id', id)
+			.order('priority', { ascending: true }),
+		supabase
+			.from('video_tags')
+			.select('tags(slug, name, name_ko), weight')
+			.eq('video_id', id)
+			.order('weight', { ascending: false }),
+		supabase.from('content_metrics').select('metrics').eq('video_id', id).maybeSingle()
+	]);
 
 	if (cmError) {
 		console.warn('[remote/getSummaryById] community metrics fetch error', cmError.message);
 	}
+	if (catError) {
+		console.warn('[remote/getSummaryById] categories fetch error', catError.message);
+	}
+	if (tagError) {
+		console.warn('[remote/getSummaryById] tags fetch error', tagError.message);
+	}
+	if (metricsError) {
+		console.warn('[remote/getSummaryById] metrics fetch error', metricsError.message);
+	}
 
-	return { ...data, community };
+	const categories = (categoryData || []).map((item) => item.categories).filter(Boolean);
+	const tags = (tagData || [])
+		.map((item) => ({ ...item.tags, weight: item.weight }))
+		.filter((tag) => tag.slug);
+	const metrics = metricsData?.metrics || {};
+
+	return { ...data, community, categories, tags, metrics };
 });
 
 export const createSummary = form(SummarySchema, async ({ video_id }) => {

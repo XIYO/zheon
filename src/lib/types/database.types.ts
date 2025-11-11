@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -34,6 +39,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          depth: number
+          description: string | null
+          id: string
+          name: string
+          name_ko: string
+          parent_id: string | null
+          path: string[]
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          depth: number
+          description?: string | null
+          id?: string
+          name: string
+          name_ko: string
+          parent_id?: string | null
+          path: string[]
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          depth?: number
+          description?: string | null
+          id?: string
+          name?: string
+          name_ko?: string
+          parent_id?: string | null
+          path?: string[]
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channels: {
         Row: {
           channel_data: Json | null
@@ -145,7 +197,7 @@ export type Database = {
           analyzed_at: string | null
           arousal_mean: number | null
           comments_analyzed: number | null
-          created_at: string
+          created_at: string | null
           emotion_anger: number | null
           emotion_anticipation: number | null
           emotion_disgust: number | null
@@ -158,7 +210,6 @@ export type Database = {
           emotion_trust: number | null
           framework_version: string | null
           id: string
-          representative_comments: Json | null
           updated_at: string | null
           valence_mean: number | null
           video_id: string
@@ -174,7 +225,7 @@ export type Database = {
           analyzed_at?: string | null
           arousal_mean?: number | null
           comments_analyzed?: number | null
-          created_at?: string
+          created_at?: string | null
           emotion_anger?: number | null
           emotion_anticipation?: number | null
           emotion_disgust?: number | null
@@ -187,7 +238,6 @@ export type Database = {
           emotion_trust?: number | null
           framework_version?: string | null
           id?: string
-          representative_comments?: Json | null
           updated_at?: string | null
           valence_mean?: number | null
           video_id: string
@@ -203,7 +253,7 @@ export type Database = {
           analyzed_at?: string | null
           arousal_mean?: number | null
           comments_analyzed?: number | null
-          created_at?: string
+          created_at?: string | null
           emotion_anger?: number | null
           emotion_anticipation?: number | null
           emotion_disgust?: number | null
@@ -216,7 +266,6 @@ export type Database = {
           emotion_trust?: number | null
           framework_version?: string | null
           id?: string
-          representative_comments?: Json | null
           updated_at?: string | null
           valence_mean?: number | null
           video_id?: string
@@ -224,6 +273,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "content_community_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "summaries"
+            referencedColumns: ["video_id"]
+          },
+        ]
+      }
+      content_metric_keys: {
+        Row: {
+          category_hint: string | null
+          created_at: string
+          description: string
+          id: string
+          metric_type: string
+          name: string
+          name_ko: string
+          slug: string
+          updated_at: string
+          value_range: Json
+        }
+        Insert: {
+          category_hint?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          metric_type?: string
+          name: string
+          name_ko: string
+          slug: string
+          updated_at?: string
+          value_range?: Json
+        }
+        Update: {
+          category_hint?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metric_type?: string
+          name?: string
+          name_ko?: string
+          slug?: string
+          updated_at?: string
+          value_range?: Json
+        }
+        Relationships: []
+      }
+      content_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metrics: Json
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metrics?: Json
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metrics?: Json
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_metrics_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: true
             referencedRelation: "summaries"
@@ -311,11 +431,35 @@ export type Database = {
       }
       summaries: {
         Row: {
+          age_group_20s: number | null
+          age_group_30s: number | null
+          age_group_40plus: number | null
+          age_group_teens: number | null
+          ai_audience_reaction: string | null
+          ai_content_summary: string | null
+          ai_key_insights: Json | null
+          ai_recommendations: Json | null
           analysis_model: string | null
           analysis_status: string | null
           analyzed_at: string | null
           channel_id: string | null
           channel_name: string | null
+          community_constructive: number | null
+          community_kindness: number | null
+          community_off_topic: number | null
+          community_politeness: number | null
+          community_quality_score: number | null
+          community_rudeness: number | null
+          community_self_centered: number | null
+          community_toxicity: number | null
+          content_category: string | null
+          content_clarity: number | null
+          content_depth: number | null
+          content_educational_value: number | null
+          content_entertainment_value: number | null
+          content_information_accuracy: number | null
+          content_quality_score: number | null
+          content_target_audience: string | null
           created_at: string
           duration: number | null
           id: string
@@ -324,21 +468,51 @@ export type Database = {
           insights_audio_url: string | null
           language: string | null
           processing_status: string | null
+          sentiment_intensity: number | null
+          sentiment_negative_ratio: number | null
+          sentiment_neutral_ratio: number | null
+          sentiment_overall_score: number | null
+          sentiment_positive_ratio: number | null
           summary: string | null
           summary_audio_status: string | null
           summary_audio_url: string | null
           thumbnail_url: string | null
           title: string | null
+          total_comments_analyzed: number | null
           transcript: string | null
           updated_at: string | null
           video_id: string
         }
         Insert: {
+          age_group_20s?: number | null
+          age_group_30s?: number | null
+          age_group_40plus?: number | null
+          age_group_teens?: number | null
+          ai_audience_reaction?: string | null
+          ai_content_summary?: string | null
+          ai_key_insights?: Json | null
+          ai_recommendations?: Json | null
           analysis_model?: string | null
           analysis_status?: string | null
           analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
+          community_constructive?: number | null
+          community_kindness?: number | null
+          community_off_topic?: number | null
+          community_politeness?: number | null
+          community_quality_score?: number | null
+          community_rudeness?: number | null
+          community_self_centered?: number | null
+          community_toxicity?: number | null
+          content_category?: string | null
+          content_clarity?: number | null
+          content_depth?: number | null
+          content_educational_value?: number | null
+          content_entertainment_value?: number | null
+          content_information_accuracy?: number | null
+          content_quality_score?: number | null
+          content_target_audience?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -347,21 +521,51 @@ export type Database = {
           insights_audio_url?: string | null
           language?: string | null
           processing_status?: string | null
+          sentiment_intensity?: number | null
+          sentiment_negative_ratio?: number | null
+          sentiment_neutral_ratio?: number | null
+          sentiment_overall_score?: number | null
+          sentiment_positive_ratio?: number | null
           summary?: string | null
           summary_audio_status?: string | null
           summary_audio_url?: string | null
           thumbnail_url?: string | null
           title?: string | null
+          total_comments_analyzed?: number | null
           transcript?: string | null
           updated_at?: string | null
           video_id: string
         }
         Update: {
+          age_group_20s?: number | null
+          age_group_30s?: number | null
+          age_group_40plus?: number | null
+          age_group_teens?: number | null
+          ai_audience_reaction?: string | null
+          ai_content_summary?: string | null
+          ai_key_insights?: Json | null
+          ai_recommendations?: Json | null
           analysis_model?: string | null
           analysis_status?: string | null
           analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
+          community_constructive?: number | null
+          community_kindness?: number | null
+          community_off_topic?: number | null
+          community_politeness?: number | null
+          community_quality_score?: number | null
+          community_rudeness?: number | null
+          community_self_centered?: number | null
+          community_toxicity?: number | null
+          content_category?: string | null
+          content_clarity?: number | null
+          content_depth?: number | null
+          content_educational_value?: number | null
+          content_entertainment_value?: number | null
+          content_information_accuracy?: number | null
+          content_quality_score?: number | null
+          content_target_audience?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -370,14 +574,50 @@ export type Database = {
           insights_audio_url?: string | null
           language?: string | null
           processing_status?: string | null
+          sentiment_intensity?: number | null
+          sentiment_negative_ratio?: number | null
+          sentiment_neutral_ratio?: number | null
+          sentiment_overall_score?: number | null
+          sentiment_positive_ratio?: number | null
           summary?: string | null
           summary_audio_status?: string | null
           summary_audio_url?: string | null
           thumbnail_url?: string | null
           title?: string | null
+          total_comments_analyzed?: number | null
           transcript?: string | null
           updated_at?: string | null
           video_id?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          name_ko: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          name_ko: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          name_ko?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -404,6 +644,84 @@ export type Database = {
           video_id?: string
         }
         Relationships: []
+      }
+      video_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          priority: number
+          video_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          priority: number
+          video_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          priority?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_categories_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "summaries"
+            referencedColumns: ["video_id"]
+          },
+        ]
+      }
+      video_tags: {
+        Row: {
+          created_at: string
+          id: string
+          tag_id: string
+          video_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag_id: string
+          video_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag_id?: string
+          video_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_tags_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "summaries"
+            referencedColumns: ["video_id"]
+          },
+        ]
       }
       videos: {
         Row: {
@@ -639,4 +957,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
