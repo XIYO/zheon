@@ -1,56 +1,43 @@
 import { query, form, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
-import * as v from 'valibot';
 import { env } from '$env/dynamic/private';
-import { SummarySchema } from './summary.schema';
+import { SummarySchema, GetSummariesSchema, GetSummaryByIdSchema } from '$lib/remote/summary.schema';
 import { extractVideoId, normalizeYouTubeUrl } from '$lib/utils/youtube.js';
-import { GetSummariesSchema } from './summary.schema';
 import { SummaryService } from '$lib/server/services/summary.service';
 
-export const getSummaries = query(
-	GetSummariesSchema,
-	async (params = { limit: 20, sortBy: 'newest' as const, direction: 'before' as const }) => {
-		const { cursor, limit = 20, sortBy = 'newest', direction = 'before' } = params;
-		const { locals } = getRequestEvent();
-		const { supabase } = locals;
+export const getSummaries = query(GetSummariesSchema, async ({ cursor, limit, sortBy, direction }) => {
+	const { locals } = getRequestEvent();
+	const { supabase } = locals;
 
-		const ascending = sortBy === 'oldest';
-		const isUnlimited = limit === 0;
+	const ascending = sortBy === 'oldest'; // 수파베이스는 정렬을 불린 사용
+	const isUnlimited = limit === 0;
 
-		let queryBuilder = supabase
-			.from('summaries')
-			.select('id, url, title, summary, processing_status, thumbnail_url, created_at, updated_at');
+	// 데이터가 클라이언트에 전달되기 때문에 최대한 가볍게 만들어야한다.
+	let queryBuilder = supabase
+		.from('summaries')
+		.select('id, title, url, processing_status, created_at');
 
-		if (!isUnlimited) {
-			queryBuilder = queryBuilder.limit(limit + 1);
-		}
+	queryBuilder = direction === 'after'
+		? queryBuilder.gt('created_at', cursor)
+		: queryBuilder.lt('created_at', cursor);
 
-		if (cursor) {
-			if (direction === 'after') {
-				queryBuilder = queryBuilder.gt('created_at', cursor);
-			} else {
-				queryBuilder = queryBuilder.lt('created_at', cursor);
-			}
-		}
+	queryBuilder = queryBuilder.order('created_at', { ascending });
 
-		queryBuilder = queryBuilder.order('created_at', { ascending });
-
-		const { data, error: sbError } = await queryBuilder;
-
-		if (sbError) throw error(500, sbError.message);
-
-		const hasMore = !isUnlimited && data.length > limit;
-		const summaries = hasMore ? data.slice(0, limit) : data;
-
-		return {
-			summaries,
-			nextCursor: hasMore ? summaries[summaries.length - 1]?.created_at : undefined
-		};
+	if (!isUnlimited) {
+		queryBuilder = queryBuilder.limit(limit + 1);
 	}
-);
 
-const GetSummaryByIdSchema = v.object({
-	id: v.string()
+	const { data, error: sbError } = await queryBuilder;
+
+	if (sbError) throw error(500, sbError.message);
+
+	const hasMore = !isUnlimited && data.length > limit;
+	const summaries = hasMore ? data.slice(0, limit) : data;
+
+	return {
+		summaries,
+		nextCursor: hasMore ? summaries[summaries.length - 1]?.created_at : undefined
+	};
 });
 
 export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
@@ -98,22 +85,14 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 
 	if (selectError) throw error(500, selectError);
 
-	let summaryId;
-
 	if (existing) {
-		summaryId = existing.id;
 		console.log(`[createSummary] 기존 레코드, status=${existing.analysis_status}`);
 
-		if (existing.analysis_status === 'completed') {
-			const { data: current } = await supabase
-				.from('summaries')
-				.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
-				.eq('id', summaryId)
-				.single();
-
-			return current;
+		if (existing.analysis_status === 'completed' || existing.analysis_status === 'processing') {
+			return;
 		}
 
+		// 거르고 걸러서, 결국 페일 상태만 업데이트 된다.
 		await adminSupabase
 			.from('summaries')
 			.update({
@@ -121,35 +100,21 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 				analysis_status: 'processing',
 				updated_at: new Date().toISOString()
 			})
-			.eq('id', summaryId);
+			.eq('id', id);
 	} else {
+		// 실제 신규, 처리 시작할거라고 미리 넣는다. 
 		console.log('[createSummary] INSERT 시도:', { id, normalizedUrl });
-		const { data: newData, error: insertError } = await supabase
+		const { error: insertError } = await supabase
 			.from('summaries')
 			.insert({
 				id,
 				url: normalizedUrl,
 				processing_status: 'processing',
 				analysis_status: 'processing'
-			})
-			.select('id')
-			.single();
-
-		if (insertError) {
-			console.error('[createSummary] INSERT 실패:', insertError);
-			throw error(500, insertError);
-		}
-		summaryId = newData.id;
-		console.log('[createSummary] INSERT 성공:', { sentId: id, returnedId: summaryId });
+			});
+		// 인서트 실패가 뜨면 바로 종료 하면된다. 인서트 실패의 이유는 동시 요청으로 들어올경우 먼저들어온것만 다음단계를 진행하면된다.
+		if (insertError) return;
 	}
-
-	const { data: summaryData } = await supabase
-		.from('summaries')
-		.select('id, url, title, summary, processing_status, thumbnail_url, updated_at')
-		.eq('id', summaryId)
-		.single();
-
-	if (!videoId) throw error(400, 'Invalid video ID');
 
 	const summaryService = new SummaryService(adminSupabase, locals.youtube);
 	summaryService
@@ -167,8 +132,6 @@ export const createSummary = form(SummarySchema, async ({ id, url }) => {
 					processing_status: 'failed',
 					updated_at: new Date().toISOString()
 				})
-				.eq('id', summaryId);
+				.eq('id', id);
 		});
-
-	return summaryData;
 });

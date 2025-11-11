@@ -124,8 +124,8 @@ return data; // 조회 결과 없음: 빈 배열 [] 반환 (null 아님)
   ```js
   // 응답 후 백그라운드 처리 (Cloudflare Workers 패턴)
   summaryService.analyzeSummary(videoId, options).catch(async (err) => {
-    console.error('백그라운드 분석 실패:', err);
-    // 에러 처리 로직
+  	console.error('백그라운드 분석 실패:', err);
+  	// 에러 처리 로직
   });
   return summaryData; // 즉시 응답 반환
   ```
@@ -161,21 +161,22 @@ v.nullish(); // null + undefined 모두 허용
 ```ts
 // src/lib/stores/summary.svelte.ts
 class SummaryStore {
-  // 스토어 로직
+	// 스토어 로직
 }
 
 const [getSummaryStore, setSummaryStore] = createContext<SummaryStore>();
 
 export const createSummaryStore = (): SummaryStore => {
-  const store = new SummaryStore();
-  setSummaryStore(store);
-  return store;
+	const store = new SummaryStore();
+	setSummaryStore(store);
+	return store;
 };
 
 export { getSummaryStore };
 ```
 
 사용 패턴:
+
 - Layout에서 `createSummaryStore()` 호출하여 컨텍스트 설정
 - 하위 컴포넌트에서 `getSummaryStore()` 호출하여 스토어 접근
 - 스토어는 Remote Functions와 Realtime을 통합 관리

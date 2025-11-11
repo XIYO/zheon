@@ -14,15 +14,20 @@ import { resolve } from '$app/paths';
 class SummaryStore {
 	#listQueries = $state([
 		getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
-		getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
+		getSummaries({ cursor: new Date().toISOString(), direction: 'before' })
 	]);
 	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
 
 	/**
-	 * Query 객체 타입 가드
+	 * RemoteQuery 타입 가드
+	 * refresh는 RemoteQuery의 공개 API 메서드
+	 * RemoteQuery는 클래스지만 export되지 않아서 instanceof 비교 불가
+	 * 따라서 공개 메서드 존재 여부로 타입 가드
 	 */
-	#isQueryObject(value: ReturnType<typeof getSummaryById> | Promise<void>): value is ReturnType<typeof getSummaryById> {
-		return typeof (value as any).refresh === 'function';
+	isRemoteQuery(
+		value: ReturnType<typeof getSummaryById> | Promise<void> | undefined
+	): value is ReturnType<typeof getSummaryById> {
+		return value != null && 'refresh' in value;
 	}
 
 	/**
@@ -37,14 +42,10 @@ class SummaryStore {
 
 		const channel = supabase
 			.channel('summary-changes')
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'summaries' },
-				(payload) => {
-					console.log('[SummaryStore] Realtime 변경:', payload);
-					// this.#handleRealtimeChange(payload);
-				}
-			)
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, (payload) => {
+				console.log('[SummaryStore] Realtime 변경:', payload);
+				// this.#handleRealtimeChange(payload);
+			})
 			.subscribe((status) => {
 				console.timeEnd(timerId);
 				console.log('[SummaryStore] Realtime 구독 상태:', status);
@@ -54,25 +55,6 @@ class SummaryStore {
 			console.log('[SummaryStore] Realtime 구독 해제');
 			supabase.removeChannel(channel);
 		};
-	}
-
-	/**
-	 * Realtime 변경 이벤트 처리
-	 */
-	#handleRealtimeChange(payload: { eventType: string; new: unknown; old: unknown }) {
-		const { eventType, new: newRecord, old: oldRecord } = payload;
-
-		switch (eventType) {
-			case 'INSERT':
-				console.log('[SummaryStore] 새 요약 추가:', newRecord);
-				break;
-			case 'UPDATE':
-				console.log('[SummaryStore] 요약 업데이트:', newRecord);
-				break;
-			case 'DELETE':
-				console.log('[SummaryStore] 요약 삭제:', oldRecord);
-				break;
-		}
 	}
 
 	/**
@@ -117,7 +99,7 @@ class SummaryStore {
 	detail(id: string) {
 		const existing = this.#detailQueries.get(id);
 
-		if (existing && this.#isQueryObject(existing)) {
+		if (this.isRemoteQuery(existing)) {
 			return existing;
 		}
 
@@ -136,33 +118,30 @@ class SummaryStore {
 	 * - 없으면 submit하고 promise 저장
 	 */
 	get form() {
-		const enhancedForm = createSummary.preflight(SummarySchema).enhance(async ({ form, data, submit }) => {
-			const id = data.id!;
-			const existing = this.#detailQueries.get(id);
+		const enhancedForm = createSummary
+			.preflight(SummarySchema)
+			.enhance(async ({ form, data, submit }) => {
+				const id = data.id!;
 
-			if (!existing || !this.#isQueryObject(existing)) {
-				this.#detailQueries.set(id, submit());
-			}
+				if (!this.isRemoteQuery(this.#detailQueries.get(id))) {
+					this.#detailQueries.set(id, submit());
+				}
 
-			goto(resolve('/(main)/[id]', { id }));
-			form.reset();
-		});
+				goto(resolve('/(main)/[id]', { id }));
+				form.reset();
+			});
 
 		return {
 			enhancedForm: {
 				...enhancedForm,
 				oninput: (event: Event) => {
-					try {
-						const form = event.currentTarget as HTMLFormElement;
-						const urlInput = form.elements.namedItem('url') as HTMLInputElement;
-						const url = urlInput.value;
+					const form = event.currentTarget as HTMLFormElement;
+					const urlInput = form.elements.namedItem('url') as HTMLInputElement;
+					const url = urlInput.value;
 
-						if (url) {
-							const uuid = generateYouTubeUuid(url);
-							createSummary.fields.id.set(uuid);
-						}
-					} catch (error) {
-						console.error('[SummaryStore] UUID 생성 실패:', error);
+					if (url) {
+						const uuid = generateYouTubeUuid(url);
+						createSummary.fields.id.set(uuid);
 					}
 				}
 			},

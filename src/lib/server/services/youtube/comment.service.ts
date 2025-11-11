@@ -107,7 +107,7 @@ export class CommentService {
 			.from('comments')
 			.select('comment_id, data, updated_at')
 			.eq('video_id', videoId)
-			.order('updated_at', { ascending: false});
+			.order('updated_at', { ascending: false });
 
 		if (fetchError) {
 			throw error(500, `댓글 조회 실패: ${fetchError.message}`);

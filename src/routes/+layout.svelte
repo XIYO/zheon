@@ -11,7 +11,9 @@
 	onMount(() => subscribe(data.supabase));
 
 	onMount(() => {
-		const { data: { subscription } } = data.supabase.auth.onAuthStateChange((event) => {
+		const {
+			data: { subscription }
+		} = data.supabase.auth.onAuthStateChange((event) => {
 			if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
 				invalidate('supabase:auth');
 			}

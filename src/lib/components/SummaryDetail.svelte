@@ -43,61 +43,15 @@
 		</div>
 	</main>
 {:then summary}
-	{@const videoId = extractVideoId(summary.url)}
-	{@const thumbnailUrl =
-		summary.thumbnail_url || (videoId && getYouTubeThumbnail(videoId, 'maxresdefault'))}
-
-	{@const playAudio = async () => {
-		if (!summary) return;
-
-		try {
-			isLoadingAudio = true;
-
-			const audioUrl = await getSummaryAudio(summary.id, getAudioSignedUrl);
-
-			if (currentAudioUrl) {
-				URL.revokeObjectURL(currentAudioUrl);
-			}
-
-			currentAudioUrl = audioUrl;
-
-			if (audioElement) {
-				audioElement.src = audioUrl;
-				await audioElement.play();
-			}
-		} catch (error) {
-			console.error('Audio playback failed:', error);
-			alert('오디오 재생에 실패했습니다.');
-		} finally {
-			isLoadingAudio = false;
-		}
-	}}
-
-	{@const togglePlayPause = () => {
-		if (isPlaying) {
-			audioElement?.pause();
-		} else {
-			if (audioElement?.src) {
-				audioElement.play();
-			} else {
-				playAudio();
-			}
-		}
-	}}
-
 	<main class="container mx-auto px-4 py-12 max-w-5xl">
 		<header>
 			<a href={summary.url} target="_blank" rel="noopener noreferrer">
-				{#if thumbnailUrl}
-					<img
-						src={thumbnailUrl}
-						alt={summary.title}
-						width="1280"
-						height="720"
-						class="rounded-xl starting:opacity-0 aspect-video" />
-				{:else}
-					<div class="w-full aspect-video rounded-xl bg-surface-200-800 animate-pulse"></div>
-				{/if}
+				<img
+					src={getYouTubeThumbnail(extractVideoId(summary.url), 'maxresdefault')}
+					alt={summary.title}
+					width="1280"
+					height="720"
+					class="rounded-xl starting:opacity-0 aspect-video" />
 			</a>
 			<div class="mt-8 mb-12">
 				<h1 class="h1 mb-2">{summary.title}</h1>

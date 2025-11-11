@@ -34,11 +34,14 @@
 </script>
 
 <section aria-labelledby="summaries-title" class="space-y-4">
-	<ul class="overflow-auto border border-surface-300-700 rounded-lg divide-y divide-surface-200-800">
+	<ul
+		class="overflow-auto border border-surface-300-700 rounded-lg divide-y divide-surface-200-800">
 		{#each summaryStore.listQueries as query, index}
-			{#each query.current?.summaries ?? [] as summary (summary.id)}
+			{#each query.current?.summaries as summary (summary.id)}
 				<li class="hover:opacity-80">
-					<a href={resolve('/(main)/[id]', { id: summary.id })} class="flex items-center gap-3 px-4 py-3">
+					<a
+						href={resolve('/(main)/[id]', { id: summary.id })}
+						class="flex items-center gap-3 px-4 py-3">
 						<div
 							class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
 								? 'bg-warning-500 animate-pulse'
@@ -48,23 +51,23 @@
 										? 'bg-error-500'
 										: 'bg-success-500'}">
 						</div>
-						{#if summary.thumbnail_url || extractVideoId(summary.url)}
-							<img
-								src={summary.thumbnail_url ||
-									getYouTubeThumbnail(extractVideoId(summary.url) || '')}
-								alt=""
-								width="80"
-								height="45"
-								class="rounded object-cover aspect-video shrink-0" />
-						{/if}
+						<img
+							src={getYouTubeThumbnail(extractVideoId(summary.url))}
+							alt=""
+							width="80"
+							height="45"
+							class="rounded object-cover aspect-video shrink-0" />
 						<div class="min-w-0 flex-1">
 							<p class="truncate">
-								{summary.title || summary.url}
+								{summary.title}
 							</p>
 						</div>
 					</a>
 				</li>
 			{:else}
+			<!-- 스토어가 최초 두개(신규-최초는0개, 현재)의 getSummaries 함수를 가지기때문에 초기에는 펜딩 상태가 두 개 존재한다.
+			 그래서 항상 마지막 배열의 펜딩만 그린다.
+			  -->
 				{#if query.loading && index === summaryStore.listQueries.length - 1}
 					<li class="px-4 py-8 text-center text-surface-500">
 						<p>불러오는 중...</p>
