@@ -91,9 +91,42 @@ const VideoAnalysisSchema = {
 				teens: { type: 'number' as const },
 				twenties: { type: 'number' as const },
 				thirties: { type: 'number' as const },
-				forty_plus: { type: 'number' as const }
+				forty_plus: { type: 'number' as const },
+				median_age: { type: 'number' as const },
+				adult_ratio: { type: 'number' as const }
 			},
-			required: ['teens', 'twenties', 'thirties', 'forty_plus']
+			required: ['teens', 'twenties', 'thirties', 'forty_plus', 'median_age', 'adult_ratio']
+		},
+		plutchik_emotions: {
+			type: 'object' as const,
+			properties: {
+				joy: { type: 'number' as const },
+				trust: { type: 'number' as const },
+				fear: { type: 'number' as const },
+				surprise: { type: 'number' as const },
+				sadness: { type: 'number' as const },
+				disgust: { type: 'number' as const },
+				anger: { type: 'number' as const },
+				anticipation: { type: 'number' as const },
+				dominant_emotion: { type: 'string' as const },
+				entropy: { type: 'number' as const },
+				valence_mean: { type: 'number' as const },
+				arousal_mean: { type: 'number' as const }
+			},
+			required: [
+				'joy',
+				'trust',
+				'fear',
+				'surprise',
+				'sadness',
+				'disgust',
+				'anger',
+				'anticipation',
+				'dominant_emotion',
+				'entropy',
+				'valence_mean',
+				'arousal_mean'
+			]
 		},
 		insights: {
 			type: 'object' as const,
@@ -104,9 +137,48 @@ const VideoAnalysisSchema = {
 				recommendations: { type: 'array' as const, items: { type: 'string' as const } }
 			},
 			required: ['content_summary', 'audience_reaction', 'key_insights', 'recommendations']
+		},
+		representative_comments: {
+			type: 'object' as const,
+			properties: {
+				age_groups: {
+					type: 'object' as const,
+					properties: {
+						teens: { type: 'string' as const },
+						twenties: { type: 'string' as const },
+						thirties: { type: 'string' as const },
+						forty_plus: { type: 'string' as const }
+					},
+					required: ['teens', 'twenties', 'thirties', 'forty_plus']
+				},
+				emotions: {
+					type: 'object' as const,
+					properties: {
+						joy: { type: 'string' as const },
+						trust: { type: 'string' as const },
+						fear: { type: 'string' as const },
+						surprise: { type: 'string' as const },
+						sadness: { type: 'string' as const },
+						disgust: { type: 'string' as const },
+						anger: { type: 'string' as const },
+						anticipation: { type: 'string' as const }
+					},
+					required: ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation']
+				}
+			},
+			required: ['age_groups', 'emotions']
 		}
 	},
-	required: ['summary', 'content_quality', 'sentiment', 'community', 'age_groups', 'insights']
+	required: [
+		'summary',
+		'content_quality',
+		'sentiment',
+		'community',
+		'age_groups',
+		'plutchik_emotions',
+		'insights',
+		'representative_comments'
+	]
 };
 
 const VideoAnalysisValidationSchema = v.object({
@@ -142,13 +214,54 @@ const VideoAnalysisValidationSchema = v.object({
 		teens: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 		twenties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 		thirties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-		forty_plus: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
+		forty_plus: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		median_age: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		adult_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
+	}),
+	plutchik_emotions: v.object({
+		joy: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		trust: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		fear: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		surprise: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		sadness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		disgust: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		anger: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		anticipation: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		dominant_emotion: v.pipe(
+			v.string(),
+			v.check((s) =>
+				['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'].includes(
+					s
+				)
+			)
+		),
+		entropy: v.pipe(v.number(), v.minValue(0)),
+		valence_mean: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+		arousal_mean: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
 	}),
 	insights: v.object({
 		content_summary: v.pipe(v.string(), v.minLength(1), v.maxLength(1000)),
 		audience_reaction: v.pipe(v.string(), v.minLength(1), v.maxLength(1000)),
 		key_insights: v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(10)),
 		recommendations: v.pipe(v.array(v.string()), v.minLength(0), v.maxLength(10))
+	}),
+	representative_comments: v.object({
+		age_groups: v.object({
+			teens: v.string(),
+			twenties: v.string(),
+			thirties: v.string(),
+			forty_plus: v.string()
+		}),
+		emotions: v.object({
+			joy: v.string(),
+			trust: v.string(),
+			fear: v.string(),
+			surprise: v.string(),
+			sadness: v.string(),
+			disgust: v.string(),
+			anger: v.string(),
+			anticipation: v.string()
+		})
 	})
 });
 
@@ -350,13 +463,50 @@ ${commentsText}
    - twenties: 20대 비율 (0-100)
    - thirties: 30대 비율 (0-100)
    - forty_plus: 40대 이상 비율 (0-100)
+   - median_age: 중앙값 나이 (0-100)
+   - adult_ratio: 성인 비율 (0-100, 20대 이상)
    - 네 연령대 합은 반드시 100이어야 함
 
-6. insights (심층 인사이트):
+6. plutchik_emotions (Plutchik 8가지 기본 감정 + VAD, 댓글 기반):
+   - joy: 기쁨 (0-100)
+   - trust: 신뢰 (0-100)
+   - fear: 공포 (0-100)
+   - surprise: 놀람 (0-100)
+   - sadness: 슬픔 (0-100)
+   - disgust: 혐오 (0-100)
+   - anger: 분노 (0-100)
+   - anticipation: 기대 (0-100)
+   - dominant_emotion: 지배 감정 (8개 중 가장 높은 값의 감정명, 예: "joy")
+   - entropy: 감정 분포의 샤논 엔트로피 (ln 기반, 소수점 2자리)
+   - valence_mean: 감정가 평균 (0-100, 긍정-부정 축)
+   - arousal_mean: 각성 평균 (0-100, 활성화 정도)
+   - 8가지 감정의 합은 반드시 100이어야 함
+
+7. insights (심층 인사이트):
    - content_summary: 영상 콘텐츠 핵심 정리 (1000자 이내, 주요 논점과 결론)
    - audience_reaction: 시청자 반응 종합 (1000자 이내, 댓글 분석을 통한 수용도 파악)
    - key_insights: 핵심 인사이트 배열 (1-10개, 영상에서 발견한 중요한 통찰)
    - recommendations: 개선 제안 배열 (0-10개, 크리에이터를 위한 구체적 조언)
+
+8. representative_comments (대표 댓글 추출):
+   - age_groups: 각 연령대를 가장 잘 나타내는 실제 댓글 1개씩 선택
+     * teens: 10대를 대표하는 댓글 (원문 그대로, 이모지 포함)
+     * twenties: 20대를 대표하는 댓글
+     * thirties: 30대를 대표하는 댓글
+     * forty_plus: 40대 이상을 대표하는 댓글
+   - emotions: 각 감정을 가장 잘 나타내는 실제 댓글 1개씩 선택
+     * joy: 기쁨을 나타내는 댓글
+     * trust: 신뢰를 나타내는 댓글
+     * fear: 공포를 나타내는 댓글
+     * surprise: 놀람을 나타내는 댓글
+     * sadness: 슬픔을 나타내는 댓글
+     * disgust: 혐오를 나타내는 댓글
+     * anger: 분노를 나타내는 댓글
+     * anticipation: 기대를 나타내는 댓글
+
+   주의사항:
+   - 댓글은 반드시 위 [댓글 상위 100개] 목록에서 선택해야 함. 절대 만들어내거나 변형하지 말 것. 원문 그대로 복사.
+   - 해당하는 댓글이 없으면 "-" 문자열을 반환 (긴 설명 금지)
 
 JSON 스키마에 정확히 맞춰 응답하세요.`;
 
@@ -452,6 +602,21 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 				analysis.age_groups.thirties;
 		}
 
+		const pe = analysis.plutchik_emotions;
+		const emotionSum =
+			pe.joy + pe.trust + pe.fear + pe.surprise + pe.sadness + pe.disgust + pe.anger + pe.anticipation;
+		if (emotionSum !== 100) {
+			const scale = 100 / emotionSum;
+			pe.joy = Math.round(pe.joy * scale);
+			pe.trust = Math.round(pe.trust * scale);
+			pe.fear = Math.round(pe.fear * scale);
+			pe.surprise = Math.round(pe.surprise * scale);
+			pe.sadness = Math.round(pe.sadness * scale);
+			pe.disgust = Math.round(pe.disgust * scale);
+			pe.anger = Math.round(pe.anger * scale);
+			pe.anticipation = 100 - pe.joy - pe.trust - pe.fear - pe.surprise - pe.sadness - pe.disgust - pe.anger;
+		}
+
 		return analysis;
 	}
 
@@ -461,58 +626,66 @@ JSON 스키마에 정확히 맞춰 응답하세요.`;
 		totalComments: number,
 		analysis: v.InferOutput<typeof VideoAnalysisValidationSchema>
 	): Promise<void> {
-		const { error: upsertError } = await this.supabase.from('summaries').upsert(
-			{
-				video_id: videoId,
-				transcript,
-				summary: analysis.summary,
-				processing_status: 'completed',
-
-				content_quality_score: analysis.content_quality.overall_score,
-				content_educational_value: analysis.content_quality.educational_value,
-				content_entertainment_value: analysis.content_quality.entertainment_value,
-				content_information_accuracy: analysis.content_quality.information_accuracy,
-				content_clarity: analysis.content_quality.clarity,
-				content_depth: analysis.content_quality.depth,
-				content_category: analysis.content_quality.category,
-				content_target_audience: analysis.content_quality.target_audience,
-
-				sentiment_overall_score: analysis.sentiment.overall_score,
-				sentiment_positive_ratio: analysis.sentiment.positive_ratio,
-				sentiment_neutral_ratio: analysis.sentiment.neutral_ratio,
-				sentiment_negative_ratio: analysis.sentiment.negative_ratio,
-				sentiment_intensity: analysis.sentiment.intensity,
-
-				community_quality_score: analysis.community.overall_score,
-				community_politeness: analysis.community.politeness,
-				community_rudeness: analysis.community.rudeness,
-				community_kindness: analysis.community.kindness,
-				community_toxicity: analysis.community.toxicity,
-				community_constructive: analysis.community.constructive,
-				community_self_centered: analysis.community.self_centered,
-				community_off_topic: analysis.community.off_topic,
-
-				age_group_teens: analysis.age_groups.teens,
-				age_group_20s: analysis.age_groups.twenties,
-				age_group_30s: analysis.age_groups.thirties,
-				age_group_40plus: analysis.age_groups.forty_plus,
-
-				ai_content_summary: analysis.insights.content_summary,
-				ai_audience_reaction: analysis.insights.audience_reaction,
-				ai_key_insights: analysis.insights.key_insights,
-				ai_recommendations: analysis.insights.recommendations,
-
-				total_comments_analyzed: Math.min(totalComments, 100),
-				analysis_status: 'completed',
-				analyzed_at: new Date().toISOString(),
-				analysis_model: 'gemini-2.0-flash'
-			},
-			{ onConflict: 'video_id' }
-		);
+		const { error: upsertError } = await this.supabase
+			.from('summaries')
+			.upsert(
+				{
+					video_id: videoId,
+					transcript,
+					summary: analysis.summary,
+					processing_status: 'completed',
+					analysis_status: 'completed',
+					analyzed_at: new Date().toISOString(),
+					analysis_model: 'gemini-2.0-flash'
+				},
+				{ onConflict: 'video_id' }
+			);
 
 		if (upsertError) {
 			console.error('[summary] DB 저장 실패:', upsertError);
 			throw error(500, `요약 저장 실패: ${upsertError.message}`);
+		}
+
+		const now = new Date().toISOString();
+		const { error: communityError } = await (this.supabase as any)
+			.from('content_community_metrics')
+			.upsert(
+				{
+					video_id: videoId,
+					comments_analyzed: totalComments,
+
+					age_teens: analysis.age_groups.teens,
+					age_20s: analysis.age_groups.twenties,
+					age_30s: analysis.age_groups.thirties,
+					age_40plus: analysis.age_groups.forty_plus,
+					age_median: analysis.age_groups.median_age,
+					age_adult_ratio: analysis.age_groups.adult_ratio,
+
+					emotion_joy: analysis.plutchik_emotions.joy,
+					emotion_trust: analysis.plutchik_emotions.trust,
+					emotion_fear: analysis.plutchik_emotions.fear,
+					emotion_surprise: analysis.plutchik_emotions.surprise,
+					emotion_sadness: analysis.plutchik_emotions.sadness,
+					emotion_disgust: analysis.plutchik_emotions.disgust,
+					emotion_anger: analysis.plutchik_emotions.anger,
+					emotion_anticipation: analysis.plutchik_emotions.anticipation,
+					emotion_dominant: analysis.plutchik_emotions.dominant_emotion,
+					emotion_entropy: analysis.plutchik_emotions.entropy,
+					valence_mean: analysis.plutchik_emotions.valence_mean,
+					arousal_mean: analysis.plutchik_emotions.arousal_mean,
+
+					representative_comments: analysis.representative_comments,
+
+					framework_version: 'v1.0',
+					analysis_model: 'gemini-2.0-flash',
+					analyzed_at: now,
+					updated_at: now
+				},
+				{ onConflict: 'video_id' }
+			);
+
+		if (communityError) {
+			console.error('[summary] 커뮤니티 메트릭 저장 실패:', communityError);
 		}
 
 		console.log(`[summary] DB 저장 완료 videoId=${videoId}`);

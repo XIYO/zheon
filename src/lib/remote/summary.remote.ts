@@ -74,7 +74,18 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 		summary_audio_status: data.summary_audio_status
 	});
 
-	return data;
+	// 함께 커뮤니티 정규화 메타데이터 조회
+	const { data: community, error: cmError } = await supabase
+		.from('content_community_metrics')
+		.select('*')
+		.eq('video_id', id)
+		.maybeSingle();
+
+	if (cmError) {
+		console.warn('[remote/getSummaryById] community metrics fetch error', cmError.message);
+	}
+
+	return { ...data, community };
 });
 
 export const createSummary = form(SummarySchema, async ({ video_id }) => {

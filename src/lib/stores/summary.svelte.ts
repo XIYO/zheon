@@ -108,8 +108,18 @@ class SummaryStore {
 		const channel = supabase
 			.channel('summary-changes')
 			.on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, (payload) => {
-				console.log('[SummaryStore] Realtime 변경:', payload);
+				console.log('[SummaryStore] summaries 변경:', payload);
 				this.#handleRealtimeChange(payload);
+			})
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'content_community_metrics' }, (payload) => {
+				console.log('[SummaryStore] community 변경:', payload);
+				const videoId = (payload.new as any)?.video_id || (payload.old as any)?.video_id;
+				if (videoId) {
+					const detailQuery = this.#detailQueries.get(videoId as string);
+					if (this.isRemoteQuery(detailQuery)) {
+						detailQuery.refresh();
+					}
+				}
 			})
 			.subscribe((status) => {
 				console.timeEnd(timerId);
@@ -192,7 +202,7 @@ class SummaryStore {
 		const enhancedForm = createSummary
 			.preflight(SummarySchema)
 			.enhance(async ({ form, data, submit }) => {
-				const videoId = extractVideoId(data.url!);
+				const videoId = data.video_id;
 
 				if (!this.isRemoteQuery(this.#detailQueries.get(videoId)))
 					this.#detailQueries.set(videoId, submit());

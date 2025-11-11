@@ -108,41 +108,7 @@ CREATE TABLE IF NOT EXISTS public.summaries (
   thumbnail_url text,
   created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
-
-  content_quality_score integer CHECK (content_quality_score >= 0 AND content_quality_score <= 100),
-  content_educational_value integer CHECK (content_educational_value >= 0 AND content_educational_value <= 100),
-  content_entertainment_value integer CHECK (content_entertainment_value >= 0 AND content_entertainment_value <= 100),
-  content_information_accuracy integer CHECK (content_information_accuracy >= 0 AND content_information_accuracy <= 100),
-  content_clarity integer CHECK (content_clarity >= 0 AND content_clarity <= 100),
-  content_depth integer CHECK (content_depth >= 0 AND content_depth <= 100),
-  content_category text,
-  content_target_audience text,
-
-  sentiment_overall_score integer CHECK (sentiment_overall_score >= -100 AND sentiment_overall_score <= 100),
-  sentiment_positive_ratio integer CHECK (sentiment_positive_ratio >= 0 AND sentiment_positive_ratio <= 100),
-  sentiment_neutral_ratio integer CHECK (sentiment_neutral_ratio >= 0 AND sentiment_neutral_ratio <= 100),
-  sentiment_negative_ratio integer CHECK (sentiment_negative_ratio >= 0 AND sentiment_negative_ratio <= 100),
-  sentiment_intensity integer CHECK (sentiment_intensity >= 0 AND sentiment_intensity <= 100),
-
-  community_quality_score integer CHECK (community_quality_score >= -100 AND community_quality_score <= 100),
-  community_politeness integer CHECK (community_politeness >= 0 AND community_politeness <= 100),
-  community_rudeness integer CHECK (community_rudeness >= 0 AND community_rudeness <= 100),
-  community_kindness integer CHECK (community_kindness >= 0 AND community_kindness <= 100),
-  community_toxicity integer CHECK (community_toxicity >= 0 AND community_toxicity <= 100),
-  community_constructive integer CHECK (community_constructive >= 0 AND community_constructive <= 100),
-  community_self_centered integer CHECK (community_self_centered >= 0 AND community_self_centered <= 100),
-  community_off_topic integer CHECK (community_off_topic >= 0 AND community_off_topic <= 100),
-
-  age_group_teens integer CHECK (age_group_teens >= 0 AND age_group_teens <= 100),
-  age_group_20s integer CHECK (age_group_20s >= 0 AND age_group_20s <= 100),
-  age_group_30s integer CHECK (age_group_30s >= 0 AND age_group_30s <= 100),
-  age_group_40plus integer CHECK (age_group_40plus >= 0 AND age_group_40plus <= 100),
-
-  ai_content_summary text,
-  ai_audience_reaction text,
-  ai_key_insights jsonb DEFAULT '[]',
-  ai_recommendations jsonb DEFAULT '[]',
-  total_comments_analyzed integer DEFAULT 0,
+  -- 메타데이터(연령/감정 등)는 별도 정규화 테이블에 저장합니다.
   analysis_status text CHECK (analysis_status IN ('pending', 'processing', 'completed', 'failed')) DEFAULT 'pending',
   analyzed_at timestamptz,
   analysis_model text DEFAULT 'gemini-2.5-flash-lite',
@@ -195,6 +161,46 @@ CREATE TABLE IF NOT EXISTS public.transcripts (
   updated_at timestamptz DEFAULT now()
 );
 
+-- 2.8 content_community_metrics (정규화된 커뮤니티 연령/감정 메타)
+CREATE TABLE IF NOT EXISTS public.content_community_metrics (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  video_id text NOT NULL UNIQUE REFERENCES public.summaries(video_id) ON DELETE CASCADE,
+  comments_analyzed integer DEFAULT 0,
+
+  -- 연령 분포 및 요약 (합 100 권장)
+  age_teens integer CHECK (age_teens >= 0 AND age_teens <= 100),
+  age_20s integer CHECK (age_20s >= 0 AND age_20s <= 100),
+  age_30s integer CHECK (age_30s >= 0 AND age_30s <= 100),
+  age_40plus integer CHECK (age_40plus >= 0 AND age_40plus <= 100),
+  age_median integer CHECK (age_median >= 0 AND age_median <= 100),
+  age_adult_ratio integer CHECK (age_adult_ratio >= 0 AND age_adult_ratio <= 100),
+
+  -- Plutchik 8축 감정 분포 (합 100 권장)
+  emotion_joy integer CHECK (emotion_joy >= 0 AND emotion_joy <= 100),
+  emotion_trust integer CHECK (emotion_trust >= 0 AND emotion_trust <= 100),
+  emotion_fear integer CHECK (emotion_fear >= 0 AND emotion_fear <= 100),
+  emotion_surprise integer CHECK (emotion_surprise >= 0 AND emotion_surprise <= 100),
+  emotion_sadness integer CHECK (emotion_sadness >= 0 AND emotion_sadness <= 100),
+  emotion_disgust integer CHECK (emotion_disgust >= 0 AND emotion_disgust <= 100),
+  emotion_anger integer CHECK (emotion_anger >= 0 AND emotion_anger <= 100),
+  emotion_anticipation integer CHECK (emotion_anticipation >= 0 AND emotion_anticipation <= 100),
+
+  -- 요약값
+  emotion_dominant text,
+  emotion_entropy real,
+  valence_mean integer CHECK (valence_mean >= 0 AND valence_mean <= 100),
+  arousal_mean integer CHECK (arousal_mean >= 0 AND arousal_mean <= 100),
+
+  -- 대표 댓글 (각 연령대/감정별 실제 댓글 예시)
+  representative_comments jsonb DEFAULT '{}',
+
+  framework_version text DEFAULT 'v1.0',
+  analysis_model text,
+  analyzed_at timestamptz,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz DEFAULT now()
+);
+
 -- ============================================================================
 -- 3. INDEXES
 -- ============================================================================
@@ -221,9 +227,6 @@ CREATE INDEX IF NOT EXISTS idx_summaries_video_id ON public.summaries(video_id);
 CREATE INDEX IF NOT EXISTS idx_summaries_created_at ON public.summaries(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_summaries_audio_status ON public.summaries(summary_audio_status) WHERE summary_audio_status IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_summaries_insights_audio_status ON public.summaries(insights_audio_status) WHERE insights_audio_status IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_content_quality ON public.summaries(content_quality_score DESC) WHERE content_quality_score IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_sentiment ON public.summaries(sentiment_overall_score DESC) WHERE sentiment_overall_score IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_summaries_community_quality ON public.summaries(community_quality_score DESC) WHERE community_quality_score IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_summaries_analysis_status ON public.summaries(analysis_status) WHERE analysis_status IS NOT NULL;
 
 -- 3.4 subscriptions indexes
@@ -237,6 +240,13 @@ CREATE INDEX IF NOT EXISTS idx_comments_comment_id ON public.comments(comment_id
 -- 3.6 transcripts indexes
 CREATE INDEX IF NOT EXISTS idx_transcripts_video_id ON public.transcripts(video_id);
 
+-- 3.7 content_community_metrics indexes
+CREATE INDEX IF NOT EXISTS idx_ccm_video_id ON public.content_community_metrics(video_id);
+CREATE INDEX IF NOT EXISTS idx_ccm_age_median ON public.content_community_metrics(age_median);
+CREATE INDEX IF NOT EXISTS idx_ccm_age_adult_ratio ON public.content_community_metrics(age_adult_ratio);
+CREATE INDEX IF NOT EXISTS idx_ccm_emotion_dominant ON public.content_community_metrics(emotion_dominant);
+CREATE INDEX IF NOT EXISTS idx_ccm_valence_arousal ON public.content_community_metrics(valence_mean, arousal_mean);
+
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY (RLS)
 -- ============================================================================
@@ -249,6 +259,7 @@ ALTER TABLE public.summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transcripts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.content_community_metrics ENABLE ROW LEVEL SECURITY;
 
 -- 4.2 channels RLS policies
 CREATE POLICY "Anyone can view channels"
@@ -382,6 +393,16 @@ CREATE POLICY "Service role can manage transcripts"
 GRANT SELECT, INSERT ON public.transcripts TO anon;
 GRANT ALL ON public.transcripts TO authenticated;
 
+-- 4.9 content_community_metrics RLS policies
+CREATE POLICY "Anyone can view content_community_metrics"
+  ON public.content_community_metrics FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+GRANT SELECT ON public.content_community_metrics TO anon;
+GRANT ALL ON public.content_community_metrics TO authenticated;
+
+
 -- ============================================================================
 -- 5. SCHEDULED TASKS (pg_cron)
 -- ============================================================================
@@ -452,17 +473,14 @@ SELECT cron.schedule(
 COMMENT ON TABLE public.channels IS 'YouTube 채널 메타데이터';
 COMMENT ON TABLE public.videos IS '비디오 메타데이터';
 COMMENT ON TABLE public.profiles IS '사용자 프로필 및 구독 동기화 상태';
-COMMENT ON TABLE public.summaries IS 'AI 생성 비디오 요약 및 인사이트';
+COMMENT ON TABLE public.summaries IS 'AI 생성 비디오 요약 (메타는 별도 테이블)';
 COMMENT ON TABLE public.subscriptions IS '사용자 구독 채널 목록';
 COMMENT ON TABLE public.comments IS 'YouTube 비디오 댓글 (증분 수집용)';
 COMMENT ON TABLE public.transcripts IS '비디오 자막 원본 데이터 (1회 소비용)';
+COMMENT ON TABLE public.content_community_metrics IS '정규화된 커뮤니티 연령/감정 메타 (검색 최적화)';
 
 COMMENT ON COLUMN public.summaries.video_id IS 'YouTube video ID (11 characters) - primary identifier';
-COMMENT ON COLUMN public.summaries.content_quality_score IS 'Overall content quality score (0-100) based on transcript analysis';
-COMMENT ON COLUMN public.summaries.sentiment_overall_score IS 'Overall sentiment score (-100 to 100: negative to positive) based on top 100 comments';
-COMMENT ON COLUMN public.summaries.community_quality_score IS 'Overall community quality score (-100 to 100: toxic to constructive) based on comment tone/attitude';
-COMMENT ON COLUMN public.summaries.ai_key_insights IS 'JSON array of key findings from AI analysis';
-COMMENT ON COLUMN public.summaries.ai_recommendations IS 'JSON array of improvement suggestions';
+COMMENT ON COLUMN public.content_community_metrics.video_id IS 'FK to summaries.video_id';
 
 -- ============================================================================
 -- 7. REALTIME
@@ -470,6 +488,8 @@ COMMENT ON COLUMN public.summaries.ai_recommendations IS 'JSON array of improvem
 
 -- Enable Realtime for summaries table
 ALTER PUBLICATION supabase_realtime ADD TABLE public.summaries;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.content_community_metrics;
 
 -- Set replica identity to full for better change tracking
 ALTER TABLE public.summaries REPLICA IDENTITY FULL;
+ALTER TABLE public.content_community_metrics REPLICA IDENTITY FULL;

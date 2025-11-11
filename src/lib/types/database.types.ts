@@ -133,6 +133,104 @@ export type Database = {
         }
         Relationships: []
       }
+      content_community_metrics: {
+        Row: {
+          age_20s: number | null
+          age_30s: number | null
+          age_40plus: number | null
+          age_adult_ratio: number | null
+          age_median: number | null
+          age_teens: number | null
+          analysis_model: string | null
+          analyzed_at: string | null
+          arousal_mean: number | null
+          comments_analyzed: number | null
+          created_at: string
+          emotion_anger: number | null
+          emotion_anticipation: number | null
+          emotion_disgust: number | null
+          emotion_dominant: string | null
+          emotion_entropy: number | null
+          emotion_fear: number | null
+          emotion_joy: number | null
+          emotion_sadness: number | null
+          emotion_surprise: number | null
+          emotion_trust: number | null
+          framework_version: string | null
+          id: string
+          representative_comments: Json | null
+          updated_at: string | null
+          valence_mean: number | null
+          video_id: string
+        }
+        Insert: {
+          age_20s?: number | null
+          age_30s?: number | null
+          age_40plus?: number | null
+          age_adult_ratio?: number | null
+          age_median?: number | null
+          age_teens?: number | null
+          analysis_model?: string | null
+          analyzed_at?: string | null
+          arousal_mean?: number | null
+          comments_analyzed?: number | null
+          created_at?: string
+          emotion_anger?: number | null
+          emotion_anticipation?: number | null
+          emotion_disgust?: number | null
+          emotion_dominant?: string | null
+          emotion_entropy?: number | null
+          emotion_fear?: number | null
+          emotion_joy?: number | null
+          emotion_sadness?: number | null
+          emotion_surprise?: number | null
+          emotion_trust?: number | null
+          framework_version?: string | null
+          id?: string
+          representative_comments?: Json | null
+          updated_at?: string | null
+          valence_mean?: number | null
+          video_id: string
+        }
+        Update: {
+          age_20s?: number | null
+          age_30s?: number | null
+          age_40plus?: number | null
+          age_adult_ratio?: number | null
+          age_median?: number | null
+          age_teens?: number | null
+          analysis_model?: string | null
+          analyzed_at?: string | null
+          arousal_mean?: number | null
+          comments_analyzed?: number | null
+          created_at?: string
+          emotion_anger?: number | null
+          emotion_anticipation?: number | null
+          emotion_disgust?: number | null
+          emotion_dominant?: string | null
+          emotion_entropy?: number | null
+          emotion_fear?: number | null
+          emotion_joy?: number | null
+          emotion_sadness?: number | null
+          emotion_surprise?: number | null
+          emotion_trust?: number | null
+          framework_version?: string | null
+          id?: string
+          representative_comments?: Json | null
+          updated_at?: string | null
+          valence_mean?: number | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_community_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "summaries"
+            referencedColumns: ["video_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -213,35 +311,11 @@ export type Database = {
       }
       summaries: {
         Row: {
-          age_group_20s: number | null
-          age_group_30s: number | null
-          age_group_40plus: number | null
-          age_group_teens: number | null
-          ai_audience_reaction: string | null
-          ai_content_summary: string | null
-          ai_key_insights: Json | null
-          ai_recommendations: Json | null
           analysis_model: string | null
           analysis_status: string | null
           analyzed_at: string | null
           channel_id: string | null
           channel_name: string | null
-          community_constructive: number | null
-          community_kindness: number | null
-          community_off_topic: number | null
-          community_politeness: number | null
-          community_quality_score: number | null
-          community_rudeness: number | null
-          community_self_centered: number | null
-          community_toxicity: number | null
-          content_category: string | null
-          content_clarity: number | null
-          content_depth: number | null
-          content_educational_value: number | null
-          content_entertainment_value: number | null
-          content_information_accuracy: number | null
-          content_quality_score: number | null
-          content_target_audience: string | null
           created_at: string
           duration: number | null
           id: string
@@ -250,51 +324,21 @@ export type Database = {
           insights_audio_url: string | null
           language: string | null
           processing_status: string | null
-          sentiment_intensity: number | null
-          sentiment_negative_ratio: number | null
-          sentiment_neutral_ratio: number | null
-          sentiment_overall_score: number | null
-          sentiment_positive_ratio: number | null
           summary: string | null
           summary_audio_status: string | null
           summary_audio_url: string | null
           thumbnail_url: string | null
           title: string | null
-          total_comments_analyzed: number | null
           transcript: string | null
           updated_at: string | null
           video_id: string
         }
         Insert: {
-          age_group_20s?: number | null
-          age_group_30s?: number | null
-          age_group_40plus?: number | null
-          age_group_teens?: number | null
-          ai_audience_reaction?: string | null
-          ai_content_summary?: string | null
-          ai_key_insights?: Json | null
-          ai_recommendations?: Json | null
           analysis_model?: string | null
           analysis_status?: string | null
           analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
-          community_constructive?: number | null
-          community_kindness?: number | null
-          community_off_topic?: number | null
-          community_politeness?: number | null
-          community_quality_score?: number | null
-          community_rudeness?: number | null
-          community_self_centered?: number | null
-          community_toxicity?: number | null
-          content_category?: string | null
-          content_clarity?: number | null
-          content_depth?: number | null
-          content_educational_value?: number | null
-          content_entertainment_value?: number | null
-          content_information_accuracy?: number | null
-          content_quality_score?: number | null
-          content_target_audience?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -303,51 +347,21 @@ export type Database = {
           insights_audio_url?: string | null
           language?: string | null
           processing_status?: string | null
-          sentiment_intensity?: number | null
-          sentiment_negative_ratio?: number | null
-          sentiment_neutral_ratio?: number | null
-          sentiment_overall_score?: number | null
-          sentiment_positive_ratio?: number | null
           summary?: string | null
           summary_audio_status?: string | null
           summary_audio_url?: string | null
           thumbnail_url?: string | null
           title?: string | null
-          total_comments_analyzed?: number | null
           transcript?: string | null
           updated_at?: string | null
           video_id: string
         }
         Update: {
-          age_group_20s?: number | null
-          age_group_30s?: number | null
-          age_group_40plus?: number | null
-          age_group_teens?: number | null
-          ai_audience_reaction?: string | null
-          ai_content_summary?: string | null
-          ai_key_insights?: Json | null
-          ai_recommendations?: Json | null
           analysis_model?: string | null
           analysis_status?: string | null
           analyzed_at?: string | null
           channel_id?: string | null
           channel_name?: string | null
-          community_constructive?: number | null
-          community_kindness?: number | null
-          community_off_topic?: number | null
-          community_politeness?: number | null
-          community_quality_score?: number | null
-          community_rudeness?: number | null
-          community_self_centered?: number | null
-          community_toxicity?: number | null
-          content_category?: string | null
-          content_clarity?: number | null
-          content_depth?: number | null
-          content_educational_value?: number | null
-          content_entertainment_value?: number | null
-          content_information_accuracy?: number | null
-          content_quality_score?: number | null
-          content_target_audience?: string | null
           created_at?: string
           duration?: number | null
           id?: string
@@ -356,17 +370,11 @@ export type Database = {
           insights_audio_url?: string | null
           language?: string | null
           processing_status?: string | null
-          sentiment_intensity?: number | null
-          sentiment_negative_ratio?: number | null
-          sentiment_neutral_ratio?: number | null
-          sentiment_overall_score?: number | null
-          sentiment_positive_ratio?: number | null
           summary?: string | null
           summary_audio_status?: string | null
           summary_audio_url?: string | null
           thumbnail_url?: string | null
           title?: string | null
-          total_comments_analyzed?: number | null
           transcript?: string | null
           updated_at?: string | null
           video_id?: string
