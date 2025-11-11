@@ -1,6 +1,14 @@
--- Zheon Database Schema - Public Schema Only
+-- Zheon Database Schema - Consolidated
+-- All migrations consolidated into single schema
 -- Uses public schema (default PostgreSQL schema)
 -- PowerSync Compatible: No DB-level foreign key constraints
+
+-- ============================================================================
+-- 1. EXTENSIONS
+-- ============================================================================
+
+-- pg_cron extension for scheduled cleanup tasks
+CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- ============================================================================
 -- 2. TABLES
@@ -24,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.channels (
   thumbnail_height integer,
   view_count bigint,
   uploads_playlist_id text,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
 
   CONSTRAINT channels_video_sync_status_check
@@ -58,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.videos (
   position integer,
   video_insight jsonb,
   last_analyzed_at timestamptz,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
 
   CONSTRAINT videos_channel_video_unique UNIQUE (channel_id, video_id)
@@ -71,6 +81,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   bio text,
   youtube_subscription_sync_status text,
   youtube_subscription_synced_at timestamptz,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
 
   CONSTRAINT profiles_youtube_subscription_sync_status_check
@@ -80,7 +91,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2.4 summaries
 CREATE TABLE IF NOT EXISTS public.summaries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  url text NOT NULL UNIQUE,
+  video_id text NOT NULL UNIQUE,
   title text,
   channel_id text,
   channel_name text,
@@ -95,6 +106,7 @@ CREATE TABLE IF NOT EXISTS public.summaries (
   insights_audio_url text,
   insights_audio_status text,
   thumbnail_url text,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
 
   content_quality_score integer CHECK (content_quality_score >= 0 AND content_quality_score <= 100),
@@ -106,13 +118,13 @@ CREATE TABLE IF NOT EXISTS public.summaries (
   content_category text,
   content_target_audience text,
 
-  sentiment_overall_score integer CHECK (sentiment_overall_score >= 0 AND sentiment_overall_score <= 100),
+  sentiment_overall_score integer CHECK (sentiment_overall_score >= -100 AND sentiment_overall_score <= 100),
   sentiment_positive_ratio integer CHECK (sentiment_positive_ratio >= 0 AND sentiment_positive_ratio <= 100),
   sentiment_neutral_ratio integer CHECK (sentiment_neutral_ratio >= 0 AND sentiment_neutral_ratio <= 100),
   sentiment_negative_ratio integer CHECK (sentiment_negative_ratio >= 0 AND sentiment_negative_ratio <= 100),
   sentiment_intensity integer CHECK (sentiment_intensity >= 0 AND sentiment_intensity <= 100),
 
-  community_quality_score integer CHECK (community_quality_score >= 0 AND community_quality_score <= 100),
+  community_quality_score integer CHECK (community_quality_score >= -100 AND community_quality_score <= 100),
   community_politeness integer CHECK (community_politeness >= 0 AND community_politeness <= 100),
   community_rudeness integer CHECK (community_rudeness >= 0 AND community_rudeness <= 100),
   community_kindness integer CHECK (community_kindness >= 0 AND community_kindness <= 100),
@@ -155,6 +167,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
   thumbnail_url text,
   resource_kind text,
   subscription_data jsonb,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now(),
 
   CONSTRAINT subscriptions_user_channel_unique UNIQUE (user_id, channel_id)
@@ -169,6 +182,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
   sentiment text CHECK (sentiment IN ('positive', 'neutral', 'negative')),
   sentiment_confidence real CHECK (sentiment_confidence >= 0 AND sentiment_confidence <= 1),
   sentiment_analyzed_at timestamptz,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now()
 );
 
@@ -177,6 +191,7 @@ CREATE TABLE IF NOT EXISTS public.transcripts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   video_id text NOT NULL UNIQUE,
   data jsonb NOT NULL,
+  created_at timestamptz DEFAULT now() NOT NULL,
   updated_at timestamptz DEFAULT now()
 );
 
@@ -202,7 +217,8 @@ CREATE INDEX IF NOT EXISTS idx_videos_channel ON public.videos(channel_id);
 -- 3.3 summaries indexes
 CREATE INDEX IF NOT EXISTS idx_summaries_channel_id ON public.summaries(channel_id) WHERE channel_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_summaries_processing_status ON public.summaries(processing_status);
-CREATE INDEX IF NOT EXISTS idx_summaries_url ON public.summaries(url);
+CREATE INDEX IF NOT EXISTS idx_summaries_video_id ON public.summaries(video_id);
+CREATE INDEX IF NOT EXISTS idx_summaries_created_at ON public.summaries(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_summaries_audio_status ON public.summaries(summary_audio_status) WHERE summary_audio_status IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_summaries_insights_audio_status ON public.summaries(insights_audio_status) WHERE insights_audio_status IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_summaries_content_quality ON public.summaries(content_quality_score DESC) WHERE content_quality_score IS NOT NULL;
@@ -305,7 +321,6 @@ CREATE POLICY "Allow service role delete"
   TO service_role
   USING (true);
 
--- 4.5.1 summaries 테이블 권한
 GRANT SELECT, INSERT ON public.summaries TO anon;
 GRANT ALL ON public.summaries TO authenticated;
 
@@ -344,7 +359,6 @@ CREATE POLICY "Service role can manage comments"
   USING (true)
   WITH CHECK (true);
 
--- 4.7.1 comments 테이블 권한
 GRANT SELECT, INSERT ON public.comments TO anon;
 GRANT ALL ON public.comments TO authenticated;
 
@@ -365,12 +379,74 @@ CREATE POLICY "Service role can manage transcripts"
   USING (true)
   WITH CHECK (true);
 
--- 4.8.1 transcripts 테이블 권한
 GRANT SELECT, INSERT ON public.transcripts TO anon;
 GRANT ALL ON public.transcripts TO authenticated;
 
 -- ============================================================================
--- 5. COMMENTS
+-- 5. SCHEDULED TASKS (pg_cron)
+-- ============================================================================
+
+-- Cleanup function for stuck processing records
+CREATE OR REPLACE FUNCTION public.cleanup_stuck_processing()
+RETURNS INTEGER AS $$
+DECLARE
+  updated_count INTEGER := 0;
+  processing_count INTEGER := 0;
+  analysis_count INTEGER := 0;
+BEGIN
+  -- processing_status가 10분 이상 stuck인 레코드 처리
+  WITH updated AS (
+    UPDATE public.summaries
+    SET
+      processing_status = 'failed',
+      updated_at = now()
+    WHERE processing_status = 'processing'
+      AND updated_at < now() - interval '10 minutes'
+    RETURNING id
+  )
+  SELECT count(*) INTO processing_count FROM updated;
+
+  -- analysis_status가 10분 이상 stuck인 레코드 처리
+  WITH updated_analysis AS (
+    UPDATE public.summaries
+    SET
+      analysis_status = 'failed',
+      updated_at = now()
+    WHERE analysis_status = 'processing'
+      AND updated_at < now() - interval '10 minutes'
+    RETURNING id
+  )
+  SELECT count(*) INTO analysis_count FROM updated_analysis;
+
+  updated_count := processing_count + analysis_count;
+
+  RAISE NOTICE 'Cleaned up % stuck processing records (processing: %, analysis: %)',
+    updated_count, processing_count, analysis_count;
+
+  RETURN updated_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION public.cleanup_stuck_processing() IS
+'10분 이상 processing 상태인 summaries 레코드를 failed로 변경. pg_cron에서 매시간 실행됨.';
+
+-- Remove existing job if present
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-stuck-processing') THEN
+    PERFORM cron.unschedule('cleanup-stuck-processing');
+  END IF;
+END $$;
+
+-- Schedule cleanup job: runs every hour
+SELECT cron.schedule(
+  'cleanup-stuck-processing',
+  '0 * * * *',
+  $$SELECT public.cleanup_stuck_processing();$$
+);
+
+-- ============================================================================
+-- 6. COMMENTS
 -- ============================================================================
 
 COMMENT ON TABLE public.channels IS 'YouTube 채널 메타데이터';
@@ -381,14 +457,15 @@ COMMENT ON TABLE public.subscriptions IS '사용자 구독 채널 목록';
 COMMENT ON TABLE public.comments IS 'YouTube 비디오 댓글 (증분 수집용)';
 COMMENT ON TABLE public.transcripts IS '비디오 자막 원본 데이터 (1회 소비용)';
 
+COMMENT ON COLUMN public.summaries.video_id IS 'YouTube video ID (11 characters) - primary identifier';
 COMMENT ON COLUMN public.summaries.content_quality_score IS 'Overall content quality score (0-100) based on transcript analysis';
-COMMENT ON COLUMN public.summaries.sentiment_overall_score IS 'Overall sentiment score (0-100) based on top 100 comments';
-COMMENT ON COLUMN public.summaries.community_quality_score IS 'Overall community quality score (0-100) based on comment tone/attitude';
+COMMENT ON COLUMN public.summaries.sentiment_overall_score IS 'Overall sentiment score (-100 to 100: negative to positive) based on top 100 comments';
+COMMENT ON COLUMN public.summaries.community_quality_score IS 'Overall community quality score (-100 to 100: toxic to constructive) based on comment tone/attitude';
 COMMENT ON COLUMN public.summaries.ai_key_insights IS 'JSON array of key findings from AI analysis';
 COMMENT ON COLUMN public.summaries.ai_recommendations IS 'JSON array of improvement suggestions';
 
 -- ============================================================================
--- 6. REALTIME
+-- 7. REALTIME
 -- ============================================================================
 
 -- Enable Realtime for summaries table
