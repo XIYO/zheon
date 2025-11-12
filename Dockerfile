@@ -1,29 +1,27 @@
 # Build stage
-FROM node:24-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
-
-RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY . .
-RUN pnpm build
+RUN bun run build
 
 # Production stage
-FROM node:24-alpine
+FROM oven/bun:1-alpine
 
 WORKDIR /app
 
-RUN corepack enable
+COPY --from=builder --chown=bun:bun /app/.svelte-kit/output ./output
+COPY --from=builder --chown=bun:bun /app/package.json ./
+COPY --from=builder --chown=bun:bun /app/pnpm-lock.yaml ./
 
-COPY --from=builder --chown=node:node /app/build ./build
-COPY --from=builder --chown=node:node /app/package.json ./
-COPY --from=builder --chown=node:node /app/pnpm-lock.yaml ./
+RUN bun install --production
 
-RUN pnpm install --prod --frozen-lockfile
+USER bun
 
-USER node
+EXPOSE 3000
 
-CMD ["node", "build/index.js"]
+CMD ["bun", "run", "output/server/index.js"]
