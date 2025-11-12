@@ -214,7 +214,7 @@ You can mix and match for optimal results:
     Open
   </Dialog.Trigger>
   <Dialog.Content class={[
-    'card preset-filled-surface-50-900 p-8',
+    'card preset-filled-surface-50-950 p-8',
     'max-w-md rounded-xl shadow-xl'
   ]}>
     <Dialog.Title class="h3 text-primary-600-400">
@@ -282,7 +282,7 @@ Layer the design system:
 
 <Collapsible.Root>
   <Collapsible.Trigger class={[
-    'card preset-filled-surface-50-900 p-4',
+    'card preset-filled-surface-50-950 p-4',
     'transition-all hover:shadow-lg hover:-translate-y-1',
     'w-full text-left'
   ]}>
@@ -302,7 +302,7 @@ Layer the design system:
   let selected = $state('');
 </script>
 
-<div class="card preset-filled-surface-50-900 p-6">
+<div class="card preset-filled-surface-50-950 p-6">
   <label class="label">
     <span class="text-sm font-semibold">Select Option</span>
     <Combobox bind:value={selected}>
@@ -348,7 +348,7 @@ Layer the design system:
   <Dialog.Portal>
     <Dialog.Overlay class="fixed inset-0 bg-black/50" />
     <Dialog.Content class={[
-      'card preset-filled-surface-50-900',
+      'card preset-filled-surface-50-950',
       'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
       'max-w-md p-8 rounded-xl shadow-xl'
     ]}>

@@ -40,9 +40,9 @@ services:
       GOOGLE_CLIENT_ID: 123106426850-sg3muliha3419e4rc4e5ibh98l0rq6sb.apps.googleusercontent.com
       GOOGLE_CLIENT_SECRET: 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
       YOUTUBE_API_KEY: AIzaSyDYpYOX-Xewqw_8nFu-d88jR0s2_RWkhyM
-      PUBLIC_SUPABASE_URL: http://host.docker.internal:55321
-      PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
-      SUPABASE_SECRET_KEY: sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz
+      PUBLIC_SUPABASE_URL: https://iefgdhwmgljjacafqomd.supabase.co
+      PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_2DSwr9dKHxpA4WOEEOYkww_AMIhsiUb
+      SUPABASE_SECRET_KEY: sb_secret_ZWX2bdGgUVk1xJNWYtHDAA_w7F3KXMz
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     depends_on:

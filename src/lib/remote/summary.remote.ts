@@ -53,11 +53,9 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 	const { locals } = getRequestEvent();
 	const { supabase } = locals;
 
-	const { data, error: sbError} = await supabase
+	const { data, error: sbError } = await supabase
 		.from('summaries')
-		.select(
-			'id, video_id, title, channel_id, channel_name, duration, transcript, summary, insights, language, processing_status, summary_audio_url, summary_audio_status, insights_audio_url, insights_audio_status, thumbnail_url, created_at, updated_at, analysis_status, analyzed_at, analysis_model, failure_reason'
-		)
+		.select('*')
 		.eq('video_id', id)
 		.single();
 

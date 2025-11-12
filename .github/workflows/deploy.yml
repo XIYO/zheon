@@ -91,11 +91,11 @@ jobs:
               cd zheon-ops
             fi
 
-            echo "Removing old Docker images..."
-            docker rmi ghcr.io/xiyo/zheon:latest || true
-
             echo "Pulling latest Docker images..."
             docker compose pull --quiet
+
+            echo "Checking Docker images..."
+            docker images ghcr.io/xiyo/zheon --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}"
 
             echo "Starting deployment..."
             bash start.sh

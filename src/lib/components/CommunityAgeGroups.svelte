@@ -17,7 +17,7 @@
 {#await summaryStore.community(videoId)}
 	<div class="space-y-3">
 		<h3 class="font-bold text-center">연령 분포</h3>
-		<div class="flex items-center justify-center rounded-lg bg-surface-100-800 h-80">
+		<div class="flex items-center justify-center rounded-lg bg-surface-100-900 h-80">
 			<p class="text-surface-500-400">커뮤니티 분석 중...</p>
 		</div>
 		<div class="h-16"></div>
@@ -27,7 +27,7 @@
 		<div class="space-y-3">
 			<h3 class="font-bold text-center">연령 분포</h3>
 			<div
-				class="flex items-center justify-center rounded-lg bg-surface-100-800 transition-all hover:bg-surface-200-700 h-80">
+				class="flex items-center justify-center rounded-lg bg-surface-100-900 transition-all hover:bg-surface-200-800 h-80">
 				<PieChart
 					data={[
 						{ label: '10대', value: community.age_teens ?? 0 },

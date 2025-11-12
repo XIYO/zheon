@@ -148,7 +148,7 @@ Prior to Svelte 5.16, use the `class:` directive:
 <div
 	class={[
 		'card p-4',
-		variant === 'filled' && 'preset-filled-surface-50-900',
+		variant === 'filled' && 'preset-filled-surface-50-950',
 		variant === 'tonal' && 'preset-tonal-surface',
 		variant === 'outlined' && 'preset-outlined-surface-500'
 	]}>

@@ -45,7 +45,7 @@
 		</div>
 	</header>
 
-	<section class="card preset-filled-surface-50-900 p-4 transition-all hover:shadow-lg">
+	<section class="card preset-filled-surface-50-950 p-4 transition-all hover:shadow-lg">
 		<header class="mb-4">
 			<h2 class="h2">AI 요약</h2>
 		</header>
@@ -76,7 +76,7 @@
 		{/await}
 	</section>
 
-	<section class="card preset-filled-surface-50-900 p-4 mt-6 transition-all hover:shadow-lg">
+	<section class="card preset-filled-surface-50-950 p-4 mt-6 transition-all hover:shadow-lg">
 		<header class="mb-6">
 			<h2 class="h2">커뮤니티 분석</h2>
 		</header>
@@ -85,14 +85,14 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 				<div class="space-y-3">
 					<h3 class="font-bold text-center">감정 분포</h3>
-					<div class="flex items-center justify-center rounded-lg bg-surface-100-800 h-80">
+					<div class="flex items-center justify-center rounded-lg bg-surface-100-900 h-80">
 						<p class="text-surface-500-400">커뮤니티 분석 중...</p>
 					</div>
 					<div class="h-16"></div>
 				</div>
 				<div class="space-y-3">
 					<h3 class="font-bold text-center">연령 분포</h3>
-					<div class="flex items-center justify-center rounded-lg bg-surface-100-800 h-80">
+					<div class="flex items-center justify-center rounded-lg bg-surface-100-900 h-80">
 						<p class="text-surface-500-400">커뮤니티 분석 중...</p>
 					</div>
 					<div class="h-16"></div>
