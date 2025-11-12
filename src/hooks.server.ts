@@ -116,11 +116,6 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	const timerLabel = `[hooks.authGuard] ${event.url.pathname}`;
 	console.time(timerLabel);
 
-	if (process.env.DISABLE_AUTH === '1' || process.env.DISABLE_AUTH === 'true') {
-		const result = await resolve(event);
-		console.timeEnd(timerLabel);
-		return result;
-	}
 	try {
 		console.time(`[hooks.authGuard.safeGetSession] ${event.url.pathname}`);
 		const { session, user } = await event.locals.safeGetSession();
@@ -149,11 +144,6 @@ const youtube: Handle = async ({ event, resolve }) => {
 	const timerLabel = `[hooks.youtube] ${event.url.pathname}`;
 	console.time(timerLabel);
 
-	if (process.env.DISABLE_REMOTE === '1' || process.env.DISABLE_REMOTE === 'true') {
-		const result = await resolve(event);
-		console.timeEnd(timerLabel);
-		return result;
-	}
 	try {
 		console.time(`[hooks.youtube.createYouTube] ${event.url.pathname}`);
 		event.locals.youtube = await createYouTube(env.TOR_SOCKS5_PROXY);
