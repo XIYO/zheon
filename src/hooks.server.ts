@@ -20,6 +20,9 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const supabase: Handle = async ({ event, resolve }) => {
+	const timerLabel = `[hooks.supabase] ${event.url.pathname}`;
+	console.time(timerLabel);
+
 	event.locals.supabase = createServerClient<Database>(
 		publicEnv.PUBLIC_SUPABASE_URL,
 		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -75,14 +78,20 @@ const supabase: Handle = async ({ event, resolve }) => {
 		}
 	};
 
-	return resolve(event, {
+	const result = await resolve(event, {
 		filterSerializedResponseHeaders(name) {
 			return name === 'content-range' || name === 'x-supabase-api-version';
 		}
 	});
+
+	console.timeEnd(timerLabel);
+	return result;
 };
 
 const adminSupabase: Handle = async ({ event, resolve }) => {
+	const timerLabel = `[hooks.adminSupabase] ${event.url.pathname}`;
+	console.time(timerLabel);
+
 	try {
 		event.locals.adminSupabase = createClient<Database>(
 			publicEnv.PUBLIC_SUPABASE_URL,
@@ -98,15 +107,25 @@ const adminSupabase: Handle = async ({ event, resolve }) => {
 		logger.error('[adminSupabase] Error creating admin client:', error);
 	}
 
-	return resolve(event);
+	const result = await resolve(event);
+	console.timeEnd(timerLabel);
+	return result;
 };
 
 const authGuard: Handle = async ({ event, resolve }) => {
+	const timerLabel = `[hooks.authGuard] ${event.url.pathname}`;
+	console.time(timerLabel);
+
 	if (process.env.DISABLE_AUTH === '1' || process.env.DISABLE_AUTH === 'true') {
-		return resolve(event);
+		const result = await resolve(event);
+		console.timeEnd(timerLabel);
+		return result;
 	}
 	try {
+		console.time(`[hooks.authGuard.safeGetSession] ${event.url.pathname}`);
 		const { session, user } = await event.locals.safeGetSession();
+		console.timeEnd(`[hooks.authGuard.safeGetSession] ${event.url.pathname}`);
+
 		event.locals.session = session;
 		event.locals.user = user;
 
@@ -121,20 +140,31 @@ const authGuard: Handle = async ({ event, resolve }) => {
 		logger.error('[authGuard] Error:', error);
 	}
 
-	return resolve(event);
+	const result = await resolve(event);
+	console.timeEnd(timerLabel);
+	return result;
 };
 
 const youtube: Handle = async ({ event, resolve }) => {
+	const timerLabel = `[hooks.youtube] ${event.url.pathname}`;
+	console.time(timerLabel);
+
 	if (process.env.DISABLE_REMOTE === '1' || process.env.DISABLE_REMOTE === 'true') {
-		return resolve(event);
+		const result = await resolve(event);
+		console.timeEnd(timerLabel);
+		return result;
 	}
 	try {
+		console.time(`[hooks.youtube.createYouTube] ${event.url.pathname}`);
 		event.locals.youtube = await createYouTube(env.TOR_SOCKS5_PROXY);
+		console.timeEnd(`[hooks.youtube.createYouTube] ${event.url.pathname}`);
 	} catch (error) {
 		logger.error('[youtube] Error creating YouTube client:', error);
 	}
 
-	return resolve(event);
+	const result = await resolve(event);
+	console.timeEnd(timerLabel);
+	return result;
 };
 
 export const handle = sequence(supabase, adminSupabase, authGuard, youtube);
