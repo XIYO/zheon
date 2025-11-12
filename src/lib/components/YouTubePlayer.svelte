@@ -50,6 +50,4 @@
 	{/await}
 {/snippet}
 
-{#key videoId}
-	{@render playerContent(videoId)}
-{/key}
+{@render playerContent(videoId)}

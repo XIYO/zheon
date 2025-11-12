@@ -24,8 +24,8 @@ export const load = (async ({ depends, fetch, data }) => {
 				db: {}
 			});
 
-	let user = null;
-	if (process.env.DISABLE_AUTH !== '1' && process.env.DISABLE_AUTH !== 'true') {
+	let user = data.user;
+	if (user) {
 		try {
 			const {
 				data: { user: fetchedUser }

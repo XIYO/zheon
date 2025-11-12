@@ -58,7 +58,7 @@
 				<ListVideo class="w-8 h-8 text-surface-600-400" />
 			</div>
 			<div class="space-y-2">
-				<h2 class="text-xl font-semibold text-surface-900-50">아직 요약이 없습니다</h2>
+				<h2 class="text-xl font-semibold text-surface-950-50">아직 요약이 없습니다</h2>
 				<p class="text-sm text-surface-600-400 max-w-md">
 					상단 폼에서 YouTube URL을 입력하여 첫 요약을 시작하세요
 				</p>

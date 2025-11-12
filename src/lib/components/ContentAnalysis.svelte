@@ -74,7 +74,7 @@
 							class="card preset-tonal-surface p-3 transition-all hover:shadow-md hover:-translate-y-0.5">
 							<div class="flex justify-between items-center mb-2">
 								<div class="flex items-center gap-2">
-									<span class="font-mono font-semibold text-surface-900-50">{key}</span>
+									<span class="font-mono font-semibold text-surface-950-50">{key}</span>
 									<span class="text-xs text-surface-500">({category})</span>
 								</div>
 								<span class="badge {badgeClass}">{score}</span>
