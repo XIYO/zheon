@@ -1,11 +1,11 @@
 ---
 name: svelte-ui-design
-description: ALWAYS use this skill for ANY Svelte component styling, design, or UI work. Complete Svelte 5 UI design system including Tailwind CSS 4, Skeleton Labs design tokens, Bits UI headless components, and Skeleton UI component library. Covers class composition, color systems, interactive components, forms, overlays, and all visual design.
+description: ALWAYS use this skill for ANY Svelte component styling, design, or UI work. Svelte 5 UI design system using Tailwind CSS 4, Skeleton Labs design tokens/presets/Tailwind Components, and Bits UI headless components. Covers class composition, color systems, interactive components, forms, overlays, and all visual design.
 ---
 
 # Svelte UI Design System
 
-Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI + Skeleton UI 통합 디자인 시스템
+Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI 통합 디자인 시스템
 
 ## When to Use This Skill
 
@@ -19,10 +19,14 @@ Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI + Skeleton UI 통합 디자�
 
 ## Core Principles
 
-1. **Skeleton 색상/프리셋**: 반드시 공식 문서 참고, 직접 shade 조합 만들지 말 것
-2. **Progressive disclosure**: 필요한 문서만 참조
-3. **Component 선택**: Bits UI (유연성) vs Skeleton UI (일관성)
-4. **1-level deep 참조**: SKILL.md → reference 파일만
+1. **컴포넌트**: Bits UI headless 컴포넌트만 사용
+2. **스타일링**:
+   - Skeleton Labs 토큰/프리셋 (preset-filled, preset-tonal 등)
+   - Skeleton Labs Tailwind Components (card, chip, badge, placeholder 등 - 클래스 조합)
+   - Tailwind CSS 유틸리티
+3. **Skeleton 색상/프리셋**: 반드시 공식 문서 참고, 직접 shade 조합 만들지 말 것
+4. **Progressive disclosure**: 필요한 문서만 참조
+5. **1-level deep 참조**: SKILL.md → reference 파일만
 
 ## Available References
 
@@ -49,13 +53,13 @@ Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI + Skeleton UI 통합 디자�
 ### Svelte 5
 - [svelte-class-syntax.md](reference/svelte-class-syntax.md) - 클래스 조합
 
-### Tailwind Components (Basic)
+### Tailwind Components (Skeleton Labs 클래스 조합)
+클래스로 디자인을 뭉쳐놓은 기본 요소. card, chip, badge, placeholder 등.
 - [badges.md](reference/badges.md), [buttons.md](reference/buttons.md), [cards.md](reference/cards.md), [chips.md](reference/chips.md)
 - [dividers.md](reference/dividers.md), [forms.md](reference/forms.md), [placeholders.md](reference/placeholders.md), [tables.md](reference/tables.md)
 
-### Component Libraries
+### Bits UI - Headless Components
 - [bits-ui-complete.md](reference/bits-ui-complete.md) - **Bits UI 42개 headless 컴포넌트 완전 문서**
-- [skeleton-ui-complete.md](reference/skeleton-ui-complete.md) - **Skeleton UI 27개 styled 컴포넌트 완전 문서**
 
 ### Guides
 - [dark-mode.md](reference/dark-mode.md) - 다크 모드
@@ -66,18 +70,9 @@ Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI + Skeleton UI 통합 디자�
 - [migrate-v2-to-v3.md](reference/migrate-v2-to-v3.md) - v2 → v3
 - [migrate-v3-to-v4.md](reference/migrate-v3-to-v4.md) - v3 → v4
 
-## Component Selection Guide
+## Bits UI - Headless Components (42개)
 
-| 상황 | 선택 |
-|------|------|
-| 완전한 디자인 제어 필요 | Bits UI |
-| Skeleton 디자인 시스템 사용 | Skeleton UI |
-| 빠른 프로토타이핑 | Skeleton UI |
-| 커스텀 디자인 시스템 | Bits UI + Tailwind |
-
-### Bits UI - Headless Components (42개)
-
-완전히 커스터마이징 가능한 unstyled 컴포넌트.
+완전히 커스터마이징 가능한 unstyled 컴포넌트. Skeleton Labs 토큰/프리셋으로 스타일링.
 
 **주요 카테고리:**
 - Layout: Accordion, Collapsible, Tabs, Separator
@@ -87,17 +82,6 @@ Svelte 5 + Tailwind CSS 4 + Skeleton Labs + Bits UI + Skeleton UI 통합 디자�
 - Navigation: Dropdown Menu, Menubar, Navigation Menu, Pagination
 - Display: Avatar, Progress, Meter, Badge
 - Interactive: Button, Toggle, Link Preview
-
-### Skeleton UI - Styled Components (27개)
-
-Skeleton 디자인 시스템이 적용된 pre-styled 컴포넌트.
-
-**주요 카테고리:**
-- Layout: App Bar, Navigation, Tabs, Pagination
-- Disclosure: Accordion, Collapsible
-- Overlays: Dialog, Popover, Tooltip, Toast
-- Forms: Combobox, Date Picker, File Upload, Slider, Switch, Tags Input
-- Display: Avatar, Progress (Circular/Linear), Tree View, Breadcrumb
 
 ## Quick Reference
 
@@ -153,9 +137,10 @@ Skeleton 디자인 시스템이 적용된 pre-styled 컴포넌트.
 
 ## Best Practices
 
-1. **Skeleton 색상/프리셋**: 반드시 공식 문서([colors-design.md](reference/colors-design.md), [presets-design.md](reference/presets-design.md))에서 확인
-2. **Component 선택**: Bits UI (유연성) vs Skeleton UI (일관성)
-3. **Class 조합 순서**: 베이스 → 프리셋 → 레이아웃 → 간격 → 조건부 → variant
-4. **접근성**: WCAG 대비 비율, focus-visible 상태
-5. **성능**: Svelte class 배열/객체 사용, Skeleton 프리셋 활용
-6. **일관성**: 동일한 용어 사용, 3인칭 작성
+1. **컴포넌트**: Bits UI headless 컴포넌트만 사용
+2. **스타일링**: Skeleton Labs 토큰/프리셋 + Tailwind Components (card, chip, badge 등) + Tailwind 유틸리티
+3. **Skeleton 색상/프리셋**: 반드시 공식 문서([colors-design.md](reference/colors-design.md), [presets-design.md](reference/presets-design.md))에서 확인
+4. **Class 조합 순서**: Tailwind Components → 프리셋 → 레이아웃 → 간격 → 조건부 → variant
+5. **접근성**: WCAG 대비 비율, focus-visible 상태
+6. **성능**: Svelte class 배열/객체 사용, Skeleton 프리셋 활용
+7. **일관성**: 동일한 용어 사용, 3인칭 작성
