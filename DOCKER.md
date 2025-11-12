@@ -4,16 +4,27 @@
 
 ### 1. 환경 변수 설정
 
-`docker-compose.yml` 파일을 열고 실제 API 키를 입력하세요:
+`docker-compose.yml` 파일을 열고 실제 값을 입력하세요 (환경 변수 키는 코드와 동일하게 유지):
 
 ```yaml
 environment:
-  PUBLIC_SUPABASE_URL: https://your-project.supabase.co # 실제 값으로 변경
-  PUBLIC_SUPABASE_ANON_KEY: your-anon-key-here # 실제 값으로 변경
-  SUPABASE_SERVICE_ROLE_KEY: your-service-role-key-here # 실제 값으로 변경
-  GOOGLE_GENERATIVE_AI_API_KEY: your-gemini-api-key-here # 실제 값으로 변경
-  ELEVENLABS_API_KEY: your-elevenlabs-api-key-here # 실제 값으로 변경 (optional)
-  LMNT_API_KEY: your-lmnt-api-key-here # 실제 값으로 변경 (optional)
+  ORIGIN: http://localhost:3000
+  PORT: 3000
+  TOR_SOCKS5_PROXY: socks5://zheon-tor-proxy:9050
+
+  # Supabase (로컬/원격 중 택일)
+  PUBLIC_SUPABASE_URL: http://host.docker.internal:55321
+  PUBLIC_SUPABASE_PUBLISHABLE_KEY: your-publishable-key
+  SUPABASE_SECRET_KEY: your-service-role-key
+
+  # AI
+  GEMINI_API_KEY: your-gemini-api-key
+
+  # OAuth (선택)
+  GOOGLE_CLIENT_ID: ...
+  GOOGLE_CLIENT_SECRET: ...
+  # YouTube API (선택, 필요 시)
+  YOUTUBE_API_KEY: ...
 ```
 
 ### 2. 빌드 & 실행

@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. The code is the source of truth; this document reflects the current implementation.
 
 ## Project Overview
 
-YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다.
+YouTube 영상 자막과 댓글을 수집해 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다.
 
 ## Tech Stack
 
@@ -12,8 +12,7 @@ YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는
 - **Backend**: Supabase (PostgreSQL)
 - **Testing**: Vitest, Playwright
 - **Language**: TypeScript
-- **Package Manager**: bun (npm/pnpm 사용 금지)
-- **i18n**: Paraglide.js
+- **Package Manager & Runtime**: Bun (개발/런타임 모두 Bun 사용)
 
 ### TypeScript Guidelines
 
@@ -34,55 +33,56 @@ YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는
 ### Development
 
 ```bash
-bun dev         # Dev server on http://localhost:7777
-bun build       # Production build
-bun preview     # Preview build on http://localhost:17777
+bun run dev         # Dev server on http://localhost:7777
+bun run build       # Production build
+bun run preview     # Preview build on http://localhost:17777
 ```
 
 ### Code Quality
 
 ```bash
-bun check       # Svelte + JS checks (via jsconfig)
-bun format      # Prettier write
-bun lint        # ESLint + Prettier check
+bun run check       # Svelte + JS checks (via svelte-check)
+bun run format      # Prettier write
+bun run lint        # ESLint + Prettier check
 ```
 
 ### Testing
 
 ```bash
-bun test        # All tests (unit + E2E)
-bun test:unit   # Vitest unit/component tests
-bun test:e2e    # Playwright E2E tests
+bun run test            # All tests (unit + E2E)
+bun run test:unit       # Vitest unit/component tests
+bun run test:e2e        # Playwright E2E tests
+bun run test:integration # Integration tests
 ```
 
 ### Deployment
 
 ```bash
-bun build       # Build for production
+bun run build       # Build for production
 ```
 
 ## Architecture & Key Patterns
 
 ### Authentication Flow
 
-- Supabase Auth (email/password)
+- Supabase Auth (email/password + Google OAuth)
 - Sessions via cookies using `@supabase/ssr`
 - Protected routes validated in `hooks.server.ts`
 - `safeGetSession()` validates JWT via `getUser()` (never use `session.user` directly)
-- Auth middleware redirects: `/private/*` requires auth, `/auth` redirects to `/private` when authenticated
+- Auth guard includes defaults for `/private/*` (unauthenticated → `/auth`) and redirects `/auth` → `/private` when authenticated. 현재 `/private` 라우트는 미사용이며, 추후 비공개 영역 도입 시 활성화됩니다.
 
 ### Supabase Configuration
 
-- **Schema**: `public` schema used (not custom `zheon` schema in migrations)
+- **Schema**: `public` schema 사용 (마이그레이션도 `public` 기준)
 - **Local Development**: Supabase CLI로 로컬 인스턴스 실행
   - `supabase start` - 로컬 Supabase 시작
   - `supabase stop` - 로컬 Supabase 정지
   - `supabase status` - 현재 상태 및 URL/Key 확인
-  - 로컬: `http://127.0.0.1:55321` (config.toml에 정의)
-- **Remote Production**: `https://iefgdhwmgljjacafqomd.supabase.co`
-- **Admin Client**: Available via `event.locals.adminSupabase` in server hooks
-- **User Client**: Available via `event.locals.supabase` with automatic cookie handling
-- **Type Safety**: Database types generated in `src/lib/types/database.types.ts`
+  - 로컬: `http://127.0.0.1:55321` (supabase/config.toml)
+- **Remote**: 환경변수(`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY`)로 구성
+- **Admin Client**: `event.locals.adminSupabase` (service role key 기반, 서버 전용)
+- **User Client**: `event.locals.supabase` (쿠키 자동 처리)
+- **Type Safety**: `src/lib/types/database.types.ts` (Supabase 타입 생성물)
 
 ### Error Handling (Go-style)
 
@@ -139,6 +139,13 @@ return data; // 조회 결과 없음: 빈 배열 [] 반환 (null 아님)
   return summaryData; // 즉시 응답 반환
   ```
 
+#### Store + Infinite Scroll 패턴 (실제 구현 요약)
+
+- SummaryStore가 list/detail/category/tag/metrics/community 쿼리를 통합 관리 (`src/lib/stores/summary.svelte.ts`).
+- 목록은 `#listQueries` 배열로 페이지 단위 Remote Query를 보관, `IntersectionObserver`로 sentinel 교차 시 `loadMore()` 호출.
+- Realtime 변경 시, 변경된 `created_at` 범위에 해당하는 list 쿼리만 `refresh()`, 상세 쿼리는 낙관적 업데이트(`set`).
+- Remote Query 타입 가드는 공개 API(`refresh`) 존재 여부로 판별하여 안전하게 `.set()` 호출.
+
 ### Valibot Schema Validation
 
 ```js
@@ -186,9 +193,9 @@ export { getSummaryStore };
 
 사용 패턴:
 
-- Layout에서 `createSummaryStore()` 호출하여 컨텍스트 설정
+- 루트 레이아웃(`src/routes/+layout.svelte`)에서 `createSummaryStore()` 호출 및 Realtime 구독 시작
 - 하위 컴포넌트에서 `getSummaryStore()` 호출하여 스토어 접근
-- 스토어는 Remote Functions와 Realtime을 통합 관리
+- 스토어는 Remote Functions와 Realtime을 통합 관리 (무한 스크롤, 낙관적 업데이트 포함)
 
 ### Supabase Realtime Integration
 
@@ -218,9 +225,9 @@ onMount(() => {
 src/
 ├─ routes/              # SvelteKit pages + API routes
 │  ├─ (main)/           # Routes with header layout
-│  │  ├─ +layout.svelte # Main layout with header
-│  │  ├─ +page.svelte   # Home page (SummaryForm + SummaryList)
-│  │  └─ [id]/          # Summary detail pages
+│  │  ├─ +layout.svelte # Header + SummaryForm
+│  │  ├─ +page.svelte   # Home (SummaryList)
+│  │  └─ [videoId]/     # Summary detail pages
 │  └─ (non-header)/     # Routes without header (auth)
 │     └─ auth/          # Auth pages (sign-in, sign-up, callback, etc)
 ├─ lib/
@@ -236,32 +243,48 @@ src/
 │  │  └─ youtube-proxy.ts     # YouTube proxy via Tor
 │  ├─ types/            # TypeScript type definitions
 │  │  └─ database.types.ts    # Supabase generated types
-│  └─ paraglide/        # i18n runtime (auto-generated)
 └─ hooks.server.ts      # Auth middleware + Supabase clients
 
 supabase/
 ├─ migrations/          # Database migrations
 └─ config.toml         # Supabase config
 
-messages/              # i18n message files (ko.json, en.json)
 ```
 
 ## Deployment Configuration
 
-- **Platform**: Raspberry Pi 4 (Bun runtime)
-- **Adapter**: @sveltejs/adapter-auto (configured in svelte.config.js)
+- **Platform**: Raspberry Pi 4
+- **Adapter**: @sveltejs/adapter-node
+- **Runtime**: Bun (Dockerfile: oven/bun 이미지 사용, `bun run build/index.js` 실행)
 
 ## Development Ports
 
-- Dev server: 7777 (configured in vite.config)
+- Dev server: 7777 (vite.config.js)
 - Preview server: 17777
-- Wrangler dev: 5170
 
 ## Important Notes
 
 - **Language**: TypeScript with type inference priority
-- **Internationalization**: Paraglide.js를 다국어용으로 사용 (messages/\*.json)
 - **Icons**: `@lucide/svelte` 사용 (lucide-svelte 금지)
-- **Performance**: `console.time()/timeEnd()/timeLog()` 사용 (performance.now() 금지)
-- **YouTube Proxy**: YouTube access via Tor SOCKS5 proxy (configured in hooks.server.ts)
-- **Unhandled Rejections**: Global handler in hooks.server.ts logs all unhandled promise rejections
+- **Performance**: `console.time()/timeEnd()/timeLog()` 선호 (빠른 계측), 고급 로깅은 `src/lib/logger.js`
+- **YouTube/Gemini Proxy**: 모든 외부 호출은 Tor SOCKS5 프록시 경유 (`TOR_SOCKS5_PROXY`)
+- **Unhandled Rejections**: Global handler in `hooks.server.ts`가 모든 unhandled promise rejections 로깅
+
+## Environment Variables (현재 코드 기준)
+
+```bash
+# Supabase
+PUBLIC_SUPABASE_URL=...
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+SUPABASE_SECRET_KEY=...
+
+# AI
+GEMINI_API_KEY=...
+
+# Network
+TOR_SOCKS5_PROXY=socks5://127.0.0.1:9050
+
+# OAuth (선택)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
