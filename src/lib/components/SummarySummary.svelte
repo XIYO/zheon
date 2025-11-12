@@ -17,7 +17,13 @@
 			<div class="placeholder animate-pulse h-4 w-4/5 rounded"></div>
 		</div>
 	{:then summary}
-		{#if summary.summary}
+		{#if summary.analysis_status === 'processing'}
+			<div class="space-y-3">
+				<div class="placeholder animate-pulse h-4 rounded"></div>
+				<div class="placeholder animate-pulse h-4 rounded"></div>
+				<div class="placeholder animate-pulse h-4 w-4/5 rounded"></div>
+			</div>
+		{:else if summary.summary}
 			<p class="break-keep text-surface-700-300">
 				{summary.summary}
 			</p>

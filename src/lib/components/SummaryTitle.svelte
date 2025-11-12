@@ -9,7 +9,7 @@
 <h1 class="text-xl font-extrabold mb-8 text-surface-950-50">
 	{#await summaryStore.detail(videoId)}
 		<span class="placeholder animate-pulse rounded w-3/4 inline-block">
-			<span class="sr-only">로딩 중...</span>
+			&nbsp;
 		</span>
 	{:then summary}
 		{summary.title}
