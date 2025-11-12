@@ -60,7 +60,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd ~/Projects/zheon-ops
-            git pull origin main
+            cd ~/Projects
+
+            if [ -d "zheon-ops" ]; then
+              echo "Updating existing zheon-ops repository..."
+              cd zheon-ops
+              git fetch origin
+              git reset --hard origin/main
+            else
+              echo "Cloning zheon-ops repository..."
+              git clone https://github.com/XIYO/zheon-ops.git
+              cd zheon-ops
+            fi
+
+            echo "Starting deployment..."
             ./start.sh
             echo "Deployment completed at $(date)"
