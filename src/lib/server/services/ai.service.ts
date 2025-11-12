@@ -4,6 +4,7 @@ import { jsonSchema } from 'ai';
 import * as v from 'valibot';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/logger';
 
 export interface CategoryInfo {
 	slug: string;
@@ -39,6 +40,12 @@ export interface AIAnalysisInput {
 		url: string;
 		publishedDate: string;
 	}>;
+	commentMetadata?: {
+		totalCount: number;
+		sampleMethod: string;
+		timeRange: string;
+		avgLikes?: number;
+	};
 }
 
 export interface AIAnalysisOutput {
@@ -60,7 +67,7 @@ export interface AIAnalysisOutput {
 		overall_score: number;
 		intensity: number;
 	};
-	community: {
+	community?: {
 		politeness: number;
 		rudeness: number;
 		kindness: number;
@@ -70,7 +77,7 @@ export interface AIAnalysisOutput {
 		off_topic: number;
 		overall_score: number;
 	};
-	age_groups: {
+	age_groups?: {
 		teens: number;
 		twenties: number;
 		thirties: number;
@@ -78,7 +85,7 @@ export interface AIAnalysisOutput {
 		median_age: number;
 		adult_ratio: number;
 	};
-	plutchik_emotions: {
+	plutchik_emotions?: {
 		joy: number;
 		trust: number;
 		fear: number;
@@ -98,7 +105,7 @@ export interface AIAnalysisOutput {
 		key_insights: string[];
 		recommendations: string[];
 	};
-	representative_comments: {
+	representative_comments?: {
 		age_groups: {
 			teens: string;
 			twenties: string;
@@ -164,14 +171,14 @@ export class AIService {
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
-				console.log(`[AI] 분석 시도 ${attempt}/${maxRetries}`);
+				logger.info(`[AI] 분석 시도 ${attempt}/${maxRetries}`);
 				return await this.performAnalysis(input);
 			} catch (error) {
-				console.error(`[AI] 시도 ${attempt}/${maxRetries} 실패:`, error);
+				logger.error(`[AI] 시도 ${attempt}/${maxRetries} 실패:`, error);
 				if (attempt === maxRetries) {
 					throw error;
 				}
-				console.log(`[AI] ${attempt + 1}번째 시도 준비 중...`);
+				logger.info(`[AI] ${attempt + 1}번째 시도 준비 중...`);
 			}
 		}
 
@@ -188,23 +195,23 @@ export class AIService {
 		const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
 			const requestId = ++requestCounter;
 			const label = `[AI Proxy #${requestId}] ${url}`;
-			console.time(label);
+			const startTime = Date.now();
 			try {
 				const response = await fetch(url, {
 					...options,
 					// @ts-expect-error Node.js fetch agent support
 					agent: proxyAgent
 				});
-				console.timeEnd(label);
+				logger.info(`${label}: ${Date.now() - startTime}ms`);
 				return response;
 			} catch (err) {
-				console.timeEnd(label);
-				console.error('[AI Proxy] 프록시 fetch 실패:', err);
+				logger.error(`${label}: ${Date.now() - startTime}ms (실패)`);
+				logger.error('[AI Proxy] 프록시 fetch 실패:', err);
 				throw err;
 			}
 		};
 
-		console.log(`[AI] SOCKS5 프록시 사용: ${this.socksProxy}`);
+		logger.info(`[AI] SOCKS5 프록시 사용: ${this.socksProxy}`);
 
 		const google = createGoogleGenerativeAI({
 			apiKey: this.geminiApiKey,
@@ -212,13 +219,14 @@ export class AIService {
 		});
 		const model = google('gemini-2.5-flash-lite');
 
-		console.log('[AI] 분석 시작');
+		logger.info('[AI] 분석 시작');
 
 		const result = await generateObject({
 			model,
 			schema: jsonSchema(schema),
 			schemaName: 'VideoAnalysis',
-			schemaDescription: 'Comprehensive video analysis with quality, sentiment, and community metrics',
+			schemaDescription:
+				'Comprehensive video analysis with quality, sentiment, and community metrics',
 			temperature: 0.1,
 			maxRetries: 3,
 			prompt
@@ -228,12 +236,23 @@ export class AIService {
 		const validationResult = v.safeParse(validationSchema, rawAnalysis);
 
 		if (!validationResult.success) {
-			const errors = validationResult.issues.map((i) => `${i.path?.join('.')}: ${i.message}`).join('\n');
-			console.error('[AI] 검증 실패:', errors);
+			const errors = validationResult.issues
+				.map((issue) => {
+					const pathStr =
+						issue.path
+							?.map((p) => (typeof p === 'object' ? JSON.stringify(p) : String(p)))
+							.join('.') || 'root';
+					const currentValue =
+						issue.input !== undefined ? `받은 값: ${JSON.stringify(issue.input)}` : '';
+					return `${pathStr}: ${issue.message}${currentValue ? ` (${currentValue})` : ''}`;
+				})
+				.join('\n');
+			logger.error('[AI] 검증 실패:', errors);
+			logger.error('[AI] 전체 응답:', JSON.stringify(rawAnalysis, null, 2));
 			throw new Error(`AI 응답 검증 실패:\n${errors}`);
 		}
 
-		console.log('[AI] 검증 성공');
+		logger.info('[AI] 검증 성공');
 		return validationResult.output as AIAnalysisOutput;
 	}
 
@@ -248,39 +267,79 @@ export class AIService {
 			.map((m) => `- ${m.slug} (${m.name_ko}): ${m.description}`)
 			.join('\n');
 		const commentsText = input.comments.slice(0, 100).join('\n');
+		const commentCount = input.comments.length;
+		const skipCommunityAnalysis = commentCount < 50;
+
+		const commentMetadataSection = input.commentMetadata
+			? `
+[댓글 메타데이터]
+전체 댓글 수: ${input.commentMetadata.totalCount}개
+제공 샘플: ${commentCount}개 (${input.commentMetadata.sampleMethod})
+수집 기간: ${input.commentMetadata.timeRange}
+${input.commentMetadata.avgLikes !== undefined ? `평균 좋아요: ${input.commentMetadata.avgLikes}개` : ''}
+`
+			: '';
 
 		return `당신은 YouTube 영상 분석 전문가입니다. 자막과 댓글을 깊이 있게 분석하여 영상의 핵심 내용과 시청자 반응을 파악하세요.
 
+**중요: 댓글 수 = ${commentCount}개${skipCommunityAnalysis ? ' (50개 미만이므로 커뮤니티 분석 생략)' : ''}**
+
 **전역 규칙 (모든 응답에 적용):**
-1. **언어**: 모든 텍스트 응답은 한국어로 작성 (summary, insights, representative_comments 등)
-2. **숫자**: 모든 숫자 값은 정수로 작성, 소수점 사용 금지 (예: 90, 90.5 금지)
-3. **번역**: 영어 댓글은 자연스러운 한국어로 번역하여 제공
-4. **길이 제한 (엄격):**
-   - slug/name: 최대 50자
-   - name_ko: 최대 50자
-   - 댓글: 최대 1000자
-   - 인사이트 항목: 최대 500자
-   - description/reasoning: 최대 500자
-5. **필수 형식 (정규식 검증됨):**
-   - slug (카테고리/태그): 소문자+숫자+하이픈 (예: web-development)
-   - name/slug (지표): 소문자로 시작+언더스코어 (예: editing_speed)
-   - weight: 0.1 이상 1.0 이하
+
+📋 R1. 언어: 모든 텍스트는 한국어 (summary, insights 등)
+
+📊 R2. 숫자 형식:
+  - 정수만 사용 (entropy 제외)
+  - 음수 허용: overall_score, valence_mean, arousal_mean (-100~100)
+  - 음수 금지: 나머지 모든 점수/비율/강도 (0 이상)
+
+📏 R3. 길이 제한:
+  - slug/name: ≤50자
+  - name_ko: ≤50자
+  - 댓글: ≤1000자
+  - 인사이트/설명: ≤500자
+
+🔤 R4. 명명 규칙:
+  - slug: kebab-case (소문자+숫자+하이픈, 예: us-government-shutdown)
+  - name: 일반 표기 (자유 형식, 예: US Government Shutdown)
+  - name_ko: 일반 표기 (한국어, 예: 미국 정부 셧다운)
+  - weight: 0.1~1.0 (카테고리/태그만 해당)
+
+⚠️ R5. 에러 처리:
+  - 자막과 댓글 모두 없을 경우 → summary: "분석 불가: 데이터 부족"
+  - 나머지 필드는 null 또는 0
+
+✓ R6. 일관성 검증:
+  - sentiment.positive_ratio > 70 → plutchik의 joy/trust 높아야 함
+  - content_quality.educational_value 높음 → metrics의 information-density 높아야 함
 
 [자막 원문]
-${input.transcript}
-
-[댓글 상위 100개]
+${input.transcript || '(자막 없음)'}
+${commentMetadataSection}
+[댓글 샘플]
 ${commentsText}
+
+**중요: 자막이 없을 경우 댓글만으로 분석하세요.**
+- 자막이 "(자막 없음)"이면 댓글의 내용, 반응, 패턴을 통해 영상 주제를 추론
+- 댓글에서 자주 언급되는 키워드, 감정, 맥락을 종합하여 영상 내용을 파악
+- summary는 가능한 데이터(자막 또는 댓글)를 최대한 활용하여 영상 내용을 요약
 
 다음 항목들을 분석하세요:
 
 1. summary (영상 요약, 500자 내외, 한국어로 작성):
-   - 영상이 전달하고자 하는 핵심 메시지를 명확히 요약
+   - **중요**: 영상 내용 자체만 서술, 분석 과정은 절대 언급 금지
+   - 금지 표현: "자막은 제공되지 않았으나", "댓글 분석 결과", "시청자들은", "많은 이들이" 등
+   - 영상이 보여주는 장면, 사건, 메시지를 직접적으로 서술
    - 주요 논점, 주장, 결론을 포함
    - 영상의 흐름과 구조를 반영
-   - 시청자가 이 요약만 읽어도 영상의 본질을 이해할 수 있도록 작성
    - 단순 내용 나열이 아닌, 맥락과 의미를 담은 요약
    - **영어 자막이더라도 반드시 한국어로 요약 작성**
+
+   올바른 예시:
+   "이 영상은 노르웨이 바다에서 수십 마리의 범고래가 모여 있는 장관을 보여줍니다. 범고래들은..."
+
+   잘못된 예시:
+   "자막은 없으나 댓글 분석 결과, 시청자들은 범고래의 집단 행동에 경외감을 표현하고..."
 
 2. content_quality (콘텐츠 품질 평가, 각 0-100):
    - educational_value: 교육적 가치, 학습 효과
@@ -297,21 +356,40 @@ ${commentsText}
    - positive_ratio: 긍정 비율 (0-100, 정수)
    - neutral_ratio: 중립 비율 (0-100, 정수)
    - negative_ratio: 부정 비율 (0-100, 정수)
-   - 합이 100이 아니면 시스템 에러 발생
-   - overall_score: 전체 감정 점수 (-100 ~ 100, 정수)
-   - intensity: 감정 강도 (0-100, 정수)
+   - overall_score: 전체 감정 점수 = (positive - negative), -100~100
+   - intensity: 감정 강도 (0-100, 정수) - 감정 표현의 강렬함
 
-4. community (커뮤니티 분위기, 댓글 기반, 각 0-100):
-   - politeness: 예의 바른 표현
-   - rudeness: 무례한 표현
-   - kindness: 친절하고 배려 있는 태도
-   - toxicity: 독성, 공격성
-   - constructive: 건설적 의견
-   - self_centered: 자기중심적 댓글
-   - off_topic: 주제 이탈
-   - overall_score: 커뮤니티 전체 점수 (-100 ~ 100)
-     * -100: 매우 부정적 커뮤니티 (독성, 공격성)
-     * +100: 매우 긍정적 커뮤니티 (건설적, 우호적)
+   📘 예시:
+   긍정 댓글 80개, 중립 15개, 부정 5개
+   → {
+     positive_ratio: 80,
+     neutral_ratio: 15,
+     negative_ratio: 5,
+     overall_score: 75,  // 80 - 5 = 75
+     intensity: 60       // 강하지만 극단적이진 않음
+   }
+
+${
+	skipCommunityAnalysis
+		? `**주의: 댓글 수가 50개 미만이므로 다음 항목들은 응답하지 마세요:**
+   - community (커뮤니티 분위기)
+   - age_groups (시청자 연령 추정)
+   - plutchik_emotions (감정 분석)
+   - representative_comments (대표 댓글)
+
+   이 항목들은 JSON 응답에 포함하지 말고 생략하세요.`
+		: `4. community (커뮤니티 분위기, 댓글 기반, 각 0-100):
+
+   **측정 기준 (정량화):**
+   - politeness: 존댓말/정중한 표현 사용 비율 (요/습니다/해요 등)
+   - rudeness: 욕설/반말/공격적 표현 비율
+   - kindness: 칭찬/격려/공감 표현 비율
+   - toxicity: 혐오/비하/모욕 표현 비율
+   - constructive: 건설적 피드백/제안 비율
+   - self_centered: 자기 이야기만 하는 댓글 비율
+   - off_topic: 영상 주제와 무관한 댓글 비율
+   - overall_score: 전체 점수 = (politeness + kindness + constructive) - (rudeness + toxicity + self_centered + off_topic) * 2/7
+     * 범위: -100 (매우 부정적) ~ +100 (매우 긍정적)
 
 5. age_groups (시청자 연령 추정, 댓글 어투/내용 기반):
    **필수 검증: teens + twenties + thirties + forty_plus = 정확히 100**
@@ -323,157 +401,147 @@ ${commentsText}
    - median_age: 중앙값 나이 (0-100, 정수)
    - adult_ratio: 성인 비율 (0-100, 정수, 20대 이상)
 
-6. plutchik_emotions (Plutchik 8가지 기본 감정 + VAD, 댓글 기반):
-   **!!!!! 필수 검증: 8가지 감정 비율의 합 = 정확히 100 (99나 101 아님, 반드시 100) !!!!!**
+6. plutchik_emotions (Plutchik 8가지 기본 감정 + VAD, 댓글 기반):`
+}
+   **중요: 각 감정은 독립적인 강도로 평가 (합계 제약 없음)**
 
-   **합계 계산 필수 단계:**
-   1. 먼저 각 감정 비율을 정수로 할당
-   2. 8개 값을 모두 더해서 합계 확인
-   3. 합계가 100이 아니면 값들을 조정하여 정확히 100으로 맞춤
-   4. 조정 후 다시 합계 확인하여 100인지 검증
+   **감정 강도 평가 방식:**
+   - 각 감정을 0-100 스케일로 독립 평가
+   - 여러 감정이 동시에 높을 수 있음 (예: joy=80, anticipation=70)
+   - 댓글 전체에서 해당 감정이 얼마나 강하게 나타나는지 측정
 
-   **감정 비율 (모두 정수, 합계 = 100):**
-   - joy: 기쁨 (0-100, 정수)
-   - trust: 신뢰 (0-100, 정수)
-   - fear: 공포 (0-100, 정수)
-   - surprise: 놀람 (0-100, 정수)
-   - sadness: 슬픔 (0-100, 정수)
-   - disgust: 혐오 (0-100, 정수)
-   - anger: 분노 (0-100, 정수)
-   - anticipation: 기대 (0-100, 정수)
+   **장르별 기준선 (참고용, 절대적 아님):**
+   - 교육: trust 60-70, anticipation 40-50, joy 30-40
+   - 엔터테인먼트: joy 70-80, surprise 50-60, anticipation 50-60
+   - 뉴스/시사: fear 40-50, anger 30-40, sadness 20-30
+   - 게임/오락: joy 60-70, surprise 50-60, anticipation 60-70
+   - 음악/예술: joy 70-80, trust 50-60, surprise 40-50
 
-   **검증 공식: joy + trust + fear + surprise + sadness + disgust + anger + anticipation = 100**
-   - 합이 99 이하 또는 101 이상이면 시스템 에러 발생
-   - 반드시 정확히 100이어야 함
+   **필수: 영상 컨텍스트 기반 감정 해석**
+   - 반드시 위 [자막 원문]을 참고하여 영상의 주제, 장르, 분위기를 파악
+   - 댓글의 감정을 영상 맥락에서 해석 (표면적 의미가 아닌 실제 의도 파악)
+   - 예시 1: 게임/오락 영상에서 "죽었다", "망했다" → 흥미진진함, 몰입(joy, anticipation), 분노 아님
+   - 예시 2: 스포츠 영상에서 "미쳤다", "죽인다" → 감탄, 놀람(surprise, joy), 부정적 감정 아님
+   - 예시 3: 교육 영상에서 "힘들다", "어렵다" → 학습 도전(anticipation), 슬픔 아님
+   - 예시 4: 음악/댄스 영상에서 "미친", "죽는다" → 감동, 열광(joy, surprise), 부정적 감정 아님
+   - 슬랭, 은어, 과장 표현은 영상 장르와 문화적 맥락에서 해석
+   - 긍정적 과장 표현(대박, 미쳤다, 죽인다 등)을 부정 감정으로 오해하지 말 것
+
+   **감정 강도 (각각 독립적인 0-100 정수):**
+   - joy: 기쁨 (0-100, 정수) - 긍정적이고 활발한 감정
+   - trust: 신뢰 (0-100, 정수) - 긍정적이고 수용적인 감정
+   - fear: 공포 (0-100, 정수) - 부정적이고 회피적인 감정
+   - surprise: 놀람 (0-100, 정수) - 중립적이고 예상 밖의 감정
+   - sadness: 슬픔 (0-100, 정수) - 부정적이고 무기력한 감정
+   - disgust: 혐오 (0-100, 정수) - 부정적이고 거부적인 감정
+   - anger: 분노 (0-100, 정수) - 부정적이고 공격적인 감정
+   - anticipation: 기대 (0-100, 정수) - 긍정적이고 미래지향적인 감정
+
+   **평가 가이드라인:**
+   - 0-20: 거의 없음
+   - 21-40: 약간 있음
+   - 41-60: 보통
+   - 61-80: 강함
+   - 81-100: 매우 강함
 
    **기타 필드:**
    - dominant_emotion: 지배 감정 (8개 중 가장 높은 값, 예: "joy")
    - entropy: 감정 분포 엔트로피 (0-10, 소수점 허용)
-   - valence_mean: 감정가 평균 (0-100, 정수)
-   - arousal_mean: 각성 평균 (0-100, 정수)
+   - valence_mean: 감정가 평균 (-100~100 스케일, 정수)
+     * -100 = 매우 부정적, 0 = 중립, +100 = 매우 긍정적
+     * 음수 허용, 전통적인 VAD 모델 스케일 사용
+   - arousal_mean: 각성 평균 (-100~100 스케일, 정수)
+     * -100 = 매우 차분함, 0 = 보통, +100 = 매우 흥분됨
+     * 음수 허용, 전통적인 VAD 모델 스케일 사용
 
-7. insights (심층 인사이트, 모두 한국어로 작성):
+4. insights (심층 인사이트, 모두 한국어로 작성):
    - content_summary: 영상 콘텐츠 핵심 정리 (1000자 이내, 주요 논점과 결론, 한국어)
+     * **중요**: 영상 내용만 직접 서술, "자막", "댓글", "시청자" 등 메타 정보 언급 금지
+     * 영상이 전달하는 메시지, 보여주는 장면, 다루는 주제만 설명
    - audience_reaction: 시청자 반응 종합 (1000자 이내, 댓글 분석을 통한 수용도 파악, 한국어)
+     * 이 필드에서만 시청자 반응을 분석하여 서술
    - key_insights: 핵심 인사이트 배열 (1-10개, 영상에서 발견한 중요한 통찰, 한국어)
    - recommendations: 개선 제안 배열 (0-10개, 크리에이터를 위한 구체적 조언, 한국어)
 
-8. representative_comments (대표 댓글 추출):
-   **절대 규칙 (시스템 검증됨):**
-
-   **!!!!! 최우선 규칙: 모든 댓글 한국어 번역 !!!!!**
-   **!!!!! CRITICAL: ALL COMMENTS MUST BE IN KOREAN !!!!!**
-
-   **언어 처리 (최우선 규칙 - 검증 실패시 전체 응답 거부됨):**
-   1. **한국어 댓글**: 이모지 포함하여 원문 그대로 복사
-   2. **영어/외국어 댓글**: 100% 반드시 한국어로 번역
-      - 영어 그대로 반환 = 시스템 에러 = 전체 분석 실패
-      - 모든 영어 단어를 한국어로 번역해야 함
-      - 3글자 이상 영어 단어가 1개라도 있으면 검증 실패
-   3. **번역 필수 예시**:
-      - 원문: "This is amazing!" → 반환: "정말 놀랍네요!" (O)
-      - 원문: "This is amazing!" → 반환: "This is amazing!" (X 시스템 에러)
-      - 원문: "I did not know golden retrievers could be very scary" → 반환: "골든 리트리버가 이렇게 무서울 수 있는지 몰랐어요" (O)
-      - 원문: "I did not know golden retrievers could be very scary" → 반환: "golden retrievers가 무서울 줄 몰랐어요" (X 시스템 에러)
-      - 원문: "LMAO 😂😂😂" → 반환: "완전 웃기네 😂😂😂" (O)
-      - 원문: "😂😂😂😂" → 반환: "😂😂😂😂" (O, 이모지만 있으면 그대로 가능)
-   4. **검증 규칙**: 정규식 /[a-zA-Z]{3,}/로 3글자 이상 영어 단어 감지
-      - 감지되면 즉시 전체 응답 거부
-      - 이모지/숫자/기호는 허용
-
-   **번역 체크리스트 (12개 댓글 모두 확인):**
-   - [ ] age_groups.teens: 영어 없음
-   - [ ] age_groups.twenties: 영어 없음
-   - [ ] age_groups.thirties: 영어 없음
-   - [ ] age_groups.forty_plus: 영어 없음
-   - [ ] emotions.joy: 영어 없음
-   - [ ] emotions.trust: 영어 없음
-   - [ ] emotions.fear: 영어 없음
-   - [ ] emotions.surprise: 영어 없음
-   - [ ] emotions.sadness: 영어 없음
-   - [ ] emotions.disgust: 영어 없음
-   - [ ] emotions.anger: 영어 없음
-   - [ ] emotions.anticipation: 영어 없음
-
+${
+	!skipCommunityAnalysis
+		? `7. representative_comments (대표 댓글 추출):
    **선택 규칙:**
    1. **광고/홍보 댓글 제외**: URL, 상품 홍보, 채널 홍보 금지
    2. **중복 사용 금지**: 같은 댓글을 여러 카테고리에 사용 금지
    3. **실제 사용자 반응**: 영상에 대한 순수한 의견/반응/질문만 선택
    4. **다양성 확보**: 최대한 다른 댓글 선택
+   5. **원문 유지**: 댓글은 이모지 포함 원문 그대로 반환
 
-   - age_groups: 각 연령대 대표 댓글 1개씩 (무조건 한국어로 번역)
+   - age_groups: 각 연령대 대표 댓글 1개씩
      * teens, twenties, thirties, forty_plus
 
-   - emotions: 각 감정 대표 댓글 1개씩 (무조건 한국어로 번역)
+   - emotions: 각 감정 대표 댓글 1개씩
      * joy, trust, fear, surprise, sadness, disgust, anger, anticipation
 
    주의사항:
    - 댓글은 반드시 위 [댓글 상위 100개] 목록에서 선택
    - 적합한 댓글이 없으면 "-" 문자열만 반환
-   - **다시 한번 강조: 영어 댓글을 영어 그대로 반환하면 전체 분석이 실패하고 처음부터 다시 해야 함**
-   - **모든 댓글을 한국어로 번역했는지 응답 전에 반드시 재확인**
 
-9. categories (최소 3개, depth 최소 2):
-   **필수 규칙:**
-   1. **배열 순서**: 반드시 부모 → 자식 순서로 배열에 배치 (루트가 먼저)
-   2. **parent_slug 검증**: parent_slug는 다음 중 하나만 가능
-      - 아래 [기존 카테고리]에 있는 slug
-      - 같은 응답 배열의 앞부분에 정의한 카테고리의 slug
-   3. **parent_slug 형식**: 바로 위 부모의 slug만 입력, 경로 아님
-   4. **필수 필드**: slug, name, name_ko (description은 선택)
-   5. **slug 형식**: 소문자 + 숫자 + 하이픈만 (예: "web-development", "ai-ml")
-   6. **name 형식**: 소문자로 시작, 언더스코어 허용 (예: "web_development", "technology")
+`
+		: ''
+}5. categories (최소 3개, depth 최소 2):
+   1. 배열 순서: 부모 → 자식 (루트가 먼저)
+   2. parent_slug: [기존 카테고리] 또는 같은 응답의 앞 항목 slug
+   3. 필수 필드: slug, name, name_ko (description 선택)
+   4. 명명: slug는 kebab-case (예: web-development), name은 자유 형식 (예: Web Development)
 
    올바른 예시:
-   첫 번째: slug: "technology", name: "technology", name_ko: "기술"
-   두 번째: slug: "programming", name: "programming", name_ko: "프로그래밍", parent_slug: "technology"
-   세 번째: slug: "web-development", name: "web_development", name_ko: "웹 개발", parent_slug: "programming"
+   첫 번째: slug: "technology", name: "Technology", name_ko: "기술"
+   두 번째: slug: "programming", name: "Programming", name_ko: "프로그래밍", parent_slug: "technology"
+   세 번째: slug: "web-development", name: "Web Development", name_ko: "웹 개발", parent_slug: "programming"
 
    [기존 카테고리]
 ${categoryList || '(없음)'}
 
 10. tags (최소 5개):
-    **필수 규칙:**
-    1. **필수 필드**: slug, name, name_ko, weight (description은 선택)
-    2. **slug 형식**: 소문자 + 숫자 + 하이픈만 (예: "machine-learning", "web-dev")
-    3. **name 형식**: 소문자로 시작, 언더스코어 허용 (예: "machine_learning", "web_dev")
-    4. **weight**: 중요도 0.1~1.0 (가장 중요한 태그가 1.0에 가깝게)
+    1. 필수 필드: slug, name, name_ko, weight (description 선택)
+    2. 명명: slug는 kebab-case (예: machine-learning), name은 자유 형식 (예: Machine Learning)
+    3. weight: 영상 내 관련성 (0.1~1.0)
+       - 1.0: 핵심 주제
+       - 0.7-0.9: 주요 소재/기술
+       - 0.4-0.6: 부차적 언급
+       - 0.1-0.3: 간접적 연관
 
     참고 (기존 태그, 새로 만들어도 됨):
 ${tagList || '(없음)'}
 
-11. metric_keys (정확히 6개):
-    **!!!!! 중요: slug는 URL용 kebab-case, name은 디스플레이용 자연스러운 영문 표현 !!!!!**
+11. metric_keys (정확히 3개):
+    ⚠️ CRITICAL: slug는 kebab-case (R4), name은 자연스러운 영문 (공백/대문자 허용)
 
-    **필수 규칙:**
-    1. **필수 필드**: slug, name, name_ko, description
-    2. **필드 형식:**
-       - **slug**: kebab-case, URL/ID용 (소문자 + 숫자 + 하이픈)
-         * 올바른 예: "video-quality", "editing-speed", "audio-clarity", "beginner-friendliness"
-         * 잘못된 예: "video_quality" (언더스코어), "VideoQuality" (대문자), "1video" (숫자로 시작)
-       - **name**: 자연스러운 영문 표현, 디스플레이용 (공백/대문자 허용)
-         * 올바른 예: "Video Quality", "Editing Speed", "Audio Clarity", "Beginner Friendliness"
-         * 잘못된 예: "video_quality" (언더스코어), "VIDEO QUALITY" (전체 대문자)
-       - **name_ko**: 한글 디스플레이 (예: "영상 품질", "편집 속도", "음질", "초보자 친화성")
-       - **description**: 영문 설명 (1-500자)
-    3. **균형 잡힌 선택**: 강점 2개, 보통 2개, 약점 2개
-    4. **일관성**: slug와 name은 같은 의미를 표현 (video-quality ↔ Video Quality)
+    **핵심 지표 3가지 선택 (균형: 강점 1개, 보통 1개, 약점 1개):**
+    - engagement-level: 시청자 반응, 몰입도, 참여 수준
+    - information-density: 정보 밀도, 교육적 가치, 학습 효과
+    - entertainment-focus: 엔터테인먼트 가치, 재미 요소, 오락성
+
+    **형식 규칙:**
+    1. 필수 필드: slug, name, name_ko, description
+    2. slug: kebab-case (예: "engagement-level")
+    3. name: 자연어 (예: "Engagement Level")
+    4. slug ↔ name 의미 일치
 
     참고 (기존 지표, 새로 만들어도 됨):
 ${metricList || '(없음)'}
 
-12. metrics (정확히 6개):
-    **!!!!! 중요: key 필드는 위 metric_keys의 slug와 정확히 일치해야 함 (kebab-case) !!!!!**
+12. metrics (정확히 3개):
+    ⚠️ CRITICAL: key는 위 metric_keys의 slug와 정확히 일치 (kebab-case)
 
-    **필수 규칙:**
-    1. **key**: 위에서 정의한 metric_keys의 slug 필드와 정확히 일치 (kebab-case)
-       - 예: metric_keys에서 slug가 "video-quality"면 metrics의 key도 "video-quality"
-       - name(Video Quality)이 아니라 slug(video-quality) 사용
-       - 6개 모두 metric_keys에서 정의한 slug 사용
-    2. **score**: 0-100 정수
-    3. **reasoning**: 점수 근거, 한국어 작성 (1-500자)
-    4. **균형**: 강점 2개(70-100), 보통 2개(40-69), 약점 2개(0-39)
-    5. **객관적 측정**: 주관적 의견이 아닌 콘텐츠 특성만 평가
+    **규칙:**
+    1. key: metric_keys의 slug (예: "engagement-level")
+    2. score: 0-100 정수 (강점 70-100, 보통 40-69, 약점 0-39)
+    3. reasoning: 한국어, 자막/댓글 근거 제시 (≤500자)
+
+    📘 예시:
+    {
+      key: "engagement-level",
+      score: 85,
+      reasoning: "댓글 100개 중 80개가 '재밌다', '웃겨' 등 긍정 반응. 답글도 활발하여 참여도 매우 높음."
+    }
 
 JSON 스키마에 맞춰 응답하세요.`;
 	}
@@ -516,7 +584,13 @@ JSON 스키마에 맞춰 응답하세요.`;
 						overall_score: { type: 'number' as const },
 						intensity: { type: 'number' as const }
 					},
-					required: ['positive_ratio', 'neutral_ratio', 'negative_ratio', 'overall_score', 'intensity']
+					required: [
+						'positive_ratio',
+						'neutral_ratio',
+						'negative_ratio',
+						'overall_score',
+						'intensity'
+					]
 				},
 				community: {
 					type: 'object' as const,
@@ -619,7 +693,16 @@ JSON 스키마에 맞춰 응답하세요.`;
 								anger: { type: 'string' as const },
 								anticipation: { type: 'string' as const }
 							},
-							required: ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation']
+							required: [
+								'joy',
+								'trust',
+								'fear',
+								'surprise',
+								'sadness',
+								'disgust',
+								'anger',
+								'anticipation'
+							]
 						}
 					},
 					required: ['age_groups', 'emotions']
@@ -682,11 +765,7 @@ JSON 스키마에 맞춰 응답하세요.`;
 				'summary',
 				'content_quality',
 				'sentiment',
-				'community',
-				'age_groups',
-				'plutchik_emotions',
 				'insights',
-				'representative_comments',
 				'categories',
 				'tags',
 				'metric_keys',
@@ -722,31 +801,35 @@ JSON 스키마에 맞춰 응답하세요.`;
 					'sentiment 비율의 합은 100이어야 합니다'
 				)
 			),
-			community: v.object({
-				politeness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				rudeness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				kindness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				toxicity: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				constructive: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				self_centered: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				off_topic: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-				overall_score: v.pipe(v.number(), v.minValue(-100), v.maxValue(100), v.integer())
-			}),
-			age_groups: v.pipe(
+			community: v.optional(
 				v.object({
-					teens: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					twenties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					thirties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					forty_plus: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					median_age: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					adult_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
-				}),
-				v.check(
-					(obj) => obj.teens + obj.twenties + obj.thirties + obj.forty_plus === 100,
-					'age_groups 비율의 합은 100이어야 합니다'
+					politeness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					rudeness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					kindness: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					toxicity: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					constructive: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					self_centered: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					off_topic: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+					overall_score: v.pipe(v.number(), v.minValue(-100), v.maxValue(100), v.integer())
+				})
+			),
+			age_groups: v.optional(
+				v.pipe(
+					v.object({
+						teens: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+						twenties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+						thirties: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+						forty_plus: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+						median_age: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
+						adult_ratio: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
+					}),
+					v.check(
+						(obj) => obj.teens + obj.twenties + obj.thirties + obj.forty_plus === 100,
+						'age_groups 비율의 합은 100이어야 합니다'
+					)
 				)
 			),
-			plutchik_emotions: v.pipe(
+			plutchik_emotions: v.optional(
 				v.object({
 					joy: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 					trust: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
@@ -758,25 +841,21 @@ JSON 스키마에 맞춰 응답하세요.`;
 					anticipation: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 					dominant_emotion: v.pipe(
 						v.string(),
-						v.picklist(['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'])
+						v.picklist([
+							'joy',
+							'trust',
+							'fear',
+							'surprise',
+							'sadness',
+							'disgust',
+							'anger',
+							'anticipation'
+						])
 					),
 					entropy: v.pipe(v.number(), v.minValue(0), v.maxValue(10)),
-					valence_mean: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
-					arousal_mean: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer())
-				}),
-				v.check(
-					(obj) =>
-						obj.joy +
-							obj.trust +
-							obj.fear +
-							obj.surprise +
-							obj.sadness +
-							obj.disgust +
-							obj.anger +
-							obj.anticipation ===
-						100,
-					'plutchik_emotions 비율의 합은 100이어야 합니다'
-				)
+					valence_mean: v.pipe(v.number(), v.minValue(-100), v.maxValue(100), v.integer()),
+					arousal_mean: v.pipe(v.number(), v.minValue(-100), v.maxValue(100), v.integer())
+				})
 			),
 			insights: v.object({
 				content_summary: v.pipe(v.string(), v.minLength(1), v.maxLength(1000)),
@@ -792,7 +871,7 @@ JSON 스키마에 맞춰 응답하세요.`;
 					v.maxLength(10)
 				)
 			}),
-			representative_comments: v.pipe(
+			representative_comments: v.optional(
 				v.object({
 					age_groups: v.object({
 						teens: v.pipe(v.string(), v.maxLength(1000)),
@@ -810,16 +889,7 @@ JSON 스키마에 맞춰 응답하세요.`;
 						anger: v.pipe(v.string(), v.maxLength(1000)),
 						anticipation: v.pipe(v.string(), v.maxLength(1000))
 					})
-				}),
-				v.check((obj) => {
-					const allComments = [...Object.values(obj.age_groups), ...Object.values(obj.emotions)];
-					for (const comment of allComments) {
-						if (comment === '-') continue;
-						const hasEnglishWords = /[a-zA-Z]{3,}/.test(comment);
-						if (hasEnglishWords) return false;
-					}
-					return true;
-				}, '대표 댓글에 영어 단어가 포함되어 있습니다. 반드시 한국어로 번역해야 합니다.')
+				})
 			),
 			categories: v.pipe(
 				v.array(
@@ -828,14 +898,12 @@ JSON 스키마에 맞춰 응답하세요.`;
 							v.string(),
 							v.minLength(1),
 							v.maxLength(50),
-							v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug는 소문자, 숫자, 하이픈만 허용 (예: web-development)')
+							v.regex(
+								/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+								'slug는 소문자, 숫자, 하이픈만 허용 (예: web-development)'
+							)
 						),
-						name: v.pipe(
-							v.string(),
-							v.minLength(1),
-							v.maxLength(50),
-							v.regex(/^[a-z][a-z0-9_]*$/, 'name은 소문자로 시작, 소문자/숫자/언더스코어만 허용')
-						),
+						name: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						name_ko: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						description: v.optional(v.pipe(v.string(), v.maxLength(500))),
 						parent_slug: v.optional(
@@ -858,14 +926,12 @@ JSON 스키마에 맞춰 응답하세요.`;
 							v.string(),
 							v.minLength(1),
 							v.maxLength(50),
-							v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug는 소문자, 숫자, 하이픈만 허용 (예: machine-learning)')
+							v.regex(
+								/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+								'slug는 소문자, 숫자, 하이픈만 허용 (예: machine-learning)'
+							)
 						),
-						name: v.pipe(
-							v.string(),
-							v.minLength(1),
-							v.maxLength(50),
-							v.regex(/^[a-z][a-z0-9_]*$/, 'name은 소문자로 시작, 소문자/숫자/언더스코어만 허용')
-						),
+						name: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						name_ko: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						description: v.optional(v.pipe(v.string(), v.maxLength(500))),
 						weight: v.pipe(v.number(), v.minValue(0.1), v.maxValue(1))
@@ -881,14 +947,17 @@ JSON 스키마에 맞춰 응답하세요.`;
 							v.string(),
 							v.minLength(1),
 							v.maxLength(50),
-							v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug는 kebab-case만 허용 (소문자+숫자+하이픈, 예: beginner-friendliness, video-quality)')
+							v.regex(
+								/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+								'slug는 kebab-case만 허용 (소문자+숫자+하이픈, 예: engagement-level, information-density)'
+							)
 						),
 						name: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						name_ko: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
 						description: v.pipe(v.string(), v.minLength(1), v.maxLength(500))
 					})
 				),
-				v.length(6)
+				v.length(3)
 			),
 			metrics: v.pipe(
 				v.array(
@@ -897,13 +966,16 @@ JSON 스키마에 맞춰 응답하세요.`;
 							v.string(),
 							v.minLength(1),
 							v.maxLength(50),
-							v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'key는 kebab-case만 허용 (소문자+숫자+하이픈, 예: video-quality)')
+							v.regex(
+								/^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+								'key는 kebab-case만 허용 (소문자+숫자+하이픈, 예: engagement-level)'
+							)
 						),
 						score: v.pipe(v.number(), v.minValue(0), v.maxValue(100), v.integer()),
 						reasoning: v.pipe(v.string(), v.minLength(1), v.maxLength(500))
 					})
 				),
-				v.length(6)
+				v.length(3)
 			)
 		});
 	}

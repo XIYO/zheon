@@ -4,6 +4,7 @@ import type { Database } from '$lib/types/database.types';
 import { SummaryService } from '$lib/server/services/summary.service';
 import { createYouTube } from '$lib/server/youtube-proxy';
 import type { Innertube } from 'youtubei.js';
+import { logger } from '$lib/logger';
 
 describe.sequential('SummaryService Integration Test', () => {
 	let adminSupabase: ReturnType<typeof createClient<Database>>;
@@ -23,8 +24,8 @@ describe.sequential('SummaryService Integration Test', () => {
 			throw new Error('TOR_SOCKS5_PROXY 환경변수가 필요합니다.');
 		}
 
-		console.log('\n환경:', process.env.PUBLIC_SUPABASE_URL);
-		console.log('테스트 영상:', process.env.TEST_VIDEO_ID, '\n');
+		logger.info('\n환경:', process.env.PUBLIC_SUPABASE_URL);
+		logger.info('테스트 영상:', process.env.TEST_VIDEO_ID, '\n');
 
 		adminSupabase = createClient<Database>(
 			process.env.PUBLIC_SUPABASE_URL,
@@ -54,7 +55,7 @@ describe.sequential('SummaryService Integration Test', () => {
 		expect(summary?.sentiment_overall_score).toBeGreaterThanOrEqual(-100);
 		expect(summary?.community_quality_score).toBeGreaterThanOrEqual(-100);
 
-		console.log(`✅ 전체 분석 성공:
+		logger.info(`✅ 전체 분석 성공:
   - 요약 ID: ${summary?.id}
   - 요약 내용: ${summary?.summary?.substring(0, 100)}...
   - 콘텐츠 점수: ${summary?.content_quality_score}
@@ -78,7 +79,7 @@ describe.sequential('SummaryService Integration Test', () => {
 		expect(summary?.summary).toBeTruthy();
 		expect(summary?.transcript).toBeTruthy();
 
-		console.log(`✅ DB 조회 성공:
+		logger.info(`✅ DB 조회 성공:
   - 요약 ID: ${summary?.id}
   - 요약: ${summary?.summary?.substring(0, 100)}...`);
 	}, 180000);
@@ -92,7 +93,7 @@ describe.sequential('SummaryService Integration Test', () => {
 			})
 		).rejects.toThrow();
 
-		console.log('✅ 자막 없음 에러 처리 확인');
+		logger.info('✅ 자막 없음 에러 처리 확인');
 	}, 30000);
 
 	it('댓글 제한이 적용되어야 함', async () => {
@@ -109,7 +110,7 @@ describe.sequential('SummaryService Integration Test', () => {
 		expect(summary).toBeDefined();
 		expect(summary?.total_comments_analyzed).toBeLessThanOrEqual(100);
 
-		console.log(`✅ 댓글 제한 확인: ${summary?.total_comments_analyzed}개 분석됨 (최대 100개)`);
+		logger.info(`✅ 댓글 제한 확인: ${summary?.total_comments_analyzed}개 분석됨 (최대 100개)`);
 	}, 180000);
 
 	it('중복 분석 방지: force=false이면 기존 분석 유지', async () => {
@@ -133,6 +134,6 @@ describe.sequential('SummaryService Integration Test', () => {
 		const secondSummary = await summaryService.getSummaryFromDB(videoId);
 		expect(secondSummary?.id).toBe(firstId);
 
-		console.log(`✅ 중복 분석 방지 확인: 동일한 ID ${firstId}`);
+		logger.info(`✅ 중복 분석 방지 확인: 동일한 ID ${firstId}`);
 	}, 180000);
 });

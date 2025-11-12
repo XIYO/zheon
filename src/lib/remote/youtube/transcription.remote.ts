@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { TranscriptionService } from '$lib/server/services/youtube/transcription.service';
 import { CollectTranscriptInputSchema } from './transcription.schema';
+import { logger } from '$lib/logger';
 
 export const collectTranscript = command(CollectTranscriptInputSchema, async (input) => {
 	try {
@@ -13,7 +14,7 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 		const service = new TranscriptionService(adminSupabase);
 		return await service.collectTranscript(videoId, { force });
 	} catch (err) {
-		console.error('[transcript] 수집 실패:', err);
+		logger.error('[transcript] 수집 실패:', err);
 		throw error(500, err instanceof Error ? err.message : '알 수 없는 오류');
 	}
 });
@@ -31,7 +32,7 @@ export const getTranscriptFromDB = command(
 			const service = new TranscriptionService(adminSupabase);
 			return await service.getTranscriptFromDB(videoId);
 		} catch (err) {
-			console.error('[transcript] DB 조회 실패:', err);
+			logger.error('[transcript] DB 조회 실패:', err);
 			throw error(500, err instanceof Error ? err.message : '알 수 없는 오류');
 		}
 	}

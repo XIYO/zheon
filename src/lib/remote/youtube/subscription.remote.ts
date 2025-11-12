@@ -3,6 +3,7 @@ import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { syncChannelVideosCommand } from './channel_video.remote.ts';
 import { getAllSubscriptions, getChannels } from '$lib/server/youtubeApi.js';
+import { logger } from '$lib/logger';
 
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
@@ -116,40 +117,40 @@ async function performSubscriptionsSync() {
 	try {
 		let accessToken = session.provider_token;
 
-		console.log('[동기화] 시작 - 사용자:', userId);
-		console.log('[동기화] provider_token 존재:', !!accessToken);
-		console.log('[동기화] provider_refresh_token 존재:', !!session.provider_refresh_token);
+		logger.info('[동기화] 시작 - 사용자:', userId);
+		logger.info('[동기화] provider_token 존재:', !!accessToken);
+		logger.info('[동기화] provider_refresh_token 존재:', !!session.provider_refresh_token);
 
 		if (!accessToken) {
-			console.log('[동기화] provider_token 없음, 세션 refresh 시도...');
+			logger.info('[동기화] provider_token 없음, 세션 refresh 시도...');
 			const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
 			if (refreshError) {
-				console.error('[동기화] refresh 실패:', refreshError);
+				logger.error('[동기화] refresh 실패:', refreshError);
 				throw error(401, 'Google 인증 토큰이 없습니다. 다시 로그인해주세요.');
 			}
 
-			console.log('[동기화] refresh 응답:', {
+			logger.info('[동기화] refresh 응답:', {
 				hasSession: !!refreshData.session,
 				hasProviderToken: !!refreshData.session?.provider_token,
 				hasProviderRefreshToken: !!refreshData.session?.provider_refresh_token
 			});
 
 			if (!refreshData.session?.provider_token) {
-				console.error('[동기화] refresh 후에도 provider_token 없음 - 재로그인 필요');
+				logger.error('[동기화] refresh 후에도 provider_token 없음 - 재로그인 필요');
 				throw error(401, 'Google 인증 토큰이 없습니다. 로그아웃 후 다시 로그인해주세요.');
 			}
 
 			accessToken = refreshData.session.provider_token;
-			console.log('[동기화] 세션 refresh 완료, provider_token 획득');
+			logger.info('[동기화] 세션 refresh 완료, provider_token 획득');
 		}
 
-		console.log('[동기화] OAuth 토큰 확인 완료, 구독 목록 가져오는 중...');
+		logger.info('[동기화] OAuth 토큰 확인 완료, 구독 목록 가져오는 중...');
 		const subscriptions = await getAllSubscriptions(accessToken);
-		console.log(`[동기화] 구독 목록 가져오기 완료: ${subscriptions.length}개`);
+		logger.info(`[동기화] 구독 목록 가져오기 완료: ${subscriptions.length}개`);
 
 		if (subscriptions.length === 0) {
-			console.log('[동기화] 구독 채널 없음, 기존 데이터 삭제 중...');
+			logger.info('[동기화] 구독 채널 없음, 기존 데이터 삭제 중...');
 			await supabase.from('youtube_subscriptions').delete().eq('user_id', userId);
 
 			await supabase
@@ -160,7 +161,7 @@ async function performSubscriptionsSync() {
 				})
 				.eq('id', userId);
 
-			console.log('[동기화] 완료: 구독 채널 없음');
+			logger.info('[동기화] 완료: 구독 채널 없음');
 			return {
 				success: true,
 				message: '동기화할 구독 채널이 없습니다',
@@ -170,17 +171,17 @@ async function performSubscriptionsSync() {
 		}
 
 		const uniqueChannelIds = [...new Set(subscriptions.map((s) => s.channel_id).filter(Boolean))];
-		console.log(`[동기화] 고유 채널 ID ${uniqueChannelIds.length}개 추출 완료`);
+		logger.info(`[동기화] 고유 채널 ID ${uniqueChannelIds.length}개 추출 완료`);
 
-		console.log('[동기화] 채널 정보 가져오는 중...');
+		logger.info('[동기화] 채널 정보 가져오는 중...');
 		const channels = await getChannels(uniqueChannelIds);
-		console.log(`[동기화] 채널 정보 가져오기 완료: ${channels.length}개`);
+		logger.info(`[동기화] 채널 정보 가져오기 완료: ${channels.length}개`);
 
 		const now = new Date().toISOString();
 
 		const { adminSupabase } = locals;
 		if (channels.length > 0) {
-			console.log(`[동기화] 채널 정보 DB 저장 중... (${channels.length}개)`);
+			logger.info(`[동기화] 채널 정보 DB 저장 중... (${channels.length}개)`);
 			for (const rowsChunk of chunk(channels, 100)) {
 				const { error: channelError } = await adminSupabase.from('channels').upsert(
 					rowsChunk.map((ch) => ({
@@ -191,24 +192,24 @@ async function performSubscriptionsSync() {
 				);
 
 				if (channelError) {
-					console.error('[동기화] 채널 저장 실패:', channelError);
+					logger.error('[동기화] 채널 저장 실패:', channelError);
 					throw error(500, channelError.message);
 				}
 			}
-			console.log('[동기화] 채널 정보 DB 저장 완료');
+			logger.info('[동기화] 채널 정보 DB 저장 완료');
 		}
 
-		console.log('[동기화] 기존 구독 데이터 삭제 중...');
+		logger.info('[동기화] 기존 구독 데이터 삭제 중...');
 		const { error: deleteError } = await supabase
 			.from('youtube_subscriptions')
 			.delete()
 			.eq('user_id', userId);
 
 		if (deleteError) {
-			console.error('[동기화] 기존 구독 삭제 실패:', deleteError);
+			logger.error('[동기화] 기존 구독 삭제 실패:', deleteError);
 			throw error(500, deleteError.message);
 		}
-		console.log('[동기화] 기존 구독 데이터 삭제 완료');
+		logger.info('[동기화] 기존 구독 데이터 삭제 완료');
 
 		const subscriptionRows = subscriptions.map((sub) => ({
 			user_id: userId,
@@ -223,22 +224,22 @@ async function performSubscriptionsSync() {
 			updated_at: now
 		}));
 
-		console.log(`[동기화] 새 구독 데이터 저장 중... (${subscriptionRows.length}개)`);
+		logger.info(`[동기화] 새 구독 데이터 저장 중... (${subscriptionRows.length}개)`);
 		for (const rowsChunk of chunk(subscriptionRows, 100)) {
 			const { error: insertError } = await supabase.from('youtube_subscriptions').insert(rowsChunk);
 
 			if (insertError) {
-				console.error('[동기화] 구독 저장 실패:', insertError);
+				logger.error('[동기화] 구독 저장 실패:', insertError);
 				throw error(500, insertError.message);
 			}
 		}
-		console.log('[동기화] 새 구독 데이터 저장 완료');
+		logger.info('[동기화] 새 구독 데이터 저장 완료');
 
 		const CONCURRENCY = 10;
 		const startTime = Date.now();
 		const syncResults = [];
 
-		console.log(
+		logger.info(
 			`[동기화] 총 ${channels.length}개 채널 비디오 동기화 시작 (동시 처리: ${CONCURRENCY}개)`
 		);
 
@@ -246,7 +247,7 @@ async function performSubscriptionsSync() {
 			const batch = channels.slice(i, i + CONCURRENCY);
 			const batchStartTime = Date.now();
 
-			console.log(
+			logger.info(
 				`[동기화] 배치 ${Math.floor(i / CONCURRENCY) + 1}/${Math.ceil(channels.length / CONCURRENCY)} 시작 (${batch.length}개 채널)`
 			);
 
@@ -264,7 +265,7 @@ async function performSubscriptionsSync() {
 			const batchTime = Date.now() - batchStartTime;
 			const succeeded = batchResults.filter((r) => r.status === 'fulfilled').length;
 			const failed = batchResults.filter((r) => r.status === 'rejected').length;
-			console.log(
+			logger.info(
 				`[동기화] 배치 완료: 성공 ${succeeded}개, 실패 ${failed}개, 소요시간 ${batchTime}ms`
 			);
 
@@ -274,10 +275,10 @@ async function performSubscriptionsSync() {
 					.map((r) => {
 						const channelId = r.reason?.channelId || 'unknown';
 						const error = r.reason?.error;
-						console.error(`[동기화] 채널 ${channelId} 실패:`, error?.message || error);
+						logger.error(`[동기화] 채널 ${channelId} 실패:`, error?.message || error);
 						return channelId;
 					});
-				console.error(`[동기화] 실패한 채널 ID:`, failedChannels);
+				logger.error(`[동기화] 실패한 채널 ID:`, failedChannels);
 			}
 		}
 
@@ -285,7 +286,7 @@ async function performSubscriptionsSync() {
 		const successes = syncResults.filter((r) => r.status === 'fulfilled');
 		const failures = syncResults.filter((r) => r.status === 'rejected');
 
-		console.log(
+		logger.info(
 			`[동기화] 전체 완료: 성공 ${successes.length}개, 실패 ${failures.length}개, 총 소요시간 ${totalTime}ms`
 		);
 

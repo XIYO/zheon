@@ -5,9 +5,12 @@
 	const { enhancedForm, fields } = summaryStore.form;
 </script>
 
-<form {...enhancedForm} novalidate class="flex gap-2">
+<form
+	{...enhancedForm}
+	novalidate
+	class="flex gap-2 sticky top-12 z-10 backdrop-blur-md bg-surface-50-950/50 py-4">
+	<input {...fields.video_id.as('text')} type="hidden" />
 	<div class="flex-1">
-		<input {...fields.video_id.as('text')} type="hidden" />
 		<input
 			type="text"
 			name="url"

@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { CommentService } from '$lib/server/services/youtube/comment.service';
 import { CollectCommentsInputSchema } from './comment.schema';
+import { logger } from '$lib/logger';
 
 export const collectComments = command(CollectCommentsInputSchema, async (input) => {
 	try {
@@ -13,7 +14,7 @@ export const collectComments = command(CollectCommentsInputSchema, async (input)
 		const service = new CommentService(adminSupabase);
 		return await service.collectComments(videoId, { maxBatches, force });
 	} catch (err) {
-		console.error('[comments] 수집 실패:', err);
+		logger.error('[comments] 수집 실패:', err);
 		throw error(500, err instanceof Error ? err.message : '알 수 없는 오류');
 	}
 });
@@ -31,7 +32,7 @@ export const getCommentsFromDB = command(
 			const service = new CommentService(adminSupabase);
 			return await service.getCommentsFromDB(videoId);
 		} catch (err) {
-			console.error('[comments] DB 조회 실패:', err);
+			logger.error('[comments] DB 조회 실패:', err);
 			throw error(500, err instanceof Error ? err.message : '알 수 없는 오류');
 		}
 	}

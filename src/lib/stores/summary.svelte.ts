@@ -1,12 +1,17 @@
 import { browser } from '$app/environment';
 import { createSummary, getSummaries, getSummaryById } from '$lib/remote/summary.remote';
 import { SummarySchema } from '$lib/remote/summary.schema';
+import { getCategories } from '$lib/remote/categories.remote';
+import { getTags } from '$lib/remote/tags.remote';
+import { getMetrics } from '$lib/remote/metrics.remote';
+import { getCommunityMetrics } from '$lib/remote/community.remote';
 import type { Database } from '$lib/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createContext } from 'svelte';
 import { extractVideoId } from '$lib/utils/youtube';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { logger } from '$lib/logger';
 
 /**
  * List 쿼리 정보
@@ -34,6 +39,10 @@ class SummaryStore {
 		}
 	]);
 	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
+	#categoriesQueries = new Map<string, ReturnType<typeof getCategories>>();
+	#tagsQueries = new Map<string, ReturnType<typeof getTags>>();
+	#metricsQueries = new Map<string, ReturnType<typeof getMetrics>>();
+	#communityQueries = new Map<string, ReturnType<typeof getCommunityMetrics>>();
 
 	/**
 	 * RemoteQuery 타입 가드
@@ -60,7 +69,7 @@ class SummaryStore {
 		const changedVideoId = payload.new?.video_id || payload.old?.video_id;
 		const changedDate = payload.new?.created_at || payload.old?.created_at;
 
-		console.log('[SummaryStore] 변경 감지:', {
+		logger.info('[SummaryStore] 변경 감지:', {
 			event: payload.eventType,
 			changedVideoId,
 			changedDate
@@ -74,7 +83,7 @@ class SummaryStore {
 					(direction === 'before' && changedDate <= cursor);
 
 				if (shouldRefresh) {
-					console.log(`[SummaryStore] List 쿼리 리프레시 [${index}]:`, { cursor, direction });
+					logger.info(`[SummaryStore] List 쿼리 리프레시 [${index}]:`, { cursor, direction });
 					queryInfo.query.refresh();
 				}
 			});
@@ -83,14 +92,14 @@ class SummaryStore {
 		if (changedVideoId && payload.new) {
 			const detailQuery = this.#detailQueries.get(changedVideoId);
 			if (this.isRemoteQuery(detailQuery)) {
-				console.log(`[SummaryStore] Detail 쿼리 낙관적 업데이트 [${changedVideoId}]:`, {
+				logger.info(`[SummaryStore] Detail 쿼리 낙관적 업데이트 [${changedVideoId}]:`, {
 					title: payload.new.title,
 					analysis_status: payload.new.analysis_status,
 					summary_audio_status: payload.new.summary_audio_status
 				});
 				detailQuery.set(payload.new);
 			} else {
-				console.log(`[SummaryStore] Detail 쿼리 없음 [${changedVideoId}]`);
+				logger.info(`[SummaryStore] Detail 쿼리 없음 [${changedVideoId}]`);
 			}
 		}
 	}
@@ -100,34 +109,97 @@ class SummaryStore {
 	 * unsubscribe 함수를 반환하여 onMount cleanup에서 사용
 	 */
 	subscribe = (supabase: SupabaseClient<Database>) => {
-		if (!browser) return () => {};
+		if (!browser) {
+			logger.warn('[SummaryStore] 브라우저 환경이 아니므로 구독 건너뜀');
+			return () => {};
+		}
 
-		const timerId = `[SummaryStore] Realtime 구독 ${Date.now()}`;
-		console.time(timerId);
+		const startTime = Date.now();
+		logger.info('[SummaryStore] Realtime 구독 시작...');
 
 		const channel = supabase
 			.channel('summary-changes')
 			.on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, (payload) => {
-				console.log('[SummaryStore] summaries 변경:', payload);
+				logger.info('[SummaryStore] summaries 변경:', payload);
 				this.#handleRealtimeChange(payload);
 			})
-			.on('postgres_changes', { event: '*', schema: 'public', table: 'content_community_metrics' }, (payload) => {
-				console.log('[SummaryStore] community 변경:', payload);
-				const videoId = (payload.new as any)?.video_id || (payload.old as any)?.video_id;
+			.on(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'content_community_metrics' },
+				(payload) => {
+					logger.info('[SummaryStore] community 변경:', payload);
+					const videoId =
+						(payload.new as { video_id?: string })?.video_id ||
+						(payload.old as { video_id?: string })?.video_id;
+					if (videoId) {
+						const communityQuery = this.#communityQueries.get(videoId as string);
+						if (communityQuery) {
+							logger.info(`[SummaryStore] Community 쿼리 리프레시 [${videoId}]`);
+							communityQuery.refresh();
+						}
+					}
+				}
+			)
+			.on(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'video_categories' },
+				(payload) => {
+					logger.info('[SummaryStore] video_categories 변경:', payload);
+					const videoId =
+						(payload.new as { video_id?: string })?.video_id ||
+						(payload.old as { video_id?: string })?.video_id;
+					if (videoId) {
+						const categoriesQuery = this.#categoriesQueries.get(videoId as string);
+						if (categoriesQuery) {
+							logger.info(`[SummaryStore] Categories 쿼리 리프레시 [${videoId}]`);
+							categoriesQuery.refresh();
+						}
+					}
+				}
+			)
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'video_tags' }, (payload) => {
+				logger.info('[SummaryStore] video_tags 변경:', payload);
+				const videoId =
+					(payload.new as { video_id?: string })?.video_id ||
+					(payload.old as { video_id?: string })?.video_id;
 				if (videoId) {
-					const detailQuery = this.#detailQueries.get(videoId as string);
-					if (this.isRemoteQuery(detailQuery)) {
-						detailQuery.refresh();
+					const tagsQuery = this.#tagsQueries.get(videoId as string);
+					if (tagsQuery) {
+						logger.info(`[SummaryStore] Tags 쿼리 리프레시 [${videoId}]`);
+						tagsQuery.refresh();
 					}
 				}
 			})
-			.subscribe((status) => {
-				console.timeEnd(timerId);
-				console.log('[SummaryStore] Realtime 구독 상태:', status);
+			.on(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'content_metrics' },
+				(payload) => {
+					logger.info('[SummaryStore] content_metrics 변경:', payload);
+					const videoId =
+						(payload.new as { video_id?: string })?.video_id ||
+						(payload.old as { video_id?: string })?.video_id;
+					if (videoId) {
+						const metricsQuery = this.#metricsQueries.get(videoId as string);
+						if (metricsQuery) {
+							logger.info(`[SummaryStore] Metrics 쿼리 리프레시 [${videoId}]`);
+							metricsQuery.refresh();
+						}
+					}
+				}
+			)
+			.subscribe((status, err) => {
+				logger.info(`[SummaryStore] Realtime 구독 완료: ${Date.now() - startTime}ms`);
+				logger.info('[SummaryStore] Realtime 구독 상태:', status);
+				if (err) {
+					logger.error('[SummaryStore] Realtime 구독 에러:', err);
+				}
+				if (status !== 'SUBSCRIBED') {
+					logger.warn('[SummaryStore] Realtime 구독 실패 - 상태:', status);
+				}
 			});
 
 		return () => {
-			console.log('[SummaryStore] Realtime 구독 해제');
+			logger.info('[SummaryStore] Realtime 구독 해제');
 			supabase.removeChannel(channel);
 		};
 	};
@@ -149,14 +221,14 @@ class SummaryStore {
 		const lastData = await lastQueryInfo.query;
 		const cursor = lastData?.nextCursor;
 
-		console.log('[SummaryStore] loadMore:', {
+		logger.info('[SummaryStore] loadMore:', {
 			totalQueries: this.#listQueries.length,
 			lastDataSummaries: lastData?.summaries?.length,
 			nextCursor: cursor
 		});
 
 		if (!cursor) {
-			console.log('[SummaryStore] loadMore 중단: nextCursor 없음');
+			logger.info('[SummaryStore] loadMore 중단: nextCursor 없음');
 			return;
 		}
 
@@ -168,7 +240,7 @@ class SummaryStore {
 				direction: 'before'
 			}
 		];
-		console.log('[SummaryStore] 새 쿼리 추가 완료, 총 쿼리:', this.#listQueries.length);
+		logger.info('[SummaryStore] 새 쿼리 추가 완료, 총 쿼리:', this.#listQueries.length);
 	}
 
 	/**
@@ -191,6 +263,62 @@ class SummaryStore {
 		};
 
 		return existing ? existing.then(createQuery) : createQuery();
+	}
+
+	/**
+	 * Categories 쿼리 조회
+	 * - 캐시된 query 있으면 반환
+	 * - 없으면 새로 생성하여 캐시
+	 */
+	categories(videoId: string) {
+		const existing = this.#categoriesQueries.get(videoId);
+		if (existing) return existing;
+
+		const query = getCategories({ videoId });
+		this.#categoriesQueries.set(videoId, query);
+		return query;
+	}
+
+	/**
+	 * Tags 쿼리 조회
+	 * - 캐시된 query 있으면 반환
+	 * - 없으면 새로 생성하여 캐시
+	 */
+	tags(videoId: string) {
+		const existing = this.#tagsQueries.get(videoId);
+		if (existing) return existing;
+
+		const query = getTags({ videoId });
+		this.#tagsQueries.set(videoId, query);
+		return query;
+	}
+
+	/**
+	 * Metrics 쿼리 조회
+	 * - 캐시된 query 있으면 반환
+	 * - 없으면 새로 생성하여 캐시
+	 */
+	metrics(videoId: string) {
+		const existing = this.#metricsQueries.get(videoId);
+		if (existing) return existing;
+
+		const query = getMetrics({ videoId });
+		this.#metricsQueries.set(videoId, query);
+		return query;
+	}
+
+	/**
+	 * Community 쿼리 조회
+	 * - 캐시된 query 있으면 반환
+	 * - 없으면 새로 생성하여 캐시
+	 */
+	community(videoId: string) {
+		const existing = this.#communityQueries.get(videoId);
+		if (existing) return existing;
+
+		const query = getCommunityMetrics({ videoId });
+		this.#communityQueries.set(videoId, query);
+		return query;
 	}
 
 	/**

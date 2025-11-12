@@ -8,7 +8,10 @@
 
 	const { subscribe } = createSummaryStore();
 
-	onMount(() => subscribe(data.supabase));
+	onMount(() => {
+		const unsubscribe = subscribe(data.supabase);
+		return unsubscribe;
+	});
 
 	onMount(() => {
 		const {

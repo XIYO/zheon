@@ -4,7 +4,11 @@
 
 	type DataPoint = { label: string; value: number };
 
-	let { data, innerRadius = 0, size = 300 } = $props<{
+	let {
+		data,
+		innerRadius = 0,
+		size = 300
+	} = $props<{
 		data: DataPoint[];
 		innerRadius?: number;
 		size?: number;
@@ -19,40 +23,34 @@
 	}
 </script>
 
-<div class="relative mx-auto" style="width: {size}px; height: {size}px;">
+<div class="relative mx-auto" style:width="{size}px" style:height="{size}px">
 	<svg width={size} height={size} viewBox="0 0 {size} {size}">
 		<g transform="translate({size / 2}, {size / 2})">
-			{#each pie()
-				.value((d) => d.value)(data) as slice}
+			{#each pie().value((d) => d.value)(data) as slice}
 				{@const arcGen = arc()
 					.innerRadius(innerRadius * (size / 2))
 					.outerRadius(size / 2 - 10)}
 				{@const labelRadius = (innerRadius * (size / 2) + (size / 2 - 10)) / 2}
-				{@const labelArc = arc()
-					.innerRadius(labelRadius)
-					.outerRadius(labelRadius)}
+				{@const labelArc = arc().innerRadius(labelRadius).outerRadius(labelRadius)}
 				{@const centroid = labelArc.centroid(slice)}
 				<path
 					d={arcGen(slice)}
 					fill={getColor(slice.data.label)}
 					stroke="var(--color-surface-950)"
 					stroke-width="2"
-					class="transition-opacity"
-				/>
+					class="transition-opacity" />
 				<text
 					x={centroid[0]}
 					y={centroid[1] - 8}
 					text-anchor="middle"
-					class="text-xs font-semibold fill-current text-surface-950-50"
-				>
+					class="text-xs font-semibold fill-current text-surface-950-50">
 					{slice.data.label}
 				</text>
 				<text
 					x={centroid[0]}
 					y={centroid[1] + 8}
 					text-anchor="middle"
-					class="text-sm font-bold fill-current text-surface-950-50"
-				>
+					class="text-sm font-bold fill-current text-surface-950-50">
 					{slice.data.value}%
 				</text>
 			{/each}

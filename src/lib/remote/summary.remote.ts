@@ -7,6 +7,7 @@ import {
 	GetSummaryByIdSchema
 } from '$lib/remote/summary.schema';
 import { SummaryService } from '$lib/server/services/summary.service';
+import { logger } from '$lib/logger';
 
 export const getSummaries = query(
 	GetSummariesSchema,
@@ -48,7 +49,7 @@ export const getSummaries = query(
 );
 
 export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
-	console.log('[remote/getSummaryById] called', { videoId: id });
+	logger.info('[remote/getSummaryById] called', { videoId: id });
 	const { locals } = getRequestEvent();
 	const { supabase } = locals;
 
@@ -59,65 +60,29 @@ export const getSummaryById = query(GetSummaryByIdSchema, async ({ id }) => {
 		.single();
 
 	if (sbError) {
-		console.error('[remote/getSummaryById] supabase error', { videoId: id, message: sbError.message });
+		logger.error('[remote/getSummaryById] supabase error', {
+			videoId: id,
+			message: sbError.message
+		});
 		throw error(404, 'Summary not found');
 	}
 	if (!data) {
-		console.warn('[remote/getSummaryById] no data returned', { videoId: id });
+		logger.warn('[remote/getSummaryById] no data returned', { videoId: id });
 		throw error(404, 'Summary not found');
 	}
 
-	console.log('[remote/getSummaryById] success', {
+	logger.info('[remote/getSummaryById] success', {
 		id: data.id,
 		video_id: data.video_id,
 		analysis_status: data.analysis_status,
 		summary_audio_status: data.summary_audio_status
 	});
 
-	const [
-		{ data: community, error: cmError },
-		{ data: categoryData, error: catError },
-		{ data: tagData, error: tagError },
-		{ data: metricsData, error: metricsError }
-	] = await Promise.all([
-		supabase.from('content_community_metrics').select('*').eq('video_id', id).maybeSingle(),
-		supabase
-			.from('video_categories')
-			.select('categories(slug, name, name_ko, description)')
-			.eq('video_id', id)
-			.order('priority', { ascending: true }),
-		supabase
-			.from('video_tags')
-			.select('tags(slug, name, name_ko), weight')
-			.eq('video_id', id)
-			.order('weight', { ascending: false }),
-		supabase.from('content_metrics').select('metrics').eq('video_id', id).maybeSingle()
-	]);
-
-	if (cmError) {
-		console.warn('[remote/getSummaryById] community metrics fetch error', cmError.message);
-	}
-	if (catError) {
-		console.warn('[remote/getSummaryById] categories fetch error', catError.message);
-	}
-	if (tagError) {
-		console.warn('[remote/getSummaryById] tags fetch error', tagError.message);
-	}
-	if (metricsError) {
-		console.warn('[remote/getSummaryById] metrics fetch error', metricsError.message);
-	}
-
-	const categories = (categoryData || []).map((item) => item.categories).filter(Boolean);
-	const tags = (tagData || [])
-		.map((item) => ({ ...item.tags, weight: item.weight }))
-		.filter((tag) => tag.slug);
-	const metrics = metricsData?.metrics || {};
-
-	return { ...data, community, categories, tags, metrics };
+	return data;
 });
 
 export const createSummary = form(SummarySchema, async ({ video_id }) => {
-	console.log('[createSummary] 호출됨:', { video_id });
+	logger.info('[createSummary] 호출됨:', { video_id });
 	const { locals } = getRequestEvent();
 	const { supabase, adminSupabase } = locals;
 
@@ -130,7 +95,7 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 	if (selectError) throw error(500, selectError);
 
 	if (existing) {
-		console.log(`[createSummary] 기존 레코드, status=${existing.analysis_status}`);
+		logger.info(`[createSummary] 기존 레코드, status=${existing.analysis_status}`);
 
 		if (existing.analysis_status === 'completed' || existing.analysis_status === 'processing') {
 			return;
@@ -147,7 +112,7 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 			.eq('video_id', video_id);
 	} else {
 		// 실제 신규, 처리 시작할거라고 미리 넣는다.
-		console.log('[createSummary] INSERT 시도:', { video_id });
+		logger.info('[createSummary] INSERT 시도:', { video_id });
 		const { error: insertError } = await supabase.from('summaries').insert({
 			video_id,
 			processing_status: 'processing',
@@ -165,7 +130,7 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 			geminiApiKey: env.GEMINI_API_KEY
 		})
 		.catch(async (err) => {
-			console.error('[createSummary] 백그라운드 분석 실패:', err);
+			logger.error('[createSummary] 백그라운드 분석 실패:', err);
 			await adminSupabase
 				.from('summaries')
 				.update({

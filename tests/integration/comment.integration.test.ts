@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { createYouTube } from '$lib/server/youtube-proxy';
 import type { Innertube } from 'youtubei.js';
+import { logger } from '$lib/logger';
 
 /**
  * CommentService 통합 테스트
@@ -37,8 +38,8 @@ describe('CommentService Integration Test', () => {
 		youtube = await createYouTube(socksProxy);
 		service = new CommentService(supabase, youtube);
 
-		console.log(`\n프록시 URL: ${socksProxy}`);
-		console.log(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
+		logger.info(`\n프록시 URL: ${socksProxy}`);
+		logger.info(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
 	});
 
 	it(
@@ -51,7 +52,7 @@ describe('CommentService Integration Test', () => {
 			expect(Array.isArray(comments)).toBe(true);
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 1배치 수집: ${comments.length}개`);
+			logger.info(`✅ 1배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -65,7 +66,7 @@ describe('CommentService Integration Test', () => {
 
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 5배치 수집: ${comments.length}개`);
+			logger.info(`✅ 5배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -79,7 +80,7 @@ describe('CommentService Integration Test', () => {
 
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 10배치 수집: ${comments.length}개`);
+			logger.info(`✅ 10배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -93,7 +94,7 @@ describe('CommentService Integration Test', () => {
 
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 20배치 수집: ${comments.length}개`);
+			logger.info(`✅ 20배치 수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -108,7 +109,7 @@ describe('CommentService Integration Test', () => {
 			expect(Array.isArray(comments)).toBe(true);
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ DB 조회 성공: ${comments.length}개`);
+			logger.info(`✅ DB 조회 성공: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -134,7 +135,7 @@ describe('CommentService Integration Test', () => {
 			const secondComments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 			expect(secondComments.length).toBe(firstCount);
 
-			console.log(`✅ 증분 수집: 기존 댓글 확인 후 중지 (${secondComments.length}개)`);
+			logger.info(`✅ 증분 수집: 기존 댓글 확인 후 중지 (${secondComments.length}개)`);
 		},
 		TIMEOUT
 	);
@@ -152,7 +153,7 @@ describe('CommentService Integration Test', () => {
 			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 강제 재수집: ${comments.length}개`);
+			logger.info(`✅ 강제 재수집: ${comments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -167,7 +168,7 @@ describe('CommentService Integration Test', () => {
 			const comments = await service.getCommentsFromDB(TEST_VIDEO_ID);
 			expect(comments.length).toBeGreaterThan(0);
 
-			console.log(`✅ 기본값: ${comments.length}개`);
+			logger.info(`✅ 기본값: ${comments.length}개`);
 		},
 		TIMEOUT
 	);

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '$lib/types/database.types';
 import { error } from '@sveltejs/kit';
 import type { Innertube } from 'youtubei.js';
+import { logger } from '$lib/logger';
 
 export interface CollectCommentsOptions {
 	maxBatches?: number;
@@ -18,7 +19,7 @@ export class CommentService {
 		videoId: string,
 		{ maxBatches = 5, force = false }: CollectCommentsOptions = {}
 	): Promise<void> {
-		console.log(
+		logger.info(
 			`[comments] 수집 시작 videoId=${videoId} maxBatches=${maxBatches} force=${force} (약 ${maxBatches * 20}개)`
 		);
 
@@ -31,7 +32,7 @@ export class CommentService {
 				.maybeSingle();
 
 			if (checkError) {
-				console.error('[comments] 기존 댓글 확인 실패:', checkError);
+				logger.error('[comments] 기존 댓글 확인 실패:', checkError);
 			}
 
 			if (existing) {
@@ -41,14 +42,14 @@ export class CommentService {
 					.eq('video_id', videoId);
 
 				const existingCount = existingComments?.length || 0;
-				console.log(`[comments] 이미 존재 videoId=${videoId}, 기존 ${existingCount}개`);
+				logger.info(`[comments] 이미 존재 videoId=${videoId}, 기존 ${existingCount}개`);
 				return;
 			}
 		}
 
 		let commentsData = await this.youtube.getComments(videoId, 'NEWEST_FIRST');
 
-		console.log(`[comments] 1단계: continuation 토큰 수집 중...`);
+		logger.info(`[comments] 1단계: continuation 토큰 수집 중...`);
 		const batches = [commentsData];
 		let batchIndex = 1;
 
@@ -58,14 +59,14 @@ export class CommentService {
 			batchIndex++;
 		}
 
-		console.log(`[comments] 2단계: ${batches.length}개 배치 처리 시작`);
+		logger.info(`[comments] 2단계: ${batches.length}개 배치 처리 시작`);
 
 		const batchPromises = batches.map((batch, index) =>
 			(async () => {
 				const comments = batch.contents
 					.map((thread) => thread.comment)
 					.filter((comment): comment is NonNullable<typeof comment> => comment !== null);
-				console.log(`[comments] 배치 ${index + 1}: ${comments.length}개 수집`);
+				logger.info(`[comments] 배치 ${index + 1}: ${comments.length}개 수집`);
 				return comments;
 			})()
 		);
@@ -92,16 +93,16 @@ export class CommentService {
 				.upsert(allComments, { onConflict: 'comment_id' });
 
 			if (insertError) {
-				console.error(`[comments] 저장 실패:`, insertError);
+				logger.error(`[comments] 저장 실패:`, insertError);
 				throw error(500, `댓글 저장 실패: ${insertError.message}`);
 			}
 		}
 
-		console.log(`[comments] 수집 완료: ${batches.length}배치, 총 ${allComments.length}개`);
+		logger.info(`[comments] 수집 완료: ${batches.length}배치, 총 ${allComments.length}개`);
 	}
 
 	async getCommentsFromDB(videoId: string) {
-		console.log(`[comments] DB 조회 시작 videoId=${videoId}`);
+		logger.info(`[comments] DB 조회 시작 videoId=${videoId}`);
 
 		const { data: comments, error: fetchError } = await this.supabase
 			.from('comments')
@@ -113,7 +114,7 @@ export class CommentService {
 			throw error(500, `댓글 조회 실패: ${fetchError.message}`);
 		}
 
-		console.log(`[comments] DB 조회 완료 ${comments?.length || 0}개`);
+		logger.info(`[comments] DB 조회 완료 ${comments?.length || 0}개`);
 
 		return comments || [];
 	}

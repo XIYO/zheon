@@ -3,6 +3,7 @@ import type { Database } from '$lib/types/database.types';
 import { error } from '@sveltejs/kit';
 import { YTNodes, type Innertube } from 'youtubei.js';
 import type { Json } from '$lib/types/database.types';
+import { logger } from '$lib/logger';
 
 export interface TranscriptSegmentData {
 	start_ms: number;
@@ -28,31 +29,31 @@ export class TranscriptionService {
 
 	async collectTranscript(videoId: string, options: CollectTranscriptOptions = {}): Promise<void> {
 		const { force = false } = options;
-		console.log(`[transcript] 수집 시작 videoId=${videoId} force=${force}`);
+		logger.info(`[transcript] 수집 시작 videoId=${videoId} force=${force}`);
 
 		if (!force) {
 			const existing = await this.checkExisting(videoId);
 			if (existing) {
-				console.log(`[transcript] 이미 존재 videoId=${videoId}`);
+				logger.info(`[transcript] 이미 존재 videoId=${videoId}`);
 				return;
 			}
 		}
 
 		const transcriptData = await this.fetchFromYouTube(videoId);
 		if (!transcriptData) {
-			console.log(`[transcript] 자막 없음 videoId=${videoId}`);
-			throw error(404, '자막을 사용할 수 없습니다');
+			logger.info(`[transcript] 자막 없음 videoId=${videoId}, 스킵`);
+			return;
 		}
 
 		await this.saveTranscript(videoId, transcriptData);
 
-		console.log(
+		logger.info(
 			`[transcript] 저장 완료 videoId=${videoId} segments=${transcriptData.segments.length}개`
 		);
 	}
 
 	async getTranscriptFromDB(videoId: string) {
-		console.log(`[transcript] DB 조회 시작 videoId=${videoId}`);
+		logger.info(`[transcript] DB 조회 시작 videoId=${videoId}`);
 
 		const { data: transcript, error: fetchError } = await this.supabase
 			.from('transcripts')
@@ -65,7 +66,7 @@ export class TranscriptionService {
 		}
 
 		const segments = (transcript?.data as TranscriptData)?.segments || [];
-		console.log(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
+		logger.info(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
 
 		return transcript;
 	}
@@ -105,7 +106,7 @@ export class TranscriptionService {
 				}))
 			};
 		} catch (err) {
-			console.error(`[transcript] YouTube API 에러 videoId=${videoId}:`, err);
+			logger.error(`[transcript] YouTube API 에러 videoId=${videoId}:`, err);
 			return null;
 		}
 	}
@@ -122,7 +123,7 @@ export class TranscriptionService {
 		);
 
 		if (insertError) {
-			console.error(`[transcript] 저장 실패:`, insertError);
+			logger.error(`[transcript] 저장 실패:`, insertError);
 			throw error(500, `자막 저장 실패: ${insertError.message}`);
 		}
 	}

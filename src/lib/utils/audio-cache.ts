@@ -1,3 +1,5 @@
+import { logger } from '$lib/logger';
+
 let worker: Worker | null = null;
 let messageId = 0;
 const pendingMessages = new Map<
@@ -34,7 +36,7 @@ function getWorker(): Worker {
 	};
 
 	worker.onerror = (error: Event | ErrorEvent) => {
-		console.error('[Audio Cache] Worker error:', error);
+		logger.error('[Audio Cache] Worker error:', error);
 	};
 
 	return worker;
@@ -84,14 +86,14 @@ async function streamingDownload(
 	const lastModified = response.headers.get('Last-Modified');
 
 	if (startOffset === 0) {
-		console.log(`[Audio Cache] Starting download: ${formatBytes(totalSize)}`);
+		logger.info(`[Audio Cache] Starting download: ${formatBytes(totalSize)}`);
 		await postMessage('initDownload', {
 			id: cacheKey,
 			metadata: { totalSize, etag, lastModified }
 		});
 	} else {
 		const remaining = totalSize - startOffset;
-		console.log(
+		logger.info(
 			`[Audio Cache] Resuming download: ${formatBytes(startOffset)} / ${formatBytes(totalSize)} (${formatBytes(remaining)} remaining)`
 		);
 	}
@@ -116,7 +118,7 @@ async function streamingDownload(
 		const now = Date.now();
 		if (now - lastLogTime > LOG_INTERVAL) {
 			const progress = ((offset / totalSize) * 100).toFixed(1);
-			console.log(
+			logger.info(
 				`[Audio Cache] Downloading: ${progress}% (${formatBytes(offset)} / ${formatBytes(totalSize)})`
 			);
 			lastLogTime = now;
@@ -133,7 +135,7 @@ async function streamingDownload(
 		updates: { complete: true }
 	});
 
-	console.log(`[Audio Cache] Download complete: ${formatBytes(totalSize)}`);
+	logger.info(`[Audio Cache] Download complete: ${formatBytes(totalSize)}`);
 }
 
 export async function getSummaryAudio(
@@ -150,7 +152,7 @@ export async function getSummaryAudio(
 	};
 
 	if (progress.complete) {
-		console.log(`[Audio Cache] Cache hit: ${cacheKey}`);
+		logger.info(`[Audio Cache] Cache hit: ${cacheKey}`);
 		const arrayBuffer = (await postMessage('read', { id: cacheKey })) as ArrayBuffer;
 		const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
 		return URL.createObjectURL(blob);
@@ -161,7 +163,7 @@ export async function getSummaryAudio(
 
 	if (progress.downloadedBytes > 0 && progress.totalSize > 0) {
 		const percent = ((progress.downloadedBytes / progress.totalSize) * 100).toFixed(1);
-		console.log(
+		logger.info(
 			`[Audio Cache] Incomplete download found: ${percent}% (${formatBytes(progress.downloadedBytes)} / ${formatBytes(progress.totalSize)})`
 		);
 
@@ -173,12 +175,12 @@ export async function getSummaryAudio(
 		if (acceptRanges === 'bytes') {
 			await streamingDownload(cacheKey, signedUrl, progress.downloadedBytes);
 		} else {
-			console.log('[Audio Cache] Server does not support Range requests, restarting download');
+			logger.info('[Audio Cache] Server does not support Range requests, restarting download');
 			await postMessage('delete', { id: cacheKey });
 			await streamingDownload(cacheKey, signedUrl, 0);
 		}
 	} else {
-		console.log(`[Audio Cache] Cache miss: ${cacheKey}`);
+		logger.info(`[Audio Cache] Cache miss: ${cacheKey}`);
 		await streamingDownload(cacheKey, signedUrl, 0);
 	}
 
@@ -192,9 +194,9 @@ export async function clearAudioCache(summaryId: string): Promise<void> {
 
 	try {
 		await postMessage('delete', { id: cacheKey });
-		console.log(`[Audio Cache] Cleared: ${cacheKey}`);
+		logger.info(`[Audio Cache] Cleared: ${cacheKey}`);
 	} catch (error) {
-		console.error('[Audio Cache] Clear failed:', error);
+		logger.error('[Audio Cache] Clear failed:', error);
 	}
 }
 
@@ -202,7 +204,7 @@ export async function getCacheInfo(): Promise<any[]> {
 	try {
 		return await postMessage('list');
 	} catch (error) {
-		console.error('[Audio Cache] getCacheInfo failed:', error);
+		logger.error('[Audio Cache] getCacheInfo failed:', error);
 		return [];
 	}
 }

@@ -3,6 +3,7 @@
 ## 1. 단어 vs 문장 임베딩
 
 ### Word Embedding (단어 임베딩)
+
 **한 단어 → 한 벡터**
 
 ```
@@ -12,11 +13,13 @@
 ```
 
 **특징**:
+
 - Word2Vec, GloVe 같은 고전 모델
 - 단어 하나의 의미만 포착
 - 문맥 무시
 
 **한계**:
+
 ```
 "Bank" (은행)
 "Bank" (강둑)
@@ -27,6 +30,7 @@
 ---
 
 ### Sentence Embedding (문장 임베딩)
+
 **전체 문장/문단 → 한 벡터**
 
 ```
@@ -41,6 +45,7 @@
 ```
 
 **특징**:
+
 - Transformer 모델 (BERT, Gemini Embedding)
 - 문장 전체의 의미 포착
 - 문맥 이해
@@ -86,6 +91,7 @@
 ```
 
 **수식**:
+
 ```
 cosine_similarity(A, B) = (A · B) / (||A|| × ||B||)
 
@@ -95,6 +101,7 @@ A와 B가 반대 → -1.0 (정반대)
 ```
 
 **PostgreSQL에서**:
+
 ```sql
 -- <=> 연산자 = 코사인 거리 (1 - similarity)
 SELECT 1 - (embedding <=> '[0.23, -0.45, ...]'::vector) as similarity
@@ -177,6 +184,7 @@ FROM tags;
 ```
 
 **관찰**:
+
 - "Game Review"와 "게임리뷰"는 가까움 (같은 의미)
 - "인디게임"은 게임 관련 클러스터에 속함
 - "요리 레시피"는 완전히 다른 영역
@@ -196,6 +204,7 @@ FROM tags;
 ```
 
 **768은 경험적 최적값**:
+
 - 512: 너무 적음 (의미 손실)
 - 1024: 과도함 (계산 비용 ↑, 과적합)
 - 768: 적절한 균형
@@ -205,6 +214,7 @@ FROM tags;
 ## 6. 학습 과정 (간략)
 
 ### Pre-training
+
 ```
 모델에게 수십억 개 문장을 보여줌:
 "The quick brown [MASK] jumps over the lazy dog"
@@ -214,6 +224,7 @@ FROM tags;
 ```
 
 ### Fine-tuning (임베딩 특화)
+
 ```
 유사 문장 쌍:
 "Game review" ↔ "게임 리뷰" (가깝게)
@@ -297,24 +308,28 @@ ORDER BY score DESC;
 ## 9. 임베딩의 한계
 
 ### 1. 긴 텍스트 제한
+
 ```
 gemini-embedding-001: 최대 2,048 토큰
 → 긴 영상 자막은 요약 후 임베딩
 ```
 
 ### 2. 숫자/날짜 약함
+
 ```
 "iPhone 15"와 "iPhone 14"가 매우 유사하게 나옴
 → 정확한 모델명 검색은 키워드 방식이 낫다
 ```
 
 ### 3. 신조어 약함
+
 ```
 2024년 이후 신조어는 학습 안됨
 → 주기적 모델 업데이트 필요
 ```
 
 ### 4. 블랙박스
+
 ```
 왜 이 벡터가 이 의미인지 설명 불가
 → 디버깅 어려움
@@ -328,29 +343,29 @@ gemini-embedding-001: 최대 2,048 토큰
 
 ```typescript
 async function searchVideos(query: string) {
-  // 1. 키워드 검색 (정확성)
-  const keywordResults = await supabase
-    .from('summaries')
-    .select('*')
-    .textSearch('title', query)
-    .limit(10);
+	// 1. 키워드 검색 (정확성)
+	const keywordResults = await supabase
+		.from('summaries')
+		.select('*')
+		.textSearch('title', query)
+		.limit(10);
 
-  // 2. 임베딩 검색 (의미)
-  const queryEmbedding = await embed({
-    model: google.textEmbedding('gemini-embedding-001'),
-    value: query
-  });
+	// 2. 임베딩 검색 (의미)
+	const queryEmbedding = await embed({
+		model: google.textEmbedding('gemini-embedding-001'),
+		value: query
+	});
 
-  const semanticResults = await supabase.rpc('match_summaries', {
-    query_embedding: queryEmbedding.embedding,
-    match_threshold: 0.7,
-    match_count: 10
-  });
+	const semanticResults = await supabase.rpc('match_summaries', {
+		query_embedding: queryEmbedding.embedding,
+		match_threshold: 0.7,
+		match_count: 10
+	});
 
-  // 3. 결과 합치기 (중복 제거 + 점수 재조정)
-  const combined = mergeAndRerank(keywordResults, semanticResults);
+	// 3. 결과 합치기 (중복 제거 + 점수 재조정)
+	const combined = mergeAndRerank(keywordResults, semanticResults);
 
-  return combined;
+	return combined;
 }
 ```
 
@@ -358,30 +373,33 @@ async function searchVideos(query: string) {
 
 ## 11. 요약
 
-| 질문 | 답변 |
-|------|------|
-| **단어 vs 문장?** | 문장 전체를 하나의 벡터로 (Sentence Embedding) |
+| 질문                | 답변                                             |
+| ------------------- | ------------------------------------------------ |
+| **단어 vs 문장?**   | 문장 전체를 하나의 벡터로 (Sentence Embedding)   |
 | **768차원의 의미?** | 추상적 의미 특성들 (해석 불가, 전체로 의미 표현) |
-| **유사도 측정?** | 코사인 유사도 (벡터 간 각도) |
-| **작동 원리?** | Transformer Self-Attention으로 문맥 이해 |
-| **왜 필요?** | 의미 기반 검색, 태그 중복 방지, 다국어 통합 |
-| **한계?** | 긴 텍스트, 숫자, 신조어 약함 → 키워드와 병행 |
+| **유사도 측정?**    | 코사인 유사도 (벡터 간 각도)                     |
+| **작동 원리?**      | Transformer Self-Attention으로 문맥 이해         |
+| **왜 필요?**        | 의미 기반 검색, 태그 중복 방지, 다국어 통합      |
+| **한계?**           | 긴 텍스트, 숫자, 신조어 약함 → 키워드와 병행     |
 
 ---
 
 ## 12. 실전 결정: 이 프로젝트에 필요한가?
 
 ### 지금 당장 필요 없는 이유
+
 1. 태그 개수 적음 (< 100개)
 2. name_normalized로 충분히 중복 방지
 3. LLM에게 기존 목록 제공으로 재사용 유도
 
 ### 나중에 필요한 시점
+
 1. 태그 500개 이상 (LLM이 전체 목록 기억 못함)
 2. 의미 기반 검색 기능 추가
 3. 다국어 영상 많아질 때 (한/영 통합 검색)
 
 ### 추천
+
 - **지금**: 스키마에 `embedding vector(768)` 컬럼만 추가 (NULL)
 - **나중**: 필요할 때 배치로 생성
 

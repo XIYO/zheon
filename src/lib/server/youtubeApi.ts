@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/logger';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
@@ -230,31 +231,31 @@ export async function getChannelUploadsPlaylistId(channelId: string): Promise<st
 export async function getChannels(channelIds: string | string[]): Promise<ChannelData[]> {
 	const ids = Array.isArray(channelIds) ? channelIds : [channelIds];
 
-	console.log(`[YouTube API] 채널 정보 요청 시작: ${ids.length}개`);
+	logger.info(`[YouTube API] 채널 정보 요청 시작: ${ids.length}개`);
 
 	if (ids.length === 0) return [];
 
 	const allChannels: any[] = [];
 	const chunks = chunk(ids, 50);
 
-	console.log(`[YouTube API] 채널 정보 ${chunks.length}개 배치로 요청`);
+	logger.info(`[YouTube API] 채널 정보 ${chunks.length}개 배치로 요청`);
 
 	for (const idChunk of chunks) {
-		console.log(`[YouTube API] 채널 배치 요청: ${idChunk.length}개`);
+		logger.info(`[YouTube API] 채널 배치 요청: ${idChunk.length}개`);
 		const data = (await fetchYouTube('channels', {
 			part: 'snippet,statistics,contentDetails',
 			id: idChunk.join(',')
 		})) as YouTubeChannelsResponse;
 
 		if (data.items) {
-			console.log(`[YouTube API] 채널 배치 응답: ${data.items.length}개`);
+			logger.info(`[YouTube API] 채널 배치 응답: ${data.items.length}개`);
 			allChannels.push(...data.items);
 		} else {
-			console.log('[YouTube API] 채널 배치 응답: 0개');
+			logger.info('[YouTube API] 채널 배치 응답: 0개');
 		}
 	}
 
-	console.log(`[YouTube API] 채널 정보 요청 완료: 총 ${allChannels.length}개`);
+	logger.info(`[YouTube API] 채널 정보 요청 완료: 총 ${allChannels.length}개`);
 
 	return allChannels.map((item) => ({
 		channel_id: item.id,
@@ -358,7 +359,7 @@ export async function getSubscriptions(
 ): Promise<SubscriptionsResult> {
 	const { maxResults = 50, pageToken } = options;
 
-	console.log('[YouTube API] 구독 목록 요청 시작', { maxResults, pageToken: pageToken || 'none' });
+	logger.info('[YouTube API] 구독 목록 요청 시작', { maxResults, pageToken: pageToken || 'none' });
 
 	const data = (await fetchYouTube(
 		'subscriptions',
@@ -375,7 +376,7 @@ export async function getSubscriptions(
 		}
 	)) as YouTubeSubscriptionsResponse;
 
-	console.log('[YouTube API] 구독 목록 응답:', {
+	logger.info('[YouTube API] 구독 목록 응답:', {
 		items: data.items?.length || 0,
 		nextPageToken: data.nextPageToken || 'none',
 		totalResults: data.pageInfo?.totalResults
@@ -399,20 +400,20 @@ export async function getSubscriptions(
 }
 
 export async function getAllSubscriptions(accessToken: string): Promise<SubscriptionItem[]> {
-	console.log('[YouTube API] 모든 구독 목록 가져오기 시작');
+	logger.info('[YouTube API] 모든 구독 목록 가져오기 시작');
 	const allSubscriptions: SubscriptionItem[] = [];
 	let pageToken: string | undefined;
 	let pageCount = 0;
 
 	do {
 		pageCount++;
-		console.log(`[YouTube API] 페이지 ${pageCount} 요청 중...`);
+		logger.info(`[YouTube API] 페이지 ${pageCount} 요청 중...`);
 		const result = await getSubscriptions(accessToken, { pageToken });
 		allSubscriptions.push(...result.items);
 		pageToken = result.nextPageToken;
 	} while (pageToken);
 
-	console.log(
+	logger.info(
 		`[YouTube API] 모든 구독 목록 가져오기 완료: 총 ${allSubscriptions.length}개 (${pageCount}페이지)`
 	);
 	return allSubscriptions;

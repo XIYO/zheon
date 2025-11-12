@@ -39,7 +39,7 @@
 	const levels = [20, 40, 60, 80, 100];
 </script>
 
-<div class="relative mx-auto space-y-3" style="width: {size}px;">
+<div class="relative mx-auto space-y-3" style:width="{size}px">
 	<svg width={size} height={size} viewBox="0 0 {size} {size}">
 		<g transform="translate({size / 2}, {size / 2})">
 			{#each levels as level}
@@ -73,7 +73,7 @@
 					y={y * 1.2}
 					text-anchor="middle"
 					dominant-baseline="middle"
-					class="text-xs fill-surface-600 dark:fill-surface-400 font-mono">
+					class="text-xs fill-surface-600-400 font-mono">
 					{key}
 				</text>
 			{/each}
@@ -103,15 +103,15 @@
 	<!-- 범례 -->
 	<div class="flex justify-center gap-4 text-xs">
 		<div class="flex items-center gap-1">
-			<div class="size-3 rounded-full" style="background: hsl(142, 70%, 50%);"></div>
+			<div class="size-3 rounded-full bg-success-500"></div>
 			<span class="text-surface-600-400">강점 (70+)</span>
 		</div>
 		<div class="flex items-center gap-1">
-			<div class="size-3 rounded-full" style="background: hsl(45, 90%, 55%);"></div>
+			<div class="size-3 rounded-full bg-warning-500"></div>
 			<span class="text-surface-600-400">보통 (40-69)</span>
 		</div>
 		<div class="flex items-center gap-1">
-			<div class="size-3 rounded-full" style="background: hsl(0, 70%, 55%);"></div>
+			<div class="size-3 rounded-full bg-error-500"></div>
 			<span class="text-surface-600-400">약점 (0-39)</span>
 		</div>
 	</div>

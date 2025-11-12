@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { createYouTube } from '$lib/server/youtube-proxy';
 import type { Innertube } from 'youtubei.js';
+import { logger } from '$lib/logger';
 
 /**
  * TranscriptionService 통합 테스트
@@ -40,8 +41,8 @@ describe('TranscriptionService Integration Test', () => {
 		youtube = await createYouTube(socksProxy);
 		service = new TranscriptionService(supabase, youtube);
 
-		console.log(`\n프록시 URL: ${socksProxy}`);
-		console.log(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
+		logger.info(`\n프록시 URL: ${socksProxy}`);
+		logger.info(`테스트 영상 ID: ${TEST_VIDEO_ID}\n`);
 	});
 
 	it(
@@ -64,9 +65,9 @@ describe('TranscriptionService Integration Test', () => {
 			expect(firstSegment).toHaveProperty('text');
 			expect(typeof firstSegment.text).toBe('string');
 
-			console.log(`✅ 자막 수집 성공:`);
-			console.log(`  - 제목: ${(transcript?.data as TranscriptData)?.title}`);
-			console.log(`  - 세그먼트: ${segments.length}개`);
+			logger.info(`✅ 자막 수집 성공:`);
+			logger.info(`  - 제목: ${(transcript?.data as TranscriptData)?.title}`);
+			logger.info(`  - 세그먼트: ${segments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -85,8 +86,8 @@ describe('TranscriptionService Integration Test', () => {
 			const segments = (transcript?.data as TranscriptData)?.segments || [];
 			expect(segments.length).toBeGreaterThan(0);
 
-			console.log(`✅ DB 조회 성공:`);
-			console.log(`  - 세그먼트: ${segments.length}개`);
+			logger.info(`✅ DB 조회 성공:`);
+			logger.info(`  - 세그먼트: ${segments.length}개`);
 		},
 		TIMEOUT
 	);
@@ -96,7 +97,7 @@ describe('TranscriptionService Integration Test', () => {
 		async () => {
 			await expect(service.collectTranscript('invalid_video_id_12345')).rejects.toThrow();
 
-			console.log(`✅ 에러 처리 확인`);
+			logger.info(`✅ 에러 처리 확인`);
 		},
 		TIMEOUT
 	);
@@ -109,7 +110,7 @@ describe('TranscriptionService Integration Test', () => {
 
 			expect(transcript).toBeNull();
 
-			console.log(`✅ 누락된 데이터 처리 확인`);
+			logger.info(`✅ 누락된 데이터 처리 확인`);
 		},
 		TIMEOUT
 	);
@@ -123,7 +124,7 @@ describe('TranscriptionService Integration Test', () => {
 			const transcript = await service.getTranscriptFromDB(TEST_VIDEO_ID);
 			expect(transcript).toBeDefined();
 
-			console.log(`✅ 중복 수집 방지 확인`);
+			logger.info(`✅ 중복 수집 방지 확인`);
 		},
 		TIMEOUT
 	);
@@ -142,7 +143,7 @@ describe('TranscriptionService Integration Test', () => {
 			'ZZ5LpwO-An4'
 		];
 
-		console.log(`\n병렬 요청 시작: ${videoIds.length}개 영상 (force=true)`);
+		logger.info(`\n병렬 요청 시작: ${videoIds.length}개 영상 (force=true)`);
 
 		const results = await Promise.allSettled(
 			videoIds.map((videoId) => service.collectTranscript(videoId, { force: true }))
@@ -163,10 +164,10 @@ describe('TranscriptionService Integration Test', () => {
 		}).length;
 		const totalAcceptable = successCount + gracefulFailures;
 
-		console.log(`\n병렬 요청 결과:`);
-		console.log(`  - 성공: ${successCount}개`);
-		console.log(`  - Graceful failure: ${gracefulFailures}개`);
-		console.log(`  - 전체 허용 가능: ${totalAcceptable}/${videoIds.length}개`);
+		logger.info(`\n병렬 요청 결과:`);
+		logger.info(`  - 성공: ${successCount}개`);
+		logger.info(`  - Graceful failure: ${gracefulFailures}개`);
+		logger.info(`  - 전체 허용 가능: ${totalAcceptable}/${videoIds.length}개`);
 
 		results.forEach((result, index) => {
 			const videoId = videoIds[index];
@@ -188,7 +189,7 @@ describe('TranscriptionService Integration Test', () => {
 					? (result.reason?.message || String(result.reason)).substring(0, 50)
 					: 'success';
 
-			console.log(`  - ${videoId}: ${status} ${errorMsg}`);
+			logger.info(`  - ${videoId}: ${status} ${errorMsg}`);
 		});
 
 		expect(totalAcceptable).toBe(videoIds.length);

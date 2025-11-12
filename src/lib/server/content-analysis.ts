@@ -1,5 +1,10 @@
 import { parse } from 'valibot';
-import { UpsertCategorySchema, UpsertTagSchema, UpsertMetricKeySchema } from './content-analysis.schema';
+import {
+	UpsertCategorySchema,
+	UpsertTagSchema,
+	UpsertMetricKeySchema
+} from './content-analysis.schema';
+import { logger } from '$lib/logger';
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
@@ -20,7 +25,9 @@ export async function upsertCategory(supabase, data) {
 			.maybeSingle();
 
 		if (parentError || !parent) {
-			console.warn(`[upsertCategory] Parent category not found: ${validated.parent_slug}, creating as root category`);
+			logger.warn(
+				`[upsertCategory] Parent category not found: ${validated.parent_slug}, creating as root category`
+			);
 		} else {
 			parent_id = parent.id;
 			depth = parent.depth + 1;

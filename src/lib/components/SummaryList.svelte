@@ -35,32 +35,43 @@
 
 <section aria-labelledby="summaries-title" class="space-y-4">
 	<ul
-		class="overflow-auto border border-surface-300-700 rounded-lg divide-y divide-surface-200-800">
+		class={[
+			'overflow-auto rounded-lg',
+			'border border-surface-300-700',
+			'divide-y divide-surface-200-800'
+		]}>
 		{#each summaryStore.listQueries as query, index}
 			{#each query.current?.summaries as summary (summary.id)}
-				<li class="hover:opacity-80">
+				<li class="transition-opacity hover:opacity-70">
 					<a
 						href={resolve('/(main)/[videoId]', { videoId: summary.video_id })}
 						class="flex items-center gap-3 px-4 py-3">
 						<div
-							class="w-2 h-2 rounded-full shrink-0 {summary.processing_status === 'pending'
-								? 'bg-warning-500 animate-pulse'
-								: summary.processing_status === 'processing'
-									? 'bg-primary-500 animate-pulse'
-									: summary.processing_status === 'failed'
-										? 'bg-error-500'
-										: 'bg-success-500'}">
+							class={[
+								'w-2 h-2 rounded-full shrink-0',
+								{
+									'bg-warning-500 animate-pulse': summary.processing_status === 'pending',
+									'bg-primary-500 animate-pulse': summary.processing_status === 'processing',
+									'bg-error-500': summary.processing_status === 'failed',
+									'bg-success-500': summary.processing_status === 'completed'
+								}
+							]}>
 						</div>
 						<img
-							src={getYouTubeThumbnail(summary.video_id)}
+							src={getYouTubeThumbnail(summary.video_id, 'hqdefault')}
 							alt=""
 							width="80"
 							height="45"
 							class="rounded object-cover aspect-video shrink-0" />
-						<div class="min-w-0 flex-1">
+						<div class="min-w-0 flex-1 space-y-1">
 							<p class="truncate">
 								{summary.title}
 							</p>
+							{#if summary.processing_status === 'failed' && summary.failure_reason}
+								<p class="text-xs text-error-500 truncate">
+									{summary.failure_reason}
+								</p>
+							{/if}
 						</div>
 					</a>
 				</li>

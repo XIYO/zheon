@@ -5,6 +5,7 @@ import { experimental_generateSpeech as generateSpeech } from 'ai';
 import { createLMNT } from '@ai-sdk/lmnt';
 import { createElevenLabs } from '@ai-sdk/elevenlabs';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/logger';
 
 const LMNT_MODEL = env.LMNT_TTS_MODEL;
 const LMNT_VOICE = env.LMNT_TTS_VOICE;
@@ -199,7 +200,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 
 	for (const strategy of randomizedStrategies) {
 		try {
-			console.log(`[TTS] ${strategy.label} 시도 중...`);
+			logger.info(`[TTS] ${strategy.label} 시도 중...`);
 
 			const request = strategy.buildRequest({ text: speechText });
 			if (!request) continue;
@@ -211,12 +212,12 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 
 			speechResult = result;
 			providerId = strategy.id;
-			console.log(`[TTS] ${strategy.label} 성공`);
+			logger.info(`[TTS] ${strategy.label} 성공`);
 			break;
 		} catch (generationError) {
 			const message =
 				generationError instanceof Error ? generationError.message : String(generationError);
-			console.error(`[TTS] ${strategy.label} 실패:`, generationError);
+			logger.error(`[TTS] ${strategy.label} 실패:`, generationError);
 			generationErrors.push(`${strategy.label}: ${message}`);
 		}
 	}
@@ -227,7 +228,7 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 		try {
 			await updateStatus('failed');
 		} catch (statusError) {
-			console.error('[TTS] 상태 업데이트 실패(모든 시도 실패):', statusError);
+			logger.error('[TTS] 상태 업데이트 실패(모든 시도 실패):', statusError);
 		}
 		throw error(
 			502,
@@ -251,14 +252,14 @@ async function generateTtsAudioInternal(summaryId: string, speechText: string) {
 
 		await updateStatus('completed', fileName);
 
-		console.log(`[TTS] 완료: ${fileName} (Provider: ${providerId})`);
+		logger.info(`[TTS] 완료: ${fileName} (Provider: ${providerId})`);
 
 		return { audioPath: fileName, section: 'summary', summaryId, provider: providerId };
 	} catch (err) {
 		try {
 			await updateStatus('failed');
 		} catch (statusError) {
-			console.error('[TTS] 상태 업데이트 실패(에러 처리 중):', statusError);
+			logger.error('[TTS] 상태 업데이트 실패(에러 처리 중):', statusError);
 		}
 
 		const errorMessage = err instanceof Error ? err.message : String(err);
@@ -288,7 +289,7 @@ async function runGenerateTts({ summaryId }: { summaryId: string }) {
 	if (!speechText) throw error(400, '아직 요약된 정보가 없습니다.');
 
 	generateTtsAudioInternal(summaryId, speechText).catch((err) => {
-		console.error('[TTS] Background processing failed:', err);
+		logger.error('[TTS] Background processing failed:', err);
 	});
 }
 

@@ -2,6 +2,7 @@ import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ss
 import { env } from '$env/dynamic/public';
 import type { LayoutLoad } from './$types';
 import type { Database } from '$lib/types/database.types';
+import { logger } from '$lib/logger';
 
 export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 	depends('supabase:auth');
@@ -30,7 +31,7 @@ export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 		} = await supabase.auth.getUser();
 		user = fetchedUser;
 	} catch (error) {
-		console.error('[Layout] Failed to get user:', error);
+		logger.error('[Layout] Failed to get user:', error);
 	}
 
 	return {

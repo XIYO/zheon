@@ -299,7 +299,8 @@ export const getVideoInfo = command(
 		const title = videoInfo.basic_info.title || '제목 없음';
 		const channelId = videoInfo.basic_info.channel_id;
 		const channelTitle = videoInfo.basic_info.channel?.name || videoInfo.basic_info.author;
-		const thumbnailUrl = getYouTubeThumbnail(videoId, 'maxresdefault');
+		const thumbnailUrl =
+			videoInfo.basic_info.thumbnail?.at(0)?.url || getYouTubeThumbnail(videoId, 'maxresdefault');
 		const publishedAt = videoInfo.basic_info.start_timestamp
 			? new Date(videoInfo.basic_info.start_timestamp * 1000).toISOString()
 			: new Date().toISOString();

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { logger } from '../src/lib/logger.js';
 
 test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 	test.beforeEach(async ({ page }) => {
@@ -17,12 +18,12 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 		// 1. 낙관적 업데이트 확인: pending 상태 표시
 		const pendingBadge = page.locator('text=대기 중').first();
 		await expect(pendingBadge).toBeVisible({ timeout: 5000 });
-		console.log('[TEST] 낙관적 업데이트 확인: pending 상태 표시됨');
+		logger.info('[TEST] 낙관적 업데이트 확인: pending 상태 표시됨');
 
 		// 2. 서버 응답 대기: processing 상태로 전환
 		const processingBadge = page.locator('text=처리 중').first();
 		await expect(processingBadge).toBeVisible({ timeout: 15000 });
-		console.log('[TEST] 서버 응답 확인: processing 상태로 전환됨');
+		logger.info('[TEST] 서버 응답 확인: processing 상태로 전환됨');
 
 		// 3. 테이블에서 URL 확인
 		const tableRow = page.locator(`a[href*="/summaries/"]`).first();
@@ -34,7 +35,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 
 		const reloadedRow = page.locator(`a[href*="/summaries/"]`).first();
 		await expect(reloadedRow).toBeVisible({ timeout: 5000 });
-		console.log('[TEST] 새로고침 후 데이터 유지 확인됨');
+		logger.info('[TEST] 새로고침 후 데이터 유지 확인됨');
 	});
 
 	test('중복 URL 제출 시 제출 방지', async ({ page }) => {
@@ -64,7 +65,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 		// 항목 수가 증가하지 않았는지 확인
 		const finalRows = await page.locator('tbody tr').count();
 		expect(finalRows).toBe(initialRows);
-		console.log('[TEST] 중복 URL 제출 방지 확인됨');
+		logger.info('[TEST] 중복 URL 제출 방지 확인됨');
 	});
 
 	test('상태 표시 확인: pending → processing → completed/failed', async ({ page }) => {
@@ -82,7 +83,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 
 		const pendingDot = page.locator('.bg-warning-500.animate-pulse').first();
 		await expect(pendingDot).toBeVisible();
-		console.log('[TEST] pending 상태 표시 확인됨');
+		logger.info('[TEST] pending 상태 표시 확인됨');
 
 		// 2. processing 상태
 		const processingBadge = page.locator('text=처리 중').first();
@@ -90,7 +91,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 
 		const processingDot = page.locator('.bg-primary-500.animate-pulse').first();
 		await expect(processingDot).toBeVisible();
-		console.log('[TEST] processing 상태 표시 확인됨');
+		logger.info('[TEST] processing 상태 표시 확인됨');
 
 		// 3. completed 또는 failed 상태 (최대 60초 대기)
 		const completedDot = page.locator('.bg-success-500').first();
@@ -100,7 +101,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 			expect(completedDot).toBeVisible({ timeout: 60000 }),
 			expect(failedBadge).toBeVisible({ timeout: 60000 })
 		]).catch(() => {
-			console.log('[TEST] 60초 내 완료/실패 상태 전환 안됨 (백그라운드 처리 진행 중)');
+			logger.info('[TEST] 60초 내 완료/실패 상태 전환 안됨 (백그라운드 처리 진행 중)');
 		});
 	});
 
@@ -128,7 +129,7 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 		await page.waitForTimeout(1000);
 		const subscriptionStartLog = logs.find((log) => log.includes('Realtime 구독 시작'));
 		expect(subscriptionStartLog).toBeTruthy();
-		console.log('[TEST] Realtime 구독 시작 확인됨');
+		logger.info('[TEST] Realtime 구독 시작 확인됨');
 
 		// UPDATE 이벤트 수신 대기 (최대 20초)
 		await page.waitForTimeout(20000);
@@ -137,9 +138,9 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 		);
 
 		if (updateEventLog) {
-			console.log('[TEST] Realtime UPDATE 이벤트 수신 확인됨');
+			logger.info('[TEST] Realtime UPDATE 이벤트 수신 확인됨');
 		} else {
-			console.log('[TEST] Realtime UPDATE 이벤트 미수신 (백그라운드 처리 지연 가능)');
+			logger.info('[TEST] Realtime UPDATE 이벤트 미수신 (백그라운드 처리 지연 가능)');
 		}
 	});
 
@@ -165,9 +166,9 @@ test.describe('Phase 0: 폼 제출 및 동기화 테스트', () => {
 
 		// 만약 성공했다면 항목이 추가되고, 실패했다면 롤백되어 동일
 		if (finalRows === initialRows) {
-			console.log('[TEST] 롤백 확인됨: 항목 수 변화 없음');
+			logger.info('[TEST] 롤백 확인됨: 항목 수 변화 없음');
 		} else {
-			console.log('[TEST] 제출 성공: 롤백 테스트 불가');
+			logger.info('[TEST] 제출 성공: 롤백 테스트 불가');
 		}
 	});
 });

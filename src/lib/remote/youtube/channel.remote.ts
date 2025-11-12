@@ -1,6 +1,7 @@
 import { query, command, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
+import { logger } from '$lib/logger';
 
 /**
  * Query: 채널 정보 조회 (자동 배칭)
@@ -51,7 +52,7 @@ export const upsertChannel = command(
 				{ onConflict: 'channel_id' }
 			);
 
-			if (upsertError) console.error('Channel upsert failed:', upsertError);
+			if (upsertError) logger.error('Channel upsert failed:', upsertError);
 		};
 
 		task();
@@ -81,7 +82,7 @@ export const updateChannelStatus = command(
 				.update(updateData)
 				.eq('channel_id', channel_id);
 
-			if (updateError) console.error('Status update failed:', updateError);
+			if (updateError) logger.error('Status update failed:', updateError);
 		};
 
 		task();

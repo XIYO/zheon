@@ -3,6 +3,8 @@
  * Remote Function과 분리하여 테스트 가능하게 설계
  */
 
+import { logger } from '$lib/logger';
+
 /**
  * YouTube 자막 추출
  * @param {string} videoId - YouTube 영상 ID
@@ -13,13 +15,13 @@ export async function extractTranscript(videoId, youtube) {
 		throw new Error('YouTube client is required');
 	}
 
-	console.log(`[transcript] YouTube API 호출 시작 videoId=${videoId}`);
+	logger.info(`[transcript] YouTube API 호출 시작 videoId=${videoId}`);
 
 	const info = await youtube.getInfo(videoId);
 	const transcript = await info.getTranscript();
 
 	if (!transcript || !transcript.transcript?.content?.body?.initial_segments) {
-		console.log(`[transcript] 자막 없음 videoId=${videoId}`);
+		logger.info(`[transcript] 자막 없음 videoId=${videoId}`);
 		return {
 			success: false,
 			videoId,
@@ -40,7 +42,7 @@ export async function extractTranscript(videoId, youtube) {
 		}))
 	};
 
-	console.log(`[transcript] 추출 완료 videoId=${videoId} segments=${segments.length}개`);
+	logger.info(`[transcript] 추출 완료 videoId=${videoId} segments=${segments.length}개`);
 
 	return {
 		success: true,
@@ -84,7 +86,7 @@ export async function saveTranscriptToDB(supabase, videoId, transcriptData) {
 		throw new Error(`자막 저장 실패: ${insertError.message}`);
 	}
 
-	console.log(
+	logger.info(
 		`[transcript] 저장 완료 videoId=${videoId} segments=${transcriptData.segments?.length}개`
 	);
 

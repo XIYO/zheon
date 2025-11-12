@@ -1,9 +1,6 @@
 # 영상 콘텐츠 분석 시스템 - 최종 통합 문서
 
-**작성일**: 2025-01-11
-**버전**: v6.1 Final
-**스키마**: public
-**DBMS**: PostgreSQL 14+ (Supabase)
+**작성일**: 2025-01-11 **버전**: v6.1 Final **스키마**: public **DBMS**: PostgreSQL 14+ (Supabase)
 
 ---
 
@@ -25,11 +22,13 @@
 YouTube 영상의 내용을 분석하여 구조화된 메타데이터를 제공합니다.
 
 **핵심 기능**:
+
 - 카테고리 자동 분류 (계층 구조)
 - 태그 자동 생성 (가중치 포함)
 - 내용 특성 분석 (레이더 차트)
 
 **변경 사항 (v6.1)**:
+
 - 영상 품질 평가 → 영상 내용 분석
 - `quality_metric_keys` → `content_metric_keys`
 - `content_quality_metrics` → `content_metrics`
@@ -56,7 +55,7 @@ YouTube 영상의 내용을 분석하여 구조화된 메타데이터를 제공�
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `name` | text | NOT NULL | 영문 이름 | `Gameplay`, `Programming Tutorial` |
 | `name_ko` | text | NOT NULL | 한글 이름 | `게임플레이`, `프로그래밍 튜토리얼` |
@@ -94,7 +93,7 @@ ALTER TABLE categories ADD CONSTRAINT categories_depth_consistency
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `video_id` | text | NOT NULL, FK → summaries(video_id) ON DELETE CASCADE | 영상 ID | `dQw4w9WgXcQ` |
 | `category_id` | uuid | NOT NULL, FK → categories(id) ON DELETE CASCADE | 카테고리 ID | `aaa-333` |
@@ -122,7 +121,7 @@ ALTER TABLE video_categories ADD CONSTRAINT video_categories_priority_unique
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `name` | text | NOT NULL | 영문 이름 | `Game Review`, `Indie Game` |
 | `name_ko` | text | NOT NULL | 한글 이름 | `게임리뷰`, `인디게임` |
@@ -146,7 +145,7 @@ CREATE INDEX idx_tags_slug ON tags(slug);
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `video_id` | text | NOT NULL, FK → summaries(video_id) ON DELETE CASCADE | 영상 ID | `dQw4w9WgXcQ` |
 | `tag_id` | uuid | NOT NULL, FK → tags(id) ON DELETE CASCADE | 태그 ID | `tag-001` |
@@ -171,7 +170,7 @@ ALTER TABLE video_tags ADD CONSTRAINT video_tags_unique
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `name` | text | NOT NULL, UNIQUE | 키 (언더스코어) | `technical_depth`, `information_density` |
 | `name_ko` | text | NOT NULL | 한글 이름 | `기술 깊이`, `정보 밀도` |
@@ -227,7 +226,7 @@ INSERT INTO content_metric_keys (name, name_ko, slug, description, category_hint
 #### 스키마
 
 | 컬럼명 | 타입 | 제약조건 | 설명 | 예시값 |
-|--------|------|----------|------|--------|
+| --- | --- | --- | --- | --- |
 | `id` | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | 고유 식별자 | `550e8400-...` |
 | `video_id` | text | NOT NULL, UNIQUE, FK → summaries(video_id) ON DELETE CASCADE | 영상 ID | `dQw4w9WgXcQ` |
 | `metrics` | jsonb | NOT NULL, DEFAULT '{}' | 내용 분석 지표 | `{"technical_depth": {"score": 85, "reasoning": "..."}}` |
@@ -245,18 +244,18 @@ CREATE INDEX idx_content_metrics_gin ON content_metrics USING GIN(metrics);
 
 ```json
 {
-  "technical_depth": {
-    "score": 85,
-    "reasoning": "비동기 프로그래밍의 내부 동작까지 깊이 있게 다룸"
-  },
-  "information_density": {
-    "score": 90,
-    "reasoning": "10분 영상에 핵심 개념 5개와 예제 3개 포함"
-  },
-  "practical_applicability": {
-    "score": 95,
-    "reasoning": "실제 웹 스크래핑 프로젝트에 바로 적용 가능"
-  }
+	"technical_depth": {
+		"score": 85,
+		"reasoning": "비동기 프로그래밍의 내부 동작까지 깊이 있게 다룸"
+	},
+	"information_density": {
+		"score": 90,
+		"reasoning": "10분 영상에 핵심 개념 5개와 예제 3개 포함"
+	},
+	"practical_applicability": {
+		"score": 95,
+		"reasoning": "실제 웹 스크래핑 프로젝트에 바로 적용 가능"
+	}
 }
 ```
 
@@ -286,11 +285,11 @@ content_metric_keys (독립, soft reference)
 
 모든 테이블 공통:
 
-| 역할 | SELECT | INSERT | UPDATE | DELETE |
-|------|--------|--------|--------|--------|
-| `anon` | ✓ | ✗ | ✗ | ✗ |
-| `authenticated` | ✓ | ✗ | ✗ | ✗ |
-| `service_role` | ✓ | ✓ | ✓ | ✓ |
+| 역할            | SELECT | INSERT | UPDATE | DELETE |
+| --------------- | ------ | ------ | ------ | ------ |
+| `anon`          | ✓      | ✗      | ✗      | ✗      |
+| `authenticated` | ✓      | ✗      | ✗      | ✗      |
+| `service_role`  | ✓      | ✓      | ✓      | ✓      |
 
 ```sql
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
@@ -312,55 +311,55 @@ CREATE POLICY "Service role full access" ON categories FOR ALL TO service_role U
 
 ```typescript
 async function upsertCategory(data: {
-  slug: string;
-  name: string;
-  name_ko: string;
-  description?: string;
-  parent_slug?: string;
+	slug: string;
+	name: string;
+	name_ko: string;
+	description?: string;
+	parent_slug?: string;
 }) {
-  // 1. 부모 카테고리 조회
-  let parent_id: string | null = null;
-  let depth = 0;
-  let path = [data.slug];
+	// 1. 부모 카테고리 조회
+	let parent_id: string | null = null;
+	let depth = 0;
+	let path = [data.slug];
 
-  if (data.parent_slug) {
-    const { data: parent } = await supabase
-      .from('categories')
-      .select('id, depth, path')
-      .eq('slug', data.parent_slug)
-      .single();
+	if (data.parent_slug) {
+		const { data: parent } = await supabase
+			.from('categories')
+			.select('id, depth, path')
+			.eq('slug', data.parent_slug)
+			.single();
 
-    if (parent) {
-      parent_id = parent.id;
-      depth = parent.depth + 1;
-      path = [...parent.path, data.slug];
-    }
-  }
+		if (parent) {
+			parent_id = parent.id;
+			depth = parent.depth + 1;
+			path = [...parent.path, data.slug];
+		}
+	}
 
-  // 2. UPSERT
-  const { data: result, error } = await supabase
-    .from('categories')
-    .upsert(
-      {
-        slug: data.slug,
-        name: data.name,
-        name_ko: data.name_ko,
-        description: data.description || null,
-        parent_id,
-        depth,
-        path,
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: 'slug',
-        ignoreDuplicates: false
-      }
-    )
-    .select()
-    .single();
+	// 2. UPSERT
+	const { data: result, error } = await supabase
+		.from('categories')
+		.upsert(
+			{
+				slug: data.slug,
+				name: data.name,
+				name_ko: data.name_ko,
+				description: data.description || null,
+				parent_id,
+				depth,
+				path,
+				updated_at: new Date().toISOString()
+			},
+			{
+				onConflict: 'slug',
+				ignoreDuplicates: false
+			}
+		)
+		.select()
+		.single();
 
-  if (error) throw error;
-  return result;
+	if (error) throw error;
+	return result;
 }
 ```
 
@@ -368,31 +367,31 @@ async function upsertCategory(data: {
 
 ```typescript
 async function upsertTag(data: {
-  slug: string;
-  name: string;
-  name_ko: string;
-  description?: string;
+	slug: string;
+	name: string;
+	name_ko: string;
+	description?: string;
 }) {
-  const { data: result, error } = await supabase
-    .from('tags')
-    .upsert(
-      {
-        slug: data.slug,
-        name: data.name,
-        name_ko: data.name_ko,
-        description: data.description || null,
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: 'slug',
-        ignoreDuplicates: false
-      }
-    )
-    .select()
-    .single();
+	const { data: result, error } = await supabase
+		.from('tags')
+		.upsert(
+			{
+				slug: data.slug,
+				name: data.name,
+				name_ko: data.name_ko,
+				description: data.description || null,
+				updated_at: new Date().toISOString()
+			},
+			{
+				onConflict: 'slug',
+				ignoreDuplicates: false
+			}
+		)
+		.select()
+		.single();
 
-  if (error) throw error;
-  return result;
+	if (error) throw error;
+	return result;
 }
 ```
 
@@ -400,36 +399,36 @@ async function upsertTag(data: {
 
 ```typescript
 async function upsertMetricKey(data: {
-  slug: string;
-  name: string;
-  name_ko: string;
-  description: string;
-  metric_type?: string;
-  category_hint?: string;
+	slug: string;
+	name: string;
+	name_ko: string;
+	description: string;
+	metric_type?: string;
+	category_hint?: string;
 }) {
-  const { data: result, error } = await supabase
-    .from('content_metric_keys')
-    .upsert(
-      {
-        slug: data.slug,
-        name: data.name,
-        name_ko: data.name_ko,
-        description: data.description,
-        metric_type: data.metric_type || 'score',
-        category_hint: data.category_hint || null,
-        value_range: { min: 0, max: 100 },
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: 'slug',
-        ignoreDuplicates: false
-      }
-    )
-    .select()
-    .single();
+	const { data: result, error } = await supabase
+		.from('content_metric_keys')
+		.upsert(
+			{
+				slug: data.slug,
+				name: data.name,
+				name_ko: data.name_ko,
+				description: data.description,
+				metric_type: data.metric_type || 'score',
+				category_hint: data.category_hint || null,
+				value_range: { min: 0, max: 100 },
+				updated_at: new Date().toISOString()
+			},
+			{
+				onConflict: 'slug',
+				ignoreDuplicates: false
+			}
+		)
+		.select()
+		.single();
 
-  if (error) throw error;
-  return result;
+	if (error) throw error;
+	return result;
 }
 ```
 
@@ -441,9 +440,9 @@ async function upsertMetricKey(data: {
 
 ```typescript
 const existingCategories = await supabase
-  .from('categories')
-  .select('slug, name, name_ko, description, depth, path')
-  .order('depth', { ascending: true });
+	.from('categories')
+	.select('slug, name, name_ko, description, depth, path')
+	.order('depth', { ascending: true });
 
 const categoryTree = buildTree(existingCategories);
 
@@ -501,15 +500,12 @@ ${formatCategoryTree(categoryTree)}
 ### 4.2 태그 생성 프롬프트
 
 ```typescript
-const popularTags = await supabase
-  .from('tags')
-  .select('slug, name, name_ko')
-  .limit(100);
+const popularTags = await supabase.from('tags').select('slug, name, name_ko').limit(100);
 
 const prompt = `
 # 기존 태그 목록 (인기순 100개)
 
-${popularTags.map(t => `- ${t.slug} (${t.name} / ${t.name_ko})`).join('\n')}
+${popularTags.map((t) => `- ${t.slug} (${t.name} / ${t.name_ko})`).join('\n')}
 
 # 태그 생성 규칙
 
@@ -544,9 +540,9 @@ ${popularTags.map(t => `- ${t.slug} (${t.name} / ${t.name_ko})`).join('\n')}
 
 ```typescript
 const metricKeys = await supabase
-  .from('content_metric_keys')
-  .select('slug, name, name_ko, description')
-  .order('created_at');
+	.from('content_metric_keys')
+	.select('slug, name, name_ko, description')
+	.order('created_at');
 
 const prompt = `
 # 영상 내용 분석
@@ -556,7 +552,7 @@ const prompt = `
 
 ## 기존 지표
 
-${metricKeys.map(k => `- ${k.slug} (${k.name_ko}): ${k.description}`).join('\n')}
+${metricKeys.map((k) => `- ${k.slug} (${k.name_ko}): ${k.description}`).join('\n')}
 
 ## 영상 정보
 
@@ -613,123 +609,115 @@ import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 
 const supabase = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+	Deno.env.get('SUPABASE_URL'),
+	Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
 Deno.serve(async (req) => {
-  const { video_id } = await req.json();
+	const { video_id } = await req.json();
 
-  // 1. 영상 정보 조회
-  const { data: summary } = await supabase
-    .from('summaries')
-    .select('title, summary')
-    .eq('video_id', video_id)
-    .single();
+	// 1. 영상 정보 조회
+	const { data: summary } = await supabase
+		.from('summaries')
+		.select('title, summary')
+		.eq('video_id', video_id)
+		.single();
 
-  // 2. 기존 데이터 조회
-  const [categories, tags, metricKeys] = await Promise.all([
-    supabase.from('categories').select('slug, name, name_ko, description'),
-    supabase.from('tags').select('slug, name, name_ko').limit(100),
-    supabase.from('content_metric_keys').select('slug, name_ko, description')
-  ]);
+	// 2. 기존 데이터 조회
+	const [categories, tags, metricKeys] = await Promise.all([
+		supabase.from('categories').select('slug, name, name_ko, description'),
+		supabase.from('tags').select('slug, name, name_ko').limit(100),
+		supabase.from('content_metric_keys').select('slug, name_ko, description')
+	]);
 
-  // 3. LLM 분석
-  const { text } = await generateText({
-    model: google('gemini-2.5-flash-lite'),
-    prompt: buildAnalysisPrompt(summary, categories.data, tags.data, metricKeys.data)
-  });
+	// 3. LLM 분석
+	const { text } = await generateText({
+		model: google('gemini-2.5-flash-lite'),
+		prompt: buildAnalysisPrompt(summary, categories.data, tags.data, metricKeys.data)
+	});
 
-  const analysis = JSON.parse(text);
+	const analysis = JSON.parse(text);
 
-  // 4. 카테고리 UPSERT
-  console.time('Upsert categories');
-  const categoryIds = [];
-  for (const cat of analysis.categories) {
-    if (!cat.use_existing) {
-      const result = await upsertCategory({
-        slug: cat.slug,
-        name: cat.name,
-        name_ko: cat.name_ko,
-        description: cat.description,
-        parent_slug: cat.parent_slug
-      });
-      categoryIds.push(result.id);
-    } else {
-      const { data } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('slug', cat.slug)
-        .single();
-      categoryIds.push(data.id);
-    }
-  }
-  console.timeEnd('Upsert categories');
+	// 4. 카테고리 UPSERT
+	console.time('Upsert categories');
+	const categoryIds = [];
+	for (const cat of analysis.categories) {
+		if (!cat.use_existing) {
+			const result = await upsertCategory({
+				slug: cat.slug,
+				name: cat.name,
+				name_ko: cat.name_ko,
+				description: cat.description,
+				parent_slug: cat.parent_slug
+			});
+			categoryIds.push(result.id);
+		} else {
+			const { data } = await supabase.from('categories').select('id').eq('slug', cat.slug).single();
+			categoryIds.push(data.id);
+		}
+	}
+	console.timeEnd('Upsert categories');
 
-  // 5. 태그 UPSERT
-  console.time('Upsert tags');
-  const tagIds = [];
-  for (const tag of analysis.tags) {
-    if (!tag.use_existing) {
-      const result = await upsertTag({
-        slug: tag.slug,
-        name: tag.name,
-        name_ko: tag.name_ko,
-        description: tag.description
-      });
-      tagIds.push({ id: result.id, weight: tag.weight });
-    } else {
-      const { data } = await supabase
-        .from('tags')
-        .select('id')
-        .eq('slug', tag.slug)
-        .single();
-      tagIds.push({ id: data.id, weight: tag.weight });
-    }
-  }
-  console.timeEnd('Upsert tags');
+	// 5. 태그 UPSERT
+	console.time('Upsert tags');
+	const tagIds = [];
+	for (const tag of analysis.tags) {
+		if (!tag.use_existing) {
+			const result = await upsertTag({
+				slug: tag.slug,
+				name: tag.name,
+				name_ko: tag.name_ko,
+				description: tag.description
+			});
+			tagIds.push({ id: result.id, weight: tag.weight });
+		} else {
+			const { data } = await supabase.from('tags').select('id').eq('slug', tag.slug).single();
+			tagIds.push({ id: data.id, weight: tag.weight });
+		}
+	}
+	console.timeEnd('Upsert tags');
 
-  // 6. 분석 항목 UPSERT
-  console.time('Upsert metric keys');
-  for (const key of analysis.metric_keys) {
-    if (!key.use_existing) {
-      await upsertMetricKey({
-        slug: key.slug,
-        name: key.name,
-        name_ko: key.name_ko,
-        description: key.description
-      });
-    }
-  }
-  console.timeEnd('Upsert metric keys');
+	// 6. 분석 항목 UPSERT
+	console.time('Upsert metric keys');
+	for (const key of analysis.metric_keys) {
+		if (!key.use_existing) {
+			await upsertMetricKey({
+				slug: key.slug,
+				name: key.name,
+				name_ko: key.name_ko,
+				description: key.description
+			});
+		}
+	}
+	console.timeEnd('Upsert metric keys');
 
-  // 7. video_categories 삽입
-  await supabase.from('video_categories').delete().eq('video_id', video_id);
-  await supabase.from('video_categories').insert(
-    categoryIds.map((id, i) => ({
-      video_id,
-      category_id: id,
-      priority: i + 1
-    }))
-  );
+	// 7. video_categories 삽입
+	await supabase.from('video_categories').delete().eq('video_id', video_id);
+	await supabase.from('video_categories').insert(
+		categoryIds.map((id, i) => ({
+			video_id,
+			category_id: id,
+			priority: i + 1
+		}))
+	);
 
-  // 8. video_tags 삽입
-  await supabase.from('video_tags').delete().eq('video_id', video_id);
-  await supabase.from('video_tags').insert(
-    tagIds.map(({ id, weight }) => ({
-      video_id,
-      tag_id: id,
-      weight
-    }))
-  );
+	// 8. video_tags 삽입
+	await supabase.from('video_tags').delete().eq('video_id', video_id);
+	await supabase.from('video_tags').insert(
+		tagIds.map(({ id, weight }) => ({
+			video_id,
+			tag_id: id,
+			weight
+		}))
+	);
 
-  // 9. content_metrics 삽입
-  await supabase.from('content_metrics').upsert({
-    video_id,
-    metrics: analysis.metrics
-  });
+	// 9. content_metrics 삽입
+	await supabase.from('content_metrics').upsert({
+		video_id,
+		metrics: analysis.metrics
+	});
 
-  return new Response(JSON.stringify({ success: true }));
+	return new Response(JSON.stringify({ success: true }));
 });
 ```
 
@@ -952,6 +940,4 @@ INSERT INTO content_metric_keys (name, name_ko, slug, description, category_hint
 
 ---
 
-**문서 버전**: v6.1 Final
-**최종 확정**: 2025-01-11
-**다음 단계**: supabase/migrations/ 생성
+**문서 버전**: v6.1 Final **최종 확정**: 2025-01-11 **다음 단계**: supabase/migrations/ 생성

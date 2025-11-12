@@ -18,3 +18,18 @@ export function getYouTubeThumbnail(
 	if (!videoId) return null;
 	return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
 }
+
+const THUMBNAIL_QUALITIES = [
+	'maxresdefault',
+	'sddefault',
+	'hqdefault',
+	'mqdefault',
+	'default'
+] as const;
+
+export function getYouTubeThumbnailFallbacks(videoId: string | null): string[] {
+	if (!videoId) return [];
+	return THUMBNAIL_QUALITIES.map(
+		(quality) => `https://img.youtube.com/vi/${videoId}/${quality}.jpg`
+	);
+}

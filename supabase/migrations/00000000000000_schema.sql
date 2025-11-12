@@ -188,8 +188,8 @@ CREATE TABLE IF NOT EXISTS public.content_community_metrics (
   -- 요약값
   emotion_dominant text,
   emotion_entropy real,
-  valence_mean integer CHECK (valence_mean >= 0 AND valence_mean <= 100),
-  arousal_mean integer CHECK (arousal_mean >= 0 AND arousal_mean <= 100),
+  valence_mean integer CHECK (valence_mean >= -100 AND valence_mean <= 100),
+  arousal_mean integer CHECK (arousal_mean >= -100 AND arousal_mean <= 100),
 
   -- 대표 댓글 (각 연령대/감정별 실제 댓글 예시)
   representative_comments jsonb DEFAULT '{}',

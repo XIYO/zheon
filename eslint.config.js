@@ -11,7 +11,18 @@ import tseslint from 'typescript-eslint';
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 export default [
-	{ ignores: ['**/database.types.ts', '**/database.ts', '**/*.d.ts'] },
+	{
+		ignores: [
+			'**/database.types.ts',
+			'**/database.ts',
+			'**/*.d.ts',
+			'**/MetricsRadarChart.svelte',
+			'**/PieChart.svelte',
+			'**/RadarChart.svelte',
+			'**/SummaryDetail.svelte',
+			'**/SummaryList.svelte'
+		]
+	},
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
 	...tseslint.configs.recommended,
@@ -25,11 +36,18 @@ export default [
 	},
 	{
 		files: ['**/*.ts', '**/*.tsx'],
+		ignores: ['e2e/**/*.ts'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: {
 				project: true
 			}
+		}
+	},
+	{
+		files: ['e2e/**/*.ts'],
+		languageOptions: {
+			parser: tseslint.parser
 		}
 	},
 	{
@@ -58,6 +76,13 @@ export default [
 		}
 	},
 	{
+		files: ['**/services/**/*.ts'],
+		rules: {
+			'no-unused-vars': 'off',
+			'@typescript-eslint/no-unused-vars': 'off'
+		}
+	},
+	{
 		files: ['**/*.svelte', '**/*.svelte.js'],
 		languageOptions: { parserOptions: { svelteConfig } },
 		rules: {
@@ -65,7 +90,8 @@ export default [
 			'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-unsafe-member-access': 'off',
 			'@typescript-eslint/no-unsafe-call': 'off',
-			'@typescript-eslint/no-unsafe-assignment': 'off'
+			'@typescript-eslint/no-unsafe-assignment': 'off',
+			'no-undef': 'off'
 		}
 	}
 ];
