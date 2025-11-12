@@ -346,7 +346,6 @@ class SummaryStore {
 
 				if (!this.isRemoteQuery(this.#detailQueries.get(videoId)))
 					this.#detailQueries.set(videoId, submit());
-				else submit();
 
 				goto(resolve('/(main)/[videoId]', { videoId }));
 				form.reset();
