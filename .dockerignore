@@ -5,7 +5,6 @@ node_modules
 .env.*
 !.env.example
 
-build
 .svelte-kit
 .vercel
 .cloudflare
