@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import { SummaryService } from '$lib/server/services/summary.service';
-import { createYouTube } from '$lib/server/youtube-proxy';
+import { getYouTube } from '$lib/server/youtube-proxy';
 import type { Innertube } from 'youtubei.js';
 import { logger } from '$lib/logger';
 
@@ -32,7 +32,7 @@ describe.sequential('SummaryService Integration Test', () => {
 			process.env.SUPABASE_SECRET_KEY
 		);
 
-		youtube = await createYouTube(process.env.TOR_SOCKS5_PROXY);
+		youtube = await getYouTube(process.env.TOR_SOCKS5_PROXY);
 		summaryService = new SummaryService(adminSupabase, youtube);
 	});
 

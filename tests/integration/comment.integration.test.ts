@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { CommentService } from '$lib/server/services/youtube/comment.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
-import { createYouTube } from '$lib/server/youtube-proxy';
+import { getYouTube } from '$lib/server/youtube-proxy';
 import type { Innertube } from 'youtubei.js';
 import { logger } from '$lib/logger';
 
@@ -35,7 +35,7 @@ describe('CommentService Integration Test', () => {
 		}
 
 		supabase = createClient<Database>(supabaseUrl, supabaseSecretKey);
-		youtube = await createYouTube(socksProxy);
+		youtube = await getYouTube(socksProxy);
 		service = new CommentService(supabase, youtube);
 
 		logger.info(`\n프록시 URL: ${socksProxy}`);

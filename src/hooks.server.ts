@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
 import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
@@ -9,6 +9,76 @@ import type { Handle } from '@sveltejs/kit';
 import { getYouTube } from '$lib/server/youtube-proxy';
 import { logger } from '$lib/logger';
 import type { Database } from '$lib/types/database.types';
+
+const supabase: Handle = async ({ event, resolve }) => {
+	const timerLabel = `[hooks.supabase] ${event.url.pathname}`;
+	console.time(timerLabel);
+
+	const cookieMethods: CookieMethodsServer = {
+		getAll: () => event.cookies.getAll(),
+		setAll: (cookiesToSet) => {
+			cookiesToSet.forEach(({ name, value, options }) => {
+				event.cookies.set(name, value, { ...options, path: '/' });
+			});
+		}
+	};
+
+	event.locals.supabase = createServerClient<Database>(
+		publicEnv.PUBLIC_SUPABASE_URL,
+		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		{
+			cookies: cookieMethods
+		}
+	);
+
+	event.locals.safeGetSession = async () => {
+		try {
+			const {
+				data: { session }
+			} = await event.locals.supabase.auth.getSession();
+			if (!session) {
+				return { session: null, user: null };
+			}
+
+			const {
+				data: { user },
+				error
+			} = await event.locals.supabase.auth.getUser();
+			if (error) {
+				return { session: null, user: null };
+			}
+
+			if (session.provider_token === undefined || session.provider_token === null) {
+				try {
+					const { data: refreshData, error: refreshError } =
+						await event.locals.supabase.auth.refreshSession();
+
+					if (!refreshError && refreshData.session) {
+						return { session: refreshData.session, user: refreshData.user };
+					}
+
+					logger.warn('[safeGetSession] refresh 실패 - 재로그인 필요:', refreshError?.message);
+				} catch (refreshError) {
+					logger.error('[safeGetSession] refresh exception:', refreshError);
+				}
+			}
+
+			return { session, user };
+		} catch (error) {
+			logger.error('[safeGetSession] Error:', error);
+			return { session: null, user: null };
+		}
+	};
+
+	const result = await resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			return name === 'content-range' || name === 'x-supabase-api-version';
+		}
+	});
+
+	console.timeEnd(timerLabel);
+	return result;
+};
 
 const adminSupabase: Handle = async ({ event, resolve }) => {
 	const timerLabel = `[hooks.adminSupabase] ${event.url.pathname}`;
@@ -79,4 +149,4 @@ const youtube: Handle = async ({ event, resolve }) => {
 	return result;
 };
 
-export const handle = sequence(adminSupabase, authGuard, youtube);
+export const handle = sequence(supabase, adminSupabase, authGuard, youtube);
