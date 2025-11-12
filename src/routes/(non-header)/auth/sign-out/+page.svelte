@@ -4,5 +4,5 @@
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-6">
-	<SignOutForm />
+	<SignOutForm onsuccess={() => {}} />
 </div>

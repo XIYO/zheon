@@ -14,18 +14,8 @@
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
 		"test:integration": "vitest run tests/integration",
-		"test": "npm run test:unit -- --run && npm run test:e2e",
-		"test:e2e": "playwright test",
-		"edge:test:all": "cd supabase && deno task test",
-		"edge:deploy": "supabase functions deploy --project-ref iefgdhwmgljjacafqomd",
-		"edge:deploy:with-secrets": "supabase secrets set --env-file=.env --project-ref iefgdhwmgljjacafqomd && supabase functions deploy --project-ref iefgdhwmgljjacafqomd",
-		"edge:secrets:set": "supabase secrets set --env-file=.env --project-ref iefgdhwmgljjacafqomd",
-		"edge:secrets:list": "supabase secrets list --project-ref iefgdhwmgljjacafqomd",
-		"edge:format": "deno fmt supabase/functions/",
-		"edge:lint": "deno lint supabase/functions/",
-		"edge:check": "cd supabase/functions && for dir in */; do [ -f \"$dir/index.ts\" ] && deno check \"$dir/index.ts\"; done",
-		"edge:debug": "supabase functions serve --inspect-mode --project-ref iefgdhwmgljjacafqomd",
-		"edge:debug:brk": "supabase functions serve --inspect-mode brk --project-ref iefgdhwmgljjacafqomd"
+		"test": "bun run test:unit -- --run && bun run test:e2e",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
@@ -34,7 +24,7 @@
 		"@playwright/test": "^1.56.1",
 		"@skeletonlabs/skeleton": "^4.3.2",
 		"@skeletonlabs/skeleton-svelte": "^4.3.2",
-		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.48.4",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@sveltejs/vite-plugin-svelte-inspector": "^5.0.1",
@@ -43,7 +33,8 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.8",
-		"@types/node": "^24.10.0",
+		"@types/node": "^24.10.1",
+		"@types/wicg-file-system-access": "^2023.10.7",
 		"@typescript-eslint/eslint-plugin": "^8.46.4",
 		"@typescript-eslint/parser": "^8.46.4",
 		"@vitest/browser": "^4.0.8",
@@ -60,7 +51,7 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.1",
 		"svelte": "^5.43.6",
-		"svelte-check": "^4.3.3",
+		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.4",
@@ -69,13 +60,11 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
-		"@ai-sdk/elevenlabs": "^1.0.19",
 		"@ai-sdk/google": "^2.0.31",
-		"@ai-sdk/lmnt": "^1.0.18",
 		"@ai-sdk/valibot": "^1.0.17",
 		"@lucide/svelte": "^0.553.0",
 		"@supabase/ssr": "^0.7.0",
-		"@supabase/supabase-js": "^2.81.0",
+		"@supabase/supabase-js": "^2.81.1",
 		"ai": "^5.0.92",
 		"bits-ui": "^2.14.3",
 		"consola": "^3.4.2",
@@ -83,14 +72,5 @@
 		"uuid": "^13.0.0",
 		"valibot": "^1.1.0",
 		"youtubei.js": "^16.0.1"
-	},
-	"packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977",
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@tailwindcss/oxide",
-			"esbuild",
-			"sharp",
-			"svelte-preprocess"
-		]
 	}
 }

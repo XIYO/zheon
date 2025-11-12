@@ -9,9 +9,9 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 	try {
 		const { videoId, force } = v.parse(CollectTranscriptInputSchema, input);
 		const { locals } = getRequestEvent();
-		const { adminSupabase } = locals;
+		const { adminSupabase, youtube } = locals;
 
-		const service = new TranscriptionService(adminSupabase);
+		const service = new TranscriptionService(adminSupabase, youtube);
 		return await service.collectTranscript(videoId, { force });
 	} catch (err) {
 		logger.error('[transcript] 수집 실패:', err);
@@ -27,9 +27,9 @@ export const getTranscriptFromDB = command(
 		try {
 			const { videoId } = v.parse(v.object({ videoId: v.string() }), input);
 			const { locals } = getRequestEvent();
-			const { adminSupabase } = locals;
+			const { adminSupabase, youtube } = locals;
 
-			const service = new TranscriptionService(adminSupabase);
+			const service = new TranscriptionService(adminSupabase, youtube);
 			return await service.getTranscriptFromDB(videoId);
 		} catch (err) {
 			logger.error('[transcript] DB 조회 실패:', err);

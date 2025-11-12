@@ -119,10 +119,18 @@ class SummaryStore {
 
 		const channel = supabase
 			.channel('summary-changes')
-			.on('postgres_changes', { event: '*', schema: 'public', table: 'summaries' }, (payload) => {
-				logger.info('[SummaryStore] summaries 변경:', payload);
-				this.#handleRealtimeChange(payload);
-			})
+			.on<Database['public']['Tables']['summaries']['Row']>(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'summaries' },
+				(payload) => {
+					logger.info('[SummaryStore] summaries 변경:', payload);
+					this.#handleRealtimeChange({
+						eventType: payload.eventType,
+						new: payload.new as Database['public']['Tables']['summaries']['Row'] | undefined,
+						old: payload.old as { id?: string; created_at?: string; video_id?: string } | undefined
+					});
+				}
+			)
 			.on(
 				'postgres_changes',
 				{ event: '*', schema: 'public', table: 'content_community_metrics' },
@@ -351,7 +359,9 @@ class SummaryStore {
 					if (url) {
 						try {
 							const videoId = extractVideoId(url);
-							createSummary.fields.video_id.set(videoId);
+							if (videoId) {
+								createSummary.fields.video_id.set(videoId);
+							}
 						} catch {
 							// URL이 아직 완전하지 않을 수 있음
 						}

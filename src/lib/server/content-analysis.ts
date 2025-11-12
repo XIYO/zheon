@@ -1,16 +1,17 @@
-import { parse } from 'valibot';
+import { parse, type InferInput } from 'valibot';
 import {
 	UpsertCategorySchema,
 	UpsertTagSchema,
 	UpsertMetricKeySchema
 } from './content-analysis.schema';
 import { logger } from '$lib/logger';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '$lib/types/database.types';
 
-/**
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {import('valibot').InferInput<typeof UpsertCategorySchema>} data
- */
-export async function upsertCategory(supabase, data) {
+export async function upsertCategory(
+	supabase: SupabaseClient<Database>,
+	data: InferInput<typeof UpsertCategorySchema>
+) {
 	const validated = parse(UpsertCategorySchema, data);
 
 	let parent_id = null;
@@ -60,11 +61,10 @@ export async function upsertCategory(supabase, data) {
 	return result;
 }
 
-/**
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {import('valibot').InferInput<typeof UpsertTagSchema>} data
- */
-export async function upsertTag(supabase, data) {
+export async function upsertTag(
+	supabase: SupabaseClient<Database>,
+	data: InferInput<typeof UpsertTagSchema>
+) {
 	const validated = parse(UpsertTagSchema, data);
 
 	const { data: result, error } = await supabase
@@ -89,11 +89,10 @@ export async function upsertTag(supabase, data) {
 	return result;
 }
 
-/**
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {import('valibot').InferInput<typeof UpsertMetricKeySchema>} data
- */
-export async function upsertMetricKey(supabase, data) {
+export async function upsertMetricKey(
+	supabase: SupabaseClient<Database>,
+	data: InferInput<typeof UpsertMetricKeySchema>
+) {
 	const validated = parse(UpsertMetricKeySchema, data);
 
 	const { data: existing } = await supabase

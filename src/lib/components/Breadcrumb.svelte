@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
 
 	const pathSegments = $derived.by(() => {
 		const pathname = page.url.pathname;
@@ -26,9 +25,7 @@
 				{segment}
 			</span>
 		{:else}
-			<a
-				href={resolve(path)}
-				class="text-surface-600-400 hover:text-surface-900-100 transition-colors">
+			<a href={path} class="text-surface-600-400 hover:text-surface-900-100 transition-colors">
 				{segment}
 			</a>
 		{/if}

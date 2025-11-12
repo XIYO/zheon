@@ -4,7 +4,7 @@ import type { LayoutLoad } from './$types';
 import type { Database } from '$lib/types/database.types';
 import { logger } from '$lib/logger';
 
-export const load: LayoutLoad = async ({ depends, fetch, data }) => {
+export const load = (async ({ depends, fetch, data }) => {
 	depends('supabase:auth');
 
 	const supabase = isBrowser()
@@ -36,6 +36,7 @@ export const load: LayoutLoad = async ({ depends, fetch, data }) => {
 
 	return {
 		supabase,
-		user
+		user,
+		session: null
 	};
-};
+}) satisfies LayoutLoad;

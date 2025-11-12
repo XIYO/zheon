@@ -55,7 +55,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(transcript).toBeDefined();
 			expect(transcript?.video_id).toBe(TEST_VIDEO_ID);
 
-			const segments = (transcript?.data as TranscriptData)?.segments || [];
+			const segments = (transcript?.data as unknown as TranscriptData)?.segments || [];
 			expect(Array.isArray(segments)).toBe(true);
 			expect(segments.length).toBeGreaterThan(0);
 
@@ -66,7 +66,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(typeof firstSegment.text).toBe('string');
 
 			logger.info(`✅ 자막 수집 성공:`);
-			logger.info(`  - 제목: ${(transcript?.data as TranscriptData)?.title}`);
+			logger.info(`  - 제목: ${(transcript?.data as unknown as TranscriptData)?.title}`);
 			logger.info(`  - 세그먼트: ${segments.length}개`);
 		},
 		TIMEOUT
@@ -83,7 +83,7 @@ describe('TranscriptionService Integration Test', () => {
 			expect(transcript?.video_id).toBe(TEST_VIDEO_ID);
 			expect(transcript?.data).toBeDefined();
 
-			const segments = (transcript?.data as TranscriptData)?.segments || [];
+			const segments = (transcript?.data as unknown as TranscriptData)?.segments || [];
 			expect(segments.length).toBeGreaterThan(0);
 
 			logger.info(`✅ DB 조회 성공:`);

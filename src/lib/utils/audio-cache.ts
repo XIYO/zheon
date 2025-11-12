@@ -202,7 +202,8 @@ export async function clearAudioCache(summaryId: string): Promise<void> {
 
 export async function getCacheInfo(): Promise<any[]> {
 	try {
-		return await postMessage('list');
+		const result = await postMessage('list');
+		return Array.isArray(result) ? result : [];
 	} catch (error) {
 		logger.error('[Audio Cache] getCacheInfo failed:', error);
 		return [];

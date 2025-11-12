@@ -2,13 +2,17 @@
 	import { applyAction, enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
-	/** @type {{ onsuccess?: () => void }} */
-	const { onsuccess } = $props();
+	interface Props {
+		onsuccess?: () => void;
+	}
 
-	/** @type {import('@sveltejs/kit').SubmitFunction} */
-	const handleEnhance = () => {
-		return ({ result }) => {
+	const { onsuccess }: Props = $props();
+
+	const handleEnhance: SubmitFunction = () => {
+		return (data) => {
+			const result = data.result;
 			if (result.type === 'redirect') {
 				onsuccess?.();
 				goto(result.location, { invalidateAll: true });

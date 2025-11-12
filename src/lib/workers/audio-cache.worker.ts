@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/// <reference types="@types/wicg-file-system-access" />
+
+// @ts-nocheck - OPFS API types are not fully compatible with current TypeScript definitions
 const AUDIO_DIR = 'audio-cache';
 const META_SUFFIX = '.meta.json';
 

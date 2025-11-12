@@ -65,7 +65,7 @@ export class TranscriptionService {
 			throw error(500, `자막 조회 실패: ${fetchError.message}`);
 		}
 
-		const segments = (transcript?.data as TranscriptData)?.segments || [];
+		const segments = (transcript?.data as unknown as TranscriptData)?.segments || [];
 		logger.info(`[transcript] DB 조회 완료 videoId=${videoId} segments=${segments.length}개`);
 
 		return transcript;

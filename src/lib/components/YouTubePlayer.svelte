@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
 	import { ExternalLink } from '@lucide/svelte';
 
-	let { videoId } = $props();
+	let { videoId }: { videoId: string } = $props();
 </script>
 
-{#snippet playerContent(id)}
+{#snippet playerContent(id: string)}
 	{#await (async () => {
 		try {
 			const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);

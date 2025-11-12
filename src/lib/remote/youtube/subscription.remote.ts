@@ -1,9 +1,10 @@
 import { query, form, command, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
-import { syncChannelVideosCommand } from './channel_video.remote.ts';
+import { syncChannelVideosCommand } from './channel_video.remote';
 import { getAllSubscriptions, getChannels } from '$lib/server/youtubeApi.js';
 import { logger } from '$lib/logger';
+import type { Database } from '$lib/types/database.types';
 
 /**
  * 배열을 지정한 크기만큼 잘라서 반환
@@ -39,7 +40,7 @@ export const getSubscriptions = query(
 		const ascending = sortBy === 'oldest';
 
 		let query = supabase
-			.from('youtube_subscriptions')
+			.from('subscriptions')
 			.select(
 				`
 				id,
@@ -151,7 +152,7 @@ async function performSubscriptionsSync() {
 
 		if (subscriptions.length === 0) {
 			logger.info('[동기화] 구독 채널 없음, 기존 데이터 삭제 중...');
-			await supabase.from('youtube_subscriptions').delete().eq('user_id', userId);
+			await supabase.from('subscriptions').delete().eq('user_id', userId);
 
 			await supabase
 				.from('profiles')
@@ -170,7 +171,9 @@ async function performSubscriptionsSync() {
 			};
 		}
 
-		const uniqueChannelIds = [...new Set(subscriptions.map((s) => s.channel_id).filter(Boolean))];
+		const uniqueChannelIds = [
+			...new Set(subscriptions.map((s) => s.channel_id).filter((id): id is string => Boolean(id)))
+		];
 		logger.info(`[동기화] 고유 채널 ID ${uniqueChannelIds.length}개 추출 완료`);
 
 		logger.info('[동기화] 채널 정보 가져오는 중...');
@@ -183,13 +186,47 @@ async function performSubscriptionsSync() {
 		if (channels.length > 0) {
 			logger.info(`[동기화] 채널 정보 DB 저장 중... (${channels.length}개)`);
 			for (const rowsChunk of chunk(channels, 100)) {
-				const { error: channelError } = await adminSupabase.from('channels').upsert(
-					rowsChunk.map((ch) => ({
-						...ch,
+				const channelRows = rowsChunk.map((ch) => {
+					const row: {
+						channel_id: string;
+						title?: string;
+						description?: string | null;
+						custom_url?: string | null;
+						published_at?: string | null;
+						thumbnail_url?: string | null;
+						thumbnail_width?: number | null;
+						thumbnail_height?: number | null;
+						view_count?: number | null;
+						subscriber_count?: string | null;
+						video_count?: number | null;
+						uploads_playlist_id?: string | null;
+						channel_data?: any;
+						updated_at?: string;
+					} = {
+						channel_id: ch.channel_id,
 						updated_at: now
-					})),
-					{ onConflict: 'channel_id' }
-				);
+					};
+
+					if (ch.title) row.title = ch.title;
+					if (ch.description !== undefined) row.description = ch.description;
+					if (ch.custom_url !== undefined) row.custom_url = ch.custom_url;
+					if (ch.published_at !== undefined) row.published_at = ch.published_at;
+					if (ch.thumbnail_url !== undefined) row.thumbnail_url = ch.thumbnail_url;
+					if (ch.thumbnail_width !== undefined) row.thumbnail_width = ch.thumbnail_width;
+					if (ch.thumbnail_height !== undefined) row.thumbnail_height = ch.thumbnail_height;
+					if (ch.view_count !== undefined) row.view_count = ch.view_count;
+					if (ch.subscriber_count !== undefined) row.subscriber_count = String(ch.subscriber_count);
+					if (ch.video_count !== undefined) row.video_count = ch.video_count;
+					if (ch.uploads_playlist_id !== undefined)
+						row.uploads_playlist_id = ch.uploads_playlist_id;
+					if (ch.channel_data !== undefined) row.channel_data = ch.channel_data;
+
+					return row;
+				});
+
+				const { error: channelError } = await adminSupabase
+					.from('channels')
+					.upsert(channelRows as any, { onConflict: 'channel_id' });
 
 				if (channelError) {
 					logger.error('[동기화] 채널 저장 실패:', channelError);
@@ -201,7 +238,7 @@ async function performSubscriptionsSync() {
 
 		logger.info('[동기화] 기존 구독 데이터 삭제 중...');
 		const { error: deleteError } = await supabase
-			.from('youtube_subscriptions')
+			.from('subscriptions')
 			.delete()
 			.eq('user_id', userId);
 
@@ -211,22 +248,26 @@ async function performSubscriptionsSync() {
 		}
 		logger.info('[동기화] 기존 구독 데이터 삭제 완료');
 
-		const subscriptionRows = subscriptions.map((sub) => ({
-			user_id: userId,
-			channel_id: sub.channel_id,
-			title: sub.title,
-			description: sub.description,
-			published_at: sub.published_at,
-			thumbnail_url: sub.thumbnail_url,
-			resource_kind: sub.resource_kind,
-			subscription_data: sub.subscription_data,
-			subscribed_at: sub.published_at || now,
-			updated_at: now
-		}));
+		const subscriptionRows = subscriptions
+			.filter((sub) => sub.channel_id)
+			.map((sub) => ({
+				user_id: userId,
+				channel_id: sub.channel_id!,
+				title: sub.title,
+				description: sub.description,
+				published_at: sub.published_at,
+				thumbnail_url: sub.thumbnail_url,
+				resource_kind: sub.resource_kind,
+				subscription_data: sub.subscription_data,
+				subscribed_at: sub.published_at || now,
+				updated_at: now
+			}));
 
 		logger.info(`[동기화] 새 구독 데이터 저장 중... (${subscriptionRows.length}개)`);
 		for (const rowsChunk of chunk(subscriptionRows, 100)) {
-			const { error: insertError } = await supabase.from('youtube_subscriptions').insert(rowsChunk);
+			const { error: insertError } = await supabase
+				.from('subscriptions')
+				.insert(rowsChunk as Database['public']['Tables']['subscriptions']['Insert'][]);
 
 			if (insertError) {
 				logger.error('[동기화] 구독 저장 실패:', insertError);
@@ -349,7 +390,10 @@ export const syncSubscriptions = form(
 
 		if (profileError) throw error(500, profileError.message);
 
-		if (['processing', 'pending'].includes(profile?.youtube_subscription_sync_status)) {
+		if (
+			profile?.youtube_subscription_sync_status &&
+			['processing', 'pending'].includes(profile.youtube_subscription_sync_status)
+		) {
 			invalid('이미 동기화가 진행 중입니다');
 			return;
 		}

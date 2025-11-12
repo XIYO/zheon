@@ -67,9 +67,9 @@
 							<p class="truncate">
 								{summary.title}
 							</p>
-							{#if summary.processing_status === 'failed' && summary.failure_reason}
+							{#if summary.processing_status === 'failed' && (summary as any).failure_reason}
 								<p class="text-xs text-error-500 truncate">
-									{summary.failure_reason}
+									{(summary as any).failure_reason}
 								</p>
 							{/if}
 						</div>

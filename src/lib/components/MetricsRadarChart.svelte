@@ -8,7 +8,7 @@
 
 	const entries = Object.entries(data);
 	const keys = entries.map(([key]) => key);
-	const values = entries.map(([, value]) => value);
+	const values = entries.map(([, value]) => value as number);
 
 	const angleSlice = (Math.PI * 2) / keys.length;
 	const radius = size / 2 - 50;

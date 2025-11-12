@@ -1,4 +1,4 @@
-export function extractVideoId(url: string): string {
+export function extractVideoId(url: string): string | undefined {
 	const patterns = [
 		/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
 		/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,

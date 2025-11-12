@@ -44,13 +44,35 @@ export const upsertChannel = command(
 		const { adminSupabase } = locals;
 
 		const task = async () => {
-			const { error: upsertError } = await adminSupabase.from('channels').upsert(
-				{
-					...channelData,
-					updated_at: new Date().toISOString()
-				},
-				{ onConflict: 'channel_id' }
-			);
+			const upsertData: {
+				channel_id: string;
+				title?: string;
+				custom_url?: string | null;
+				thumbnail_url?: string | null;
+				subscriber_count?: string | null;
+				description?: string | null;
+				video_count?: number | null;
+				channel_data?: any;
+				updated_at?: string;
+			} = {
+				channel_id: channelData.channel_id,
+				updated_at: new Date().toISOString()
+			};
+
+			if (channelData.title) upsertData.title = channelData.title;
+			if (channelData.custom_url !== undefined) upsertData.custom_url = channelData.custom_url;
+			if (channelData.thumbnail_url !== undefined)
+				upsertData.thumbnail_url = channelData.thumbnail_url;
+			if (channelData.subscriber_count !== undefined)
+				upsertData.subscriber_count = channelData.subscriber_count;
+			if (channelData.description !== undefined) upsertData.description = channelData.description;
+			if (channelData.video_count !== undefined) upsertData.video_count = channelData.video_count;
+			if (channelData.channel_data !== undefined)
+				upsertData.channel_data = channelData.channel_data;
+
+			const { error: upsertError } = await adminSupabase
+				.from('channels')
+				.upsert(upsertData as any, { onConflict: 'channel_id' });
 
 			if (upsertError) logger.error('Channel upsert failed:', upsertError);
 		};
@@ -74,7 +96,9 @@ export const updateChannelStatus = command(
 		const { adminSupabase } = locals;
 
 		const task = async () => {
-			const updateData = { video_sync_status };
+			const updateData: { video_sync_status: string; video_synced_at?: string } = {
+				video_sync_status
+			};
 			if (video_synced_at) updateData.video_synced_at = video_synced_at;
 
 			const { error: updateError } = await adminSupabase

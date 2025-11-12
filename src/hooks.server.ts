@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Handle } from '@sveltejs/kit';
 import { createYouTube } from '$lib/server/youtube-proxy';
 import { logger } from '$lib/logger';
+import type { Database } from '$lib/types/database.types';
 
 process.on('unhandledRejection', (reason, promise) => {
 	logger.error('=== UNHANDLED REJECTION ===');
@@ -19,7 +20,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const supabase: Handle = async ({ event, resolve }) => {
-	event.locals.supabase = createServerClient(
+	event.locals.supabase = createServerClient<Database>(
 		publicEnv.PUBLIC_SUPABASE_URL,
 		publicEnv.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 		{
@@ -32,7 +33,8 @@ const supabase: Handle = async ({ event, resolve }) => {
 				}
 			}
 		}
-	);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	) as any;
 
 	event.locals.safeGetSession = async () => {
 		try {
@@ -82,7 +84,7 @@ const supabase: Handle = async ({ event, resolve }) => {
 
 const adminSupabase: Handle = async ({ event, resolve }) => {
 	try {
-		event.locals.adminSupabase = createClient(
+		event.locals.adminSupabase = createClient<Database>(
 			publicEnv.PUBLIC_SUPABASE_URL,
 			env.SUPABASE_SECRET_KEY,
 			{

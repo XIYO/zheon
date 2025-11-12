@@ -36,26 +36,15 @@ services:
       ORIGIN: http://localhost:3000
       PORT: 3000
       TOR_SOCKS5_PROXY: socks5://zheon-tor-proxy:9050
-      USE_TOR_PROXY: true
       GEMINI_API_KEY: AIzaSyAcc6g0WZKzNRJvG2E2igIhjusgndaFLJ0
       GOOGLE_CLIENT_ID: 123106426850-sg3muliha3419e4rc4e5ibh98l0rq6sb.apps.googleusercontent.com
       GOOGLE_CLIENT_SECRET: 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
       YOUTUBE_API_KEY: AIzaSyDYpYOX-Xewqw_8nFu-d88jR0s2_RWkhyM
-      LMNT_API_KEY: ak_89cMAca3AabMWNNcz7Cods
-      LMNT_TTS_MODEL: blizzard
-      LMNT_TTS_VOICE: natalie
-      LMNT_TTS_LANGUAGE: ko
-      LMNT_TTS_FORMAT: mp3
-      LMNT_TTS_SPEED: 1.0
-      ELEVENLABS_API_KEY: sk_c04a22a7481e3bf909131bfb56e048c0241b379cdcf53767
-      ELEVENLABS_TTS_MODEL: eleven_v3
-      ELEVENLABS_TTS_VOICE: B8gJV1IhpuegLxdpXFOE
-      ELEVENLABS_TTS_FORMAT: mp3_44100_128
-      ELEVENLABS_TTS_SPEED: 1.0
-      PUBLIC_SUPABASE_URL: http://127.0.0.1:55321
+      PUBLIC_SUPABASE_URL: http://host.docker.internal:55321
       PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
       SUPABASE_SECRET_KEY: sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55322/postgres
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     depends_on:
       tor-proxy:
         condition: service_healthy

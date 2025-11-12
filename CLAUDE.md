@@ -4,57 +4,61 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다. Supabase Edge Functions로 AI 요약 파이프라인을 구성합니다.
+YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다.
 
 ## Tech Stack
 
 - **Frontend**: SvelteKit 2 (Svelte 5), Tailwind CSS 4, Skeleton UI
-- **Backend**: Supabase (PostgreSQL + Edge Functions)
-- **Testing**: Vitest, Playwright, Deno Test
-- **Language**: JavaScript with JSDoc (TypeScript 미사용)
-- **Package Manager**: pnpm (npm 사용 금지)
+- **Backend**: Supabase (PostgreSQL)
+- **Testing**: Vitest, Playwright
+- **Language**: TypeScript
+- **Package Manager**: bun (npm/pnpm 사용 금지)
 - **i18n**: Paraglide.js
+
+### TypeScript Guidelines
+
+- **타입 추론 우선**: TypeScript가 자동으로 타입을 추론하게 하여 최대한 간결하게 작성
+- **명시적 타입**: 타입 추론이 불가능하거나 명확하지 않을 때만 명시적으로 표기
+- **함수 파라미터**: 타입 명시 필수
+- **함수 반환 타입**: 추론 가능하면 생략
+- **변수 선언**: 초기값으로 타입 추론 가능하면 타입 생략
+
+### Svelte Guidelines
+
+- **TypeScript 필수**: 모든 Svelte 파일은 반드시 `<script lang="ts">` 사용
+- **JSDoc 금지**: JSDoc 대신 TypeScript 타입 명시만 사용
+- **타입 안전성**: 모든 props와 변수는 명확한 타입 정의
 
 ## Essential Commands
 
 ### Development
 
 ```bash
-pnpm dev         # Dev server on http://localhost:7777
-pnpm build       # Production build
-pnpm preview     # Preview build on http://localhost:17777
+bun dev         # Dev server on http://localhost:7777
+bun build       # Production build
+bun preview     # Preview build on http://localhost:17777
 ```
 
 ### Code Quality
 
 ```bash
-pnpm check       # Svelte + JS checks (via jsconfig)
-pnpm format      # Prettier write
-pnpm lint        # ESLint + Prettier check
+bun check       # Svelte + JS checks (via jsconfig)
+bun format      # Prettier write
+bun lint        # ESLint + Prettier check
 ```
 
 ### Testing
 
 ```bash
-pnpm test        # All tests (unit + E2E)
-pnpm test:unit   # Vitest unit/component tests
-pnpm test:e2e    # Playwright E2E tests
+bun test        # All tests (unit + E2E)
+bun test:unit   # Vitest unit/component tests
+bun test:e2e    # Playwright E2E tests
 ```
 
 ### Deployment
 
 ```bash
-pnpm build       # Build for production
-```
-
-### Edge Functions (Supabase)
-
-```bash
-pnpm edge:test:all   # Run all Deno tests
-pnpm edge:deploy     # Deploy functions to Supabase
-pnpm edge:format     # Format Deno code
-pnpm edge:lint       # Lint Deno code
-pnpm edge:check      # Type-check Deno code
+bun build       # Build for production
 ```
 
 ## Architecture & Key Patterns
@@ -70,7 +74,12 @@ pnpm edge:check      # Type-check Deno code
 ### Supabase Configuration
 
 - **Schema**: `public` schema used (not custom `zheon` schema in migrations)
-- **Connection**: 모든 연결은 리모트 서버와 한다 (로컬 테스트 불필요)
+- **Local Development**: Supabase CLI로 로컬 인스턴스 실행
+  - `supabase start` - 로컬 Supabase 시작
+  - `supabase stop` - 로컬 Supabase 정지
+  - `supabase status` - 현재 상태 및 URL/Key 확인
+  - 로컬: `http://127.0.0.1:55321` (config.toml에 정의)
+- **Remote Production**: `https://iefgdhwmgljjacafqomd.supabase.co`
 - **Admin Client**: Available via `event.locals.adminSupabase` in server hooks
 - **User Client**: Available via `event.locals.supabase` with automatic cookie handling
 - **Type Safety**: Database types generated in `src/lib/types/database.types.ts`
@@ -232,8 +241,6 @@ src/
 
 supabase/
 ├─ migrations/          # Database migrations
-├─ functions/           # Deno Edge Functions
-├─ tests/              # Deno tests
 └─ config.toml         # Supabase config
 
 messages/              # i18n message files (ko.json, en.json)
@@ -241,9 +248,8 @@ messages/              # i18n message files (ko.json, en.json)
 
 ## Deployment Configuration
 
-- **Platform**: Raspberry Pi 4 (Node.js server)
-- **Adapter**: @sveltejs/adapter-node (configured in svelte.config.js)
-- **Supabase Edge Functions**: Deployed separately via `pnpm edge:deploy`
+- **Platform**: Raspberry Pi 4 (Bun runtime)
+- **Adapter**: @sveltejs/adapter-auto (configured in svelte.config.js)
 
 ## Development Ports
 
@@ -253,7 +259,7 @@ messages/              # i18n message files (ko.json, en.json)
 
 ## Important Notes
 
-- **Language**: JavaScript with JSDoc, TypeScript is only used for type definitions
+- **Language**: TypeScript with type inference priority
 - **Internationalization**: Paraglide.js를 다국어용으로 사용 (messages/\*.json)
 - **Icons**: `@lucide/svelte` 사용 (lucide-svelte 금지)
 - **Performance**: `console.time()/timeEnd()/timeLog()` 사용 (performance.now() 금지)

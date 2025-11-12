@@ -59,11 +59,11 @@
 								<span class="invisible">카테고리 로딩중 텍스트</span>
 							</span>
 						{:then categories}
-							{#if categories && categories.length > 0}
+							{#if categories && Array.isArray(categories) && categories.length > 0}
 								{#each categories as category}
 									<span
 										class="chip preset-filled-primary-500 text-sm transition-all hover:scale-105">
-										{category.name_ko || category.name}
+										{(category as any).name_ko || (category as any).name}
 									</span>
 								{/each}
 							{:else}
@@ -157,7 +157,9 @@
 								data={Object.fromEntries(
 									Object.entries(metrics).map(([key, value]) => [
 										key,
-										typeof value === 'object' && 'score' in value ? value.score : 0
+										typeof value === 'object' && value !== null && 'score' in value
+											? (value.score as number)
+											: 0
 									])
 								)} />
 						{:else}
@@ -173,17 +175,17 @@
 						{#if metrics && Object.keys(metrics).length > 0}
 							{#each Object.entries(metrics) as [key, value]}
 								{@const metricValue =
-									typeof value === 'object' && 'score' in value
-										? value
+									typeof value === 'object' && value !== null && 'score' in value
+										? (value as { score: number; reasoning?: string })
 										: { score: 0, reasoning: '' }}
+								{@const score = typeof metricValue.score === 'number' ? metricValue.score : 0}
 								{@const badgeClass =
-									metricValue.score >= 70
+									score >= 70
 										? 'preset-filled-success'
-										: metricValue.score >= 40
+										: score >= 40
 											? 'preset-filled-warning'
 											: 'preset-filled-error'}
-								{@const category =
-									metricValue.score >= 70 ? '강점' : metricValue.score >= 40 ? '보통' : '약점'}
+								{@const category = score >= 70 ? '강점' : score >= 40 ? '보통' : '약점'}
 								<div
 									class="card preset-tonal-surface p-3 transition-all hover:shadow-md hover:-translate-y-0.5">
 									<div class="flex justify-between items-center mb-2">
@@ -191,7 +193,7 @@
 											<span class="font-mono font-semibold text-surface-900-50">{key}</span>
 											<span class="text-xs text-surface-500">({category})</span>
 										</div>
-										<span class="badge {badgeClass}">{metricValue.score}</span>
+										<span class="badge {badgeClass}">{score}</span>
 									</div>
 									{#if metricValue.reasoning}
 										<p class="text-surface-600-400 text-xs">{metricValue.reasoning}</p>

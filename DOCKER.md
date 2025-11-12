@@ -8,12 +8,12 @@
 
 ```yaml
 environment:
-  PUBLIC_SUPABASE_URL: https://your-project.supabase.co  # 실제 값으로 변경
-  PUBLIC_SUPABASE_ANON_KEY: your-anon-key-here          # 실제 값으로 변경
+  PUBLIC_SUPABASE_URL: https://your-project.supabase.co # 실제 값으로 변경
+  PUBLIC_SUPABASE_ANON_KEY: your-anon-key-here # 실제 값으로 변경
   SUPABASE_SERVICE_ROLE_KEY: your-service-role-key-here # 실제 값으로 변경
   GOOGLE_GENERATIVE_AI_API_KEY: your-gemini-api-key-here # 실제 값으로 변경
-  ELEVENLABS_API_KEY: your-elevenlabs-api-key-here      # 실제 값으로 변경 (optional)
-  LMNT_API_KEY: your-lmnt-api-key-here                  # 실제 값으로 변경 (optional)
+  ELEVENLABS_API_KEY: your-elevenlabs-api-key-here # 실제 값으로 변경 (optional)
+  LMNT_API_KEY: your-lmnt-api-key-here # 실제 값으로 변경 (optional)
 ```
 
 ### 2. 빌드 & 실행
@@ -23,6 +23,7 @@ docker compose up --build
 ```
 
 이 명령으로:
+
 - ✅ Dockerfile 자동 빌드
 - ✅ tor-proxy 컨테이너 시작
 - ✅ zheon 앱 컨테이너 시작 (tor-proxy healthy 대기)
@@ -100,18 +101,23 @@ docker-compose.yml
 ## 트러블슈팅
 
 ### 컨테이너가 계속 재시작됨
+
 ```bash
 docker compose logs zheon
 ```
+
 로그 확인 후 환경 변수가 올바른지 체크
 
 ### tor-proxy 연결 안 됨
+
 ```bash
 docker compose ps
 ```
+
 tor-proxy가 healthy 상태인지 확인
 
 ### 포트 충돌
+
 ```bash
 # 포트 변경 (docker-compose.yml)
 ports:

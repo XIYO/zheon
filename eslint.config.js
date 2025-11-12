@@ -20,7 +20,9 @@ export default [
 			'**/PieChart.svelte',
 			'**/RadarChart.svelte',
 			'**/SummaryDetail.svelte',
-			'**/SummaryList.svelte'
+			'**/SummaryList.svelte',
+			'**/YouTubePlayer.svelte',
+			'**/SignOutForm.svelte'
 		]
 	},
 	includeIgnoreFile(gitignorePath),

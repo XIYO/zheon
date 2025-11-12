@@ -34,7 +34,7 @@ export async function extractTranscript(videoId, youtube) {
 	const transcriptData = {
 		title: info.basic_info?.title,
 		duration: info.basic_info?.duration,
-		language: transcript.transcript?.content?.body?.language || 'unknown',
+		language: 'unknown',
 		segments: segments.map((segment) => ({
 			text: segment.snippet.text,
 			offset: parseInt(segment.start_ms),
@@ -53,6 +53,8 @@ export async function extractTranscript(videoId, youtube) {
 
 /**
  * DB에서 자막 조회
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase - Supabase 클라이언트
+ * @param {string} videoId - YouTube 영상 ID
  */
 export async function findTranscriptInDB(supabase, videoId) {
 	const { data: existing, error: checkError } = await supabase
@@ -70,6 +72,9 @@ export async function findTranscriptInDB(supabase, videoId) {
 
 /**
  * DB에 자막 저장
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase - Supabase 클라이언트
+ * @param {string} videoId - YouTube 영상 ID
+ * @param {any} transcriptData - 자막 데이터
  */
 export async function saveTranscriptToDB(supabase, videoId, transcriptData) {
 	const { error: insertError } = await supabase.from('transcripts').upsert(

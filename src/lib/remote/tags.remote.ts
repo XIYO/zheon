@@ -18,6 +18,14 @@ export const getTags = query(GetTagsSchema, async ({ videoId }) => {
 	}
 
 	return (data || [])
-		.map((item) => ({ ...item.tags, weight: item.weight }))
-		.filter((tag) => tag.slug);
+		.map((item) => {
+			if (item.tags && typeof item.tags === 'object' && !Array.isArray(item.tags)) {
+				const tags = item.tags as { slug?: string | null; name?: string; name_ko?: string };
+				return { ...tags, weight: item.weight };
+			}
+			return null;
+		})
+		.filter(
+			(tag): tag is NonNullable<typeof tag> => tag !== null && 'slug' in tag && tag.slug !== null
+		);
 });
