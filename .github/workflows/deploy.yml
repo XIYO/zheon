@@ -95,5 +95,5 @@ jobs:
             docker compose pull --quiet
 
             echo "Starting deployment..."
-            ./start.sh
+            bash start.sh
             echo "Deployment completed at $(date)"
