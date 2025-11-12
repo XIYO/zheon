@@ -6,10 +6,14 @@
 		const pathname = page.url.pathname;
 		if (pathname === '/') return [];
 
+		const isVideoRoute = page.route.id === '/(main)/[videoId]';
 		const segments = pathname.split('/').filter(Boolean);
+
 		return segments.map((segment, index) => {
 			const path = '/' + segments.slice(0, index + 1).join('/');
-			return { segment, path };
+			const isLastSegment = index === segments.length - 1;
+			const label = isVideoRoute && isLastSegment ? '영상 인사이트' : segment;
+			return { segment: label, path };
 		});
 	});
 </script>
