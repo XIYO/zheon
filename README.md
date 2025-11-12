@@ -81,8 +81,8 @@ YouTube 영상의 자막과 댓글을 AI로 분석하여 요약, 감정, 연령�
 ### Backend & Database
 
 - **Supabase**: PostgreSQL + Auth + Realtime + Storage
-- **Cloudflare Workers**: 프로덕션 배포 환경
 - **Deno**: Edge Functions 런타임
+- **Node.js**: Raspberry Pi 4 배포 환경
 
 ### AI & Analysis
 
@@ -218,7 +218,7 @@ pnpm test:e2e        # Playwright E2E 테스트
 ### 배포
 
 ```bash
-pnpm deploy          # Cloudflare Workers 배포
+pnpm build           # 프로덕션 빌드
 pnpm edge:deploy     # Supabase Edge Functions 배포
 ```
 
@@ -233,8 +233,7 @@ pnpm edge:check      # Deno 타입 체크
 
 ## 배포 환경
 
-- **프로덕션 도메인**: [zheon.xiyo.dev](https://zheon.xiyo.dev)
-- **플랫폼**: Cloudflare Workers
+- **플랫폼**: Raspberry Pi 4 (Node.js)
 - **데이터베이스**: Supabase PostgreSQL
 - **Edge Functions**: Supabase Deno Runtime
 
@@ -242,7 +241,6 @@ pnpm edge:check      # Deno 타입 체크
 
 - Dev server: **7777**
 - Preview server: **17777**
-- Wrangler dev: **5170**
 
 ## 라이선스
 

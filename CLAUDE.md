@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다. Cloudflare Workers에 배포되며, Edge Functions로 AI 요약 파이프라인을 구성합니다.
+YouTube 영상 자막을 추출해 다국어 요약/인사이트를 제공하는 SvelteKit + Supabase 애플리케이션입니다. Supabase Edge Functions로 AI 요약 파이프라인을 구성합니다.
 
 ## Tech Stack
 
 - **Frontend**: SvelteKit 2 (Svelte 5), Tailwind CSS 4, Skeleton UI
-- **Backend**: Supabase (PostgreSQL + Edge Functions), Cloudflare Workers
+- **Backend**: Supabase (PostgreSQL + Edge Functions)
 - **Testing**: Vitest, Playwright, Deno Test
 - **Language**: JavaScript with JSDoc (TypeScript 미사용)
 - **Package Manager**: pnpm (npm 사용 금지)
@@ -44,7 +44,7 @@ pnpm test:e2e    # Playwright E2E tests
 ### Deployment
 
 ```bash
-pnpm deploy      # Deploy to Cloudflare Workers (zheon.xiyo.dev)
+pnpm build       # Build for production
 ```
 
 ### Edge Functions (Supabase)
@@ -122,7 +122,7 @@ return data; // 조회 결과 없음: 빈 배열 [] 반환 (null 아님)
 - **서버-서버 호출**: Remote Functions는 서버에서 다른 Remote Function 호출 가능
 - **백그라운드 작업 패턴**: Remote Functions에서 Promise를 반환하지 않고 `.catch()` 체이닝으로 백그라운드 실행
   ```js
-  // 응답 후 백그라운드 처리 (Cloudflare Workers 패턴)
+  // 응답 후 백그라운드 처리
   summaryService.analyzeSummary(videoId, options).catch(async (err) => {
   	console.error('백그라운드 분석 실패:', err);
   	// 에러 처리 로직
@@ -241,8 +241,7 @@ messages/              # i18n message files (ko.json, en.json)
 
 ## Deployment Configuration
 
-- **Platform**: Cloudflare Workers (production via `pnpm deploy`)
-- **Domain**: zheon.xiyo.dev
+- **Platform**: Raspberry Pi 4 (Node.js server)
 - **Adapter**: @sveltejs/adapter-node (configured in svelte.config.js)
 - **Supabase Edge Functions**: Deployed separately via `pnpm edge:deploy`
 
