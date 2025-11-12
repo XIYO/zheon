@@ -10,15 +10,6 @@ import { createYouTube } from '$lib/server/youtube-proxy';
 import { logger } from '$lib/logger';
 import type { Database } from '$lib/types/database.types';
 
-process.on('unhandledRejection', (reason, promise) => {
-	logger.error('=== UNHANDLED REJECTION ===');
-	logger.error('Reason:', reason);
-	logger.error('Promise:', promise);
-	if (reason && typeof reason === 'object') {
-		logger.error('Reason details:', JSON.stringify(reason, null, 2));
-	}
-});
-
 const supabase: Handle = async ({ event, resolve }) => {
 	const timerLabel = `[hooks.supabase] ${event.url.pathname}`;
 	console.time(timerLabel);
