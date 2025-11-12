@@ -91,6 +91,9 @@ jobs:
               cd zheon-ops
             fi
 
+            echo "Pulling latest Docker images..."
+            docker compose pull --quiet
+
             echo "Starting deployment..."
             ./start.sh
             echo "Deployment completed at $(date)"
