@@ -2,6 +2,8 @@
 	import '../app.css';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { ServerCrash, FileQuestion, AlertTriangle, Home, ArrowLeft } from '@lucide/svelte';
+	import type { ComponentType } from 'svelte';
 
 	const status = $derived(page?.status ?? 500);
 	const message = $derived(page?.error?.message ?? '알 수 없는 오류가 발생했습니다.');
@@ -11,7 +13,8 @@
 			return {
 				title: '서버 오류',
 				description: '서버에서 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-				color: 'error',
+				icon: ServerCrash as ComponentType,
+				badgePreset: 'preset-filled-error-500',
 				borderClass: 'border-error-600-400'
 			};
 		}
@@ -19,7 +22,8 @@
 			return {
 				title: '페이지를 찾을 수 없습니다',
 				description: '요청하신 페이지가 존재하지 않습니다.',
-				color: 'warning',
+				icon: FileQuestion as ComponentType,
+				badgePreset: 'preset-filled-warning-500',
 				borderClass: 'border-warning-600-400'
 			};
 		}
@@ -27,14 +31,16 @@
 			return {
 				title: '잘못된 요청',
 				description: '요청을 처리할 수 없습니다.',
-				color: 'warning',
+				icon: AlertTriangle as ComponentType,
+				badgePreset: 'preset-filled-warning-500',
 				borderClass: 'border-warning-600-400'
 			};
 		}
 		return {
 			title: '오류',
 			description: '문제가 발생했습니다.',
-			color: 'surface',
+			icon: AlertTriangle as ComponentType,
+			badgePreset: 'preset-filled-surface-500',
 			borderClass: 'border-surface-600-400'
 		};
 	});
@@ -44,46 +50,40 @@
 	<div class="max-w-2xl w-full">
 		<div
 			class={[
-				'card preset-filled-surface-50-900',
-				'border-4 rounded-xl overflow-hidden',
-				'transition-all hover:shadow-xl',
+				'card preset-filled-surface-100-900',
+				'border-[1px] card-hover',
+				'divide-y divide-surface-200-800',
+				'overflow-hidden rounded-xl',
 				statusConfig.borderClass
 			]}>
-			<header class="p-8 text-center border-b border-surface-300-700">
-				<div class="mb-4">
-					<span
-						class={[
-							'inline-flex items-center justify-center',
-							'w-20 h-20 rounded-full',
-							'text-4xl font-bold',
-							{
-								'bg-error-500/10 text-error-600-400': statusConfig.color === 'error',
-								'bg-warning-500/10 text-warning-600-400': statusConfig.color === 'warning',
-								'bg-surface-500/10 text-surface-600-400': statusConfig.color === 'surface'
-							}
-						]}>
-						{status}
+			<header class="space-y-4 p-8 text-center">
+				<div class="flex justify-center">
+					<span class={['badge-icon', statusConfig.badgePreset]}>
+						<svelte:component this={statusConfig.icon} class="size-8" />
 					</span>
 				</div>
-				<h1 class="h2 mb-2">{statusConfig.title}</h1>
+				<span class={['badge', statusConfig.badgePreset]}>{status}</span>
+				<h1 class="h2">{statusConfig.title}</h1>
 				<p class="text-surface-700-300">{statusConfig.description}</p>
 			</header>
 
-			<section class="p-8 space-y-6">
-				<div class="card preset-tonal-surface p-4 rounded-lg">
-					<h2 class="text-sm font-semibold mb-2 text-surface-800-200">오류 메시지</h2>
-					<p class="break-words text-surface-700-300">{message}</p>
+			<article class="space-y-4 p-8">
+				<div class="card preset-tonal-surface p-4">
+					<h2 class="h6 mb-2">오류 상세</h2>
+					<p class="break-words text-sm text-surface-700-300">{message}</p>
 				</div>
+			</article>
 
-				<div class="divider"></div>
-
-				<div class="flex flex-col sm:flex-row gap-4 justify-center">
-					<a href={resolve('/')} class="btn preset-filled-primary-500"> 홈으로 돌아가기 </a>
-					<button onclick={() => window.history.back()} class="btn preset-outlined-surface-500-400">
-						이전 페이지
-					</button>
-				</div>
-			</section>
+			<footer class="flex flex-col gap-4 p-8 sm:flex-row sm:justify-center">
+				<a href={resolve('/')} class="btn btn-base preset-filled-primary-500">
+					<Home class="size-5" />
+					<span>홈으로 돌아가기</span>
+				</a>
+				<button onclick={() => window.history.back()} class="btn btn-base preset-outlined-surface-500-400">
+					<ArrowLeft class="size-5" />
+					<span>이전 페이지</span>
+				</button>
+			</footer>
 		</div>
 	</div>
 </div>
