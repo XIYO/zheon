@@ -102,6 +102,9 @@ const adminSupabase: Handle = async ({ event, resolve }) => {
 };
 
 const authGuard: Handle = async ({ event, resolve }) => {
+	if (process.env.DISABLE_AUTH === '1' || process.env.DISABLE_AUTH === 'true') {
+		return resolve(event);
+	}
 	try {
 		const { session, user } = await event.locals.safeGetSession();
 		event.locals.session = session;
@@ -122,6 +125,9 @@ const authGuard: Handle = async ({ event, resolve }) => {
 };
 
 const youtube: Handle = async ({ event, resolve }) => {
+	if (process.env.DISABLE_REMOTE === '1' || process.env.DISABLE_REMOTE === 'true') {
+		return resolve(event);
+	}
 	try {
 		event.locals.youtube = await createYouTube(env.TOR_SOCKS5_PROXY);
 	} catch (error) {

@@ -1,3 +1,5 @@
+<!-- 사용 화면 스크린샷: Supabase 연결 후 생성 예정 -->
+
 # Zheon
 
 YouTube 영상의 자막과 댓글을 수집·분석해 요약과 인사이트를 제공하는 SvelteKit + Supabase 애플리케이션.
@@ -22,4 +24,3 @@ YouTube 영상의 자막과 댓글을 수집·분석해 요약과 인사이트�
 - TTS: AI SDK 호환 음성 → Gemini → Google TTS → OpenAI 순
 - 자막 번역 + TTS 오버레이
 - 문서 정비 및 예제 강화
-

@@ -25,13 +25,15 @@ export const load = (async ({ depends, fetch, data }) => {
 			});
 
 	let user = null;
-	try {
-		const {
-			data: { user: fetchedUser }
-		} = await supabase.auth.getUser();
-		user = fetchedUser;
-	} catch (error) {
-		logger.error('[Layout] Failed to get user:', error);
+	if (process.env.DISABLE_AUTH !== '1' && process.env.DISABLE_AUTH !== 'true') {
+		try {
+			const {
+				data: { user: fetchedUser }
+			} = await supabase.auth.getUser();
+			user = fetchedUser;
+		} catch (error) {
+			logger.error('[Layout] Failed to get user:', error);
+		}
 	}
 
 	return {

@@ -26,18 +26,22 @@ interface QueryInfo {
  * Summary 데이터 통합 관리 스토어
  */
 class SummaryStore {
-	#listQueries = $state<QueryInfo[]>([
-		{
-			query: getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
-			cursor: new Date().toISOString(),
-			direction: 'after'
-		},
-		{
-			query: getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
-			cursor: new Date().toISOString(),
-			direction: 'before'
-		}
-	]);
+	#listQueries = $state<QueryInfo[]>(
+		!browser && (process.env.DISABLE_REMOTE === '1' || process.env.DISABLE_REMOTE === 'true')
+			? []
+			: [
+					{
+						query: getSummaries({ cursor: new Date().toISOString(), direction: 'after', limit: 0 }),
+						cursor: new Date().toISOString(),
+						direction: 'after'
+					},
+					{
+						query: getSummaries({ cursor: new Date().toISOString(), direction: 'before' }),
+						cursor: new Date().toISOString(),
+						direction: 'before'
+					}
+				]
+	);
 	#detailQueries = new Map<string, ReturnType<typeof getSummaryById> | Promise<void>>();
 	#categoriesQueries = new Map<string, ReturnType<typeof getCategories>>();
 	#tagsQueries = new Map<string, ReturnType<typeof getTags>>();
