@@ -1,14 +1,13 @@
 import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
-import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
+import { logger } from '$lib/logger';
+import { createYouTubeClient } from '$lib/server/youtube';
+import type { Database } from '$lib/types/database.types';
 import { createClient } from '@supabase/supabase-js';
 import type { Handle } from '@sveltejs/kit';
-import { createYouTubeClient } from '$lib/server/youtube';
-import { logger } from '$lib/logger';
-import type { Database } from '$lib/types/database.types';
 import type { Innertube } from 'youtubei.js';
 
 const supabase: Handle = async ({ event, resolve }) => {

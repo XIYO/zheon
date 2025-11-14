@@ -18,14 +18,15 @@
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.4.1",
+		"@changesets/cli": "^2.29.7",
+		"@eslint/compat": "^2.0.0",
 		"@eslint/js": "^9.39.1",
 		"@layerstack/tailwind": "^1.0.1",
 		"@playwright/test": "^1.56.1",
-		"@skeletonlabs/skeleton": "^4.3.2",
-		"@skeletonlabs/skeleton-svelte": "^4.3.2",
+		"@skeletonlabs/skeleton": "^4.3.3",
+		"@skeletonlabs/skeleton-svelte": "^4.3.3",
 		"@sveltejs/adapter-node": "^5.4.0",
-		"@sveltejs/kit": "^2.48.4",
+		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@sveltejs/vite-plugin-svelte-inspector": "^5.0.1",
 		"@tailwindcss/forms": "^0.5.10",
@@ -37,7 +38,7 @@
 		"@types/wicg-file-system-access": "^2023.10.7",
 		"@typescript-eslint/eslint-plugin": "^8.46.4",
 		"@typescript-eslint/parser": "^8.46.4",
-		"@vitest/browser": "^4.0.8",
+		"@vitest/browser": "^4.0.9",
 		"d3-scale": "^4.0.2",
 		"d3-shape": "^3.2.0",
 		"eslint": "^9.39.1",
@@ -58,7 +59,7 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.4",
 		"vite": "^7.2.2",
-		"vitest": "^4.0.8",
+		"vitest": "^4.0.9",
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {

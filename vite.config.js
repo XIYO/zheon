@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
 		strictPort: true
 	},
 	ssr: {
-		noExternal: mode === 'production' ? true : undefined
+		noExternal: mode === 'production' ? true : undefined,
+		external: mode === 'production' ? ['socks-proxy-agent'] : undefined
 	}
 }));
