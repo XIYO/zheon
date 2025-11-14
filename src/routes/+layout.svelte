@@ -4,6 +4,7 @@
 	import { invalidate } from '$app/navigation';
 	import { createSummaryStore } from '$lib/stores/summary.svelte';
 	import VersionDisplay from '$lib/components/VersionDisplay.svelte';
+	import { Tooltip } from 'bits-ui';
 
 	let { data, children } = $props();
 
@@ -27,5 +28,7 @@
 	});
 </script>
 
-{@render children()}
-<VersionDisplay />
+<Tooltip.Provider>
+	{@render children()}
+	<VersionDisplay />
+</Tooltip.Provider>
