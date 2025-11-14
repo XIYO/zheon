@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/XIYO/zheon/compare/v1.1.0...v1.1.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* CHANGELOG 버전 헤더 매칭 정규식 수정 ([f6977f7](https://github.com/XIYO/zheon/commit/f6977f7f82cb81281e4f460c2ea6c7bd356a9935))
+
 # [1.1.0](https://github.com/XIYO/zheon/compare/v1.0.3...v1.1.0) (2025-11-14)
 
 
