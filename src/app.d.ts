@@ -3,6 +3,9 @@ import type { Database } from '$lib/types/database.types';
 import type { Innertube } from 'youtubei.js';
 
 declare global {
+	const __APP_VERSION__: string;
+	const __BUILD_TIME__: string;
+
 	namespace App {
 		interface Error {
 			message: string;

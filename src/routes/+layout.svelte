@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import { createSummaryStore } from '$lib/stores/summary.svelte';
+	import VersionDisplay from '$lib/components/VersionDisplay.svelte';
 
 	let { data, children } = $props();
 
@@ -27,3 +28,4 @@
 </script>
 
 {@render children()}
+<VersionDisplay />

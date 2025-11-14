@@ -15,14 +15,17 @@
 		"test:unit": "vitest",
 		"test:integration": "vitest run tests/integration",
 		"test": "bun run test:unit -- --run && bun run test:e2e",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"release": "semantic-release"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.29.7",
 		"@eslint/compat": "^2.0.0",
 		"@eslint/js": "^9.39.1",
 		"@layerstack/tailwind": "^1.0.1",
 		"@playwright/test": "^1.56.1",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^12.0.2",
 		"@skeletonlabs/skeleton": "^4.3.3",
 		"@skeletonlabs/skeleton-svelte": "^4.3.3",
 		"@sveltejs/adapter-node": "^5.4.0",
@@ -52,6 +55,7 @@
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.1",
+		"semantic-release": "^25.0.2",
 		"sharp": "^0.34.5",
 		"svelte": "^5.43.6",
 		"svelte-check": "^4.3.4",
