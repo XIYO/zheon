@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/XIYO/zheon/compare/v1.0.0...v1.0.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* workflow_dispatch 트리거 추가로 수동 배포 가능하게 변경 ([b3362a8](https://github.com/XIYO/zheon/commit/b3362a8e2d6fdcf8fda6bfda092db62b4b8503ae))
+
 # 1.0.0 (2025-11-14)
 
 
