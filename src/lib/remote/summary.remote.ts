@@ -128,11 +128,12 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 
 	const summaryService = new SummaryService(adminSupabase, locals.youtube);
 	summaryService
-		.analyzeSummary(video_id, {
-			maxBatches: 5,
-			force: false,
-			geminiApiKey: env.GEMINI_API_KEY
-		})
+		.analyzeSummary(
+			{ videoId: video_id },
+			{ geminiApiKey: env.GEMINI_API_KEY, openaiApiKey: env.OPENAI_API_KEY },
+			{ geminiModel: env.GEMINI_MODEL, openaiModel: env.OPENAI_MODEL },
+			{ maxBatches: 5, force: false }
+		)
 		.catch(async (err) => {
 			logger.error('[createSummary] 백그라운드 분석 실패:', err);
 			await adminSupabase

@@ -1,10 +1,12 @@
-import { generateObject } from 'ai';
+import { generateObject, type LanguageModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { jsonSchema } from 'ai';
 import * as v from 'valibot';
-import { SocksProxyAgent } from 'socks-proxy-agent';
 import { env } from '$env/dynamic/private';
 import { logger } from '$lib/logger';
+
+type AIProvider = 'gemini' | 'openai';
 
 export interface CategoryInfo {
 	slug: string;
@@ -150,76 +152,99 @@ export interface AIAnalysisOutput {
 	}>;
 }
 
+export interface AIServiceKeys {
+	geminiApiKey?: string;
+	openaiApiKey?: string;
+}
+
+export interface AIServiceModels {
+	geminiModel?: string;
+	openaiModel?: string;
+}
+
+export interface AIServiceOptions {
+	maxRetries?: number;
+}
+
+export interface AIAnalysisResult {
+	output: AIAnalysisOutput;
+	usedModel: string;
+	usedProvider: AIProvider;
+}
+
 export class AIService {
-	constructor(
-		private geminiApiKey: string,
-		private socksProxy: string
-	) {
-		if (!geminiApiKey) {
-			throw new Error('GEMINI_API_KEY is required');
+	private availableProviders: AIProvider[] = [];
+	private geminiApiKey?: string;
+	private openaiApiKey?: string;
+	private geminiModel: string;
+	private openaiModel: string;
+	private defaultMaxRetries: number;
+
+	constructor(keys: AIServiceKeys, models: AIServiceModels, options: AIServiceOptions = {}) {
+		this.geminiApiKey = keys.geminiApiKey;
+		this.openaiApiKey = keys.openaiApiKey;
+		this.geminiModel = models.geminiModel!;
+		this.openaiModel = models.openaiModel!;
+		this.defaultMaxRetries = options.maxRetries ?? 2;
+
+		if (this.geminiApiKey) {
+			this.availableProviders.push('gemini');
 		}
-		if (!socksProxy) {
-			throw new Error('SOCKS5 proxy is required');
+		if (this.openaiApiKey) {
+			this.availableProviders.push('openai');
 		}
+
+		if (this.availableProviders.length === 0) {
+			throw new Error('At least one AI API key is required (GEMINI_API_KEY or OPENAI_API_KEY)');
+		}
+
+		logger.info(`[AI] 사용 가능한 providers: ${this.availableProviders.join(', ')}`);
+		logger.info(`[AI] Gemini 모델: ${this.geminiModel}, OpenAI 모델: ${this.openaiModel}`);
 	}
 
-	async analyzeVideo(
-		input: AIAnalysisInput,
-		options: { maxRetries?: number } = {}
-	): Promise<AIAnalysisOutput> {
-		const { maxRetries = 3 } = options;
+	async analyzeVideo(input: AIAnalysisInput): Promise<AIAnalysisResult> {
+		const maxRetries = this.defaultMaxRetries;
+		const errors: Array<{ provider: AIProvider; error: unknown }> = [];
 
-		for (let attempt = 1; attempt <= maxRetries; attempt++) {
-			try {
-				logger.info(`[AI] 분석 시도 ${attempt}/${maxRetries}`);
-				return await this.performAnalysis(input);
-			} catch (error) {
-				logger.error(`[AI] 시도 ${attempt}/${maxRetries} 실패:`, error);
-				if (attempt === maxRetries) {
-					throw error;
+		for (const provider of this.availableProviders) {
+			logger.info(`[AI] ${provider} provider로 분석 시도`);
+
+			for (let attempt = 1; attempt <= maxRetries; attempt++) {
+				try {
+					logger.info(`[AI] ${provider} 시도 ${attempt}/${maxRetries}`);
+					const output = await this.performAnalysis(input, provider);
+					const usedModel = provider === 'gemini' ? this.geminiModel : this.openaiModel;
+					return { output, usedModel, usedProvider: provider };
+				} catch (error) {
+					logger.error(`[AI] ${provider} 시도 ${attempt}/${maxRetries} 실패:`, error);
+					errors.push({ provider, error });
+
+					if (attempt === maxRetries) {
+						logger.warn(`[AI] ${provider} 모든 재시도 실패, 다음 provider로 이동`);
+						break;
+					}
+					logger.info(`[AI] ${provider} ${attempt + 1}번째 시도 준비 중...`);
 				}
-				logger.info(`[AI] ${attempt + 1}번째 시도 준비 중...`);
 			}
 		}
 
-		throw new Error('AI 분석 실패: 최대 재시도 횟수 초과');
+		const errorMessages = errors
+			.map(({ provider, error }) => `${provider}: ${error instanceof Error ? error.message : String(error)}`)
+			.join('\n');
+		throw new Error(`모든 AI providers 실패:\n${errorMessages}`);
 	}
 
-	private async performAnalysis(input: AIAnalysisInput): Promise<AIAnalysisOutput> {
+	private async performAnalysis(
+		input: AIAnalysisInput,
+		provider: AIProvider
+	): Promise<AIAnalysisOutput> {
 		const prompt = this.buildPrompt(input);
 		const schema = this.getAnalysisSchema();
 		const validationSchema = this.getValidationSchema();
 
-		const proxyAgent = new SocksProxyAgent(this.socksProxy);
-		let requestCounter = 0;
-		const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
-			const requestId = ++requestCounter;
-			const label = `[AI Proxy #${requestId}] ${url}`;
-			const startTime = Date.now();
-			try {
-				const response = await fetch(url, {
-					...options,
-					// @ts-expect-error Node.js fetch agent support
-					agent: proxyAgent
-				});
-				logger.info(`${label}: ${Date.now() - startTime}ms`);
-				return response;
-			} catch (err) {
-				logger.error(`${label}: ${Date.now() - startTime}ms (실패)`);
-				logger.error('[AI Proxy] 프록시 fetch 실패:', err);
-				throw err;
-			}
-		};
+		const model = this.createModel(provider);
 
-		logger.info(`[AI] SOCKS5 프록시 사용: ${this.socksProxy}`);
-
-		const google = createGoogleGenerativeAI({
-			apiKey: this.geminiApiKey,
-			fetch: customFetch
-		});
-		const model = google('gemini-2.5-flash-lite');
-
-		logger.info('[AI] 분석 시작');
+		logger.info(`[AI] ${provider} 분석 시작`);
 
 		const result = await generateObject({
 			model,
@@ -228,7 +253,7 @@ export class AIService {
 			schemaDescription:
 				'Comprehensive video analysis with quality, sentiment, and community metrics',
 			temperature: 0.1,
-			maxRetries: 3,
+			maxRetries: 0,
 			prompt
 		});
 
@@ -247,13 +272,36 @@ export class AIService {
 					return `${pathStr}: ${issue.message}${currentValue ? ` (${currentValue})` : ''}`;
 				})
 				.join('\n');
-			logger.error('[AI] 검증 실패:', errors);
-			logger.error('[AI] 전체 응답:', JSON.stringify(rawAnalysis, null, 2));
-			throw new Error(`AI 응답 검증 실패:\n${errors}`);
+			logger.error(`[AI] ${provider} 검증 실패:`, errors);
+			logger.error(`[AI] ${provider} 전체 응답:`, JSON.stringify(rawAnalysis, null, 2));
+			throw new Error(`${provider} 응답 검증 실패:\n${errors}`);
 		}
 
-		logger.info('[AI] 검증 성공');
+		logger.info(`[AI] ${provider} 검증 성공`);
 		return validationResult.output as AIAnalysisOutput;
+	}
+
+	private createModel(provider: AIProvider): LanguageModel {
+		switch (provider) {
+			case 'gemini': {
+				if (!this.geminiApiKey) {
+					throw new Error('GEMINI_API_KEY is not available');
+				}
+				const google = createGoogleGenerativeAI({
+					apiKey: this.geminiApiKey
+				});
+				return google(this.geminiModel);
+			}
+			case 'openai': {
+				if (!this.openaiApiKey) {
+					throw new Error('OPENAI_API_KEY is not available');
+				}
+				const openai = createOpenAI({
+					apiKey: this.openaiApiKey
+				});
+				return openai(this.openaiModel);
+			}
+		}
 	}
 
 	private buildPrompt(input: AIAnalysisInput): string {
@@ -980,17 +1028,4 @@ JSON 스키마에 맞춰 응답하세요.`;
 		});
 	}
 
-	static createFromEnv(): AIService {
-		const geminiApiKey = env.GEMINI_API_KEY;
-		const socksProxy = env.TOR_SOCKS5_PROXY;
-
-		if (!geminiApiKey) {
-			throw new Error('GEMINI_API_KEY environment variable is not set');
-		}
-		if (!socksProxy) {
-			throw new Error('TOR_SOCKS5_PROXY environment variable is not set');
-		}
-
-		return new AIService(geminiApiKey, socksProxy);
-	}
 }

@@ -11,9 +11,6 @@ import type { Handle } from '@sveltejs/kit';
 import type { Innertube } from 'youtubei.js';
 
 const supabase: Handle = async ({ event, resolve }) => {
-	const timerLabel = `[hooks.supabase] ${event.url.pathname}`;
-	console.time(timerLabel);
-
 	const cookieMethods: CookieMethodsServer = {
 		getAll: () => event.cookies.getAll(),
 		setAll: (cookiesToSet) => {
@@ -76,7 +73,6 @@ const supabase: Handle = async ({ event, resolve }) => {
 		}
 	});
 
-	console.timeEnd(timerLabel);
 	return result;
 };
 

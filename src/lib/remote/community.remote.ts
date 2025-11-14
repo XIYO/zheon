@@ -11,11 +11,18 @@ export const analyzeCommunityMetrics = query(
 		const { adminSupabase } = locals;
 
 		if (!adminSupabase) throw error(500, 'adminSupabase가 구성되어 있지 않습니다');
-		const geminiApiKey = env.GEMINI_API_KEY;
-		if (!geminiApiKey) throw error(500, 'GEMINI_API_KEY가 설정되지 않았습니다');
 
 		const service = new CommunityMetricsService(adminSupabase);
-		const result = await service.analyze(videoId, { maxBatches, geminiApiKey });
+		const result = await service.analyze(
+			{ videoId },
+			{
+				geminiApiKey: env.GEMINI_API_KEY,
+				openaiApiKey: env.OPENAI_API_KEY,
+				geminiModel: env.GEMINI_MODEL,
+				openaiModel: env.OPENAI_MODEL
+			},
+			{ maxBatches }
+		);
 		return result;
 	}
 );

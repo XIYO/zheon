@@ -68,6 +68,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/google": "^2.0.31",
+		"@ai-sdk/openai": "^2.0.66",
 		"@ai-sdk/valibot": "^1.0.17",
 		"@lucide/svelte": "^0.553.0",
 		"@supabase/ssr": "^0.7.0",

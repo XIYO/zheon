@@ -2,12 +2,15 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/types/database.types';
 import * as v from 'valibot';
 import { jsonSchema } from 'ai';
-import { generateObject } from 'ai';
+import { generateObject, type LanguageModel } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
+
+type AIProvider = 'gemini' | 'openai';
 
 type CommentData = { content?: { text?: string }; text?: string };
 
@@ -90,18 +93,43 @@ const EmotionsValidation = v.object({
 	entropy: v.pipe(v.number(), v.minValue(0))
 });
 
+export interface CommunityKeys {
+	videoId: string;
+}
+
+export interface CommunityLLMConfig {
+	geminiApiKey?: string;
+	openaiApiKey?: string;
+	geminiModel?: string;
+	openaiModel?: string;
+}
+
 export interface AnalyzeCommunityOptions {
 	maxBatches?: number;
-	force?: boolean; // 현재는 사용하지 않지만 인터페이스 확장 대비
-	geminiApiKey: string;
+	force?: boolean;
 }
 
 export class CommunityMetricsService {
+	private availableProviders: AIProvider[] = [];
+
 	constructor(private supabase: SupabaseClient<Database>) {}
 
-	async analyze(videoId: string, options: AnalyzeCommunityOptions) {
-		const { maxBatches = 5, geminiApiKey } = options;
-		if (!geminiApiKey) throw error(500, 'GEMINI_API_KEY가 설정되지 않았습니다');
+	async analyze(
+		keys: CommunityKeys,
+		llmConfig: CommunityLLMConfig,
+		options: AnalyzeCommunityOptions
+	) {
+		const { videoId } = keys;
+		const { geminiApiKey, openaiApiKey, geminiModel, openaiModel } = llmConfig;
+		const { maxBatches = 5 } = options;
+
+		this.availableProviders = [];
+		if (geminiApiKey) this.availableProviders.push('gemini');
+		if (openaiApiKey) this.availableProviders.push('openai');
+
+		if (this.availableProviders.length === 0) {
+			throw error(500, 'AI API 키가 설정되지 않았습니다 (GEMINI_API_KEY 또는 OPENAI_API_KEY 필요)');
+		}
 
 		// 1) 댓글 로드(최대 N*20개)
 		const { data: commentRecords, error: commentError } = await this.supabase
@@ -123,7 +151,52 @@ export class CommunityMetricsService {
 			.map((c, i) => `${i + 1}. ${c}`)
 			.join('\n');
 
-		// 2) 프록시 + 모델 구성(기존 SummaryService와 동일 스타일)
+		// 2) Fallback 로직으로 분석 시도
+		const errors: Array<{ provider: AIProvider; error: unknown }> = [];
+
+		for (const provider of this.availableProviders) {
+			logger.info(`[Community] ${provider} provider로 분석 시도`);
+
+			for (let attempt = 1; attempt <= 2; attempt++) {
+				try {
+					logger.info(`[Community] ${provider} 시도 ${attempt}/2`);
+					const result = await this.performAnalysis(
+						videoId,
+						commentsText,
+						comments.length,
+						maxBatches,
+						provider,
+						{ geminiApiKey, openaiApiKey },
+						{ geminiModel, openaiModel }
+					);
+					return result;
+				} catch (err) {
+					logger.error(`[Community] ${provider} 시도 ${attempt}/2 실패:`, err);
+					errors.push({ provider, error: err });
+
+					if (attempt === 2) {
+						logger.warn(`[Community] ${provider} 모든 재시도 실패, 다음 provider로 이동`);
+						break;
+					}
+				}
+			}
+		}
+
+		const errorMessages = errors
+			.map(({ provider, error: err }) => `${provider}: ${err instanceof Error ? err.message : String(err)}`)
+			.join('\n');
+		throw error(500, `모든 AI providers 실패:\n${errorMessages}`);
+	}
+
+	private async performAnalysis(
+		videoId: string,
+		commentsText: string,
+		commentsLength: number,
+		maxBatches: number,
+		provider: AIProvider,
+		keys: { geminiApiKey?: string; openaiApiKey?: string },
+		models: { geminiModel?: string; openaiModel?: string }
+	) {
 		const socksProxy = env.TOR_SOCKS5_PROXY;
 		if (!socksProxy) throw new Error('TOR_SOCKS5_PROXY not configured');
 
@@ -148,8 +221,7 @@ export class CommunityMetricsService {
 			}
 		};
 
-		const google = createGoogleGenerativeAI({ apiKey: geminiApiKey, fetch: customFetch });
-		const model = google('gemini-2.0-flash');
+		const model = this.createModel(provider, customFetch, keys, models);
 
 		// 3) Age 추정
 		const agePrompt = `당신은 YouTube 커뮤니티 분석가입니다. 아래 댓글 목록을 보고 시청자 연령 분포를 추정하세요.
@@ -291,10 +363,11 @@ JSON만 출력:
 
 		// 5) 저장(Upsert)
 		const now = new Date().toISOString();
+		const modelName = provider === 'gemini' ? models.geminiModel! : models.openaiModel!;
 		const { error: upsertError } = await this.supabase.from('content_community_metrics').upsert(
 			{
 				video_id: videoId,
-				comments_analyzed: Math.min(comments.length, maxBatches * 20),
+				comments_analyzed: Math.min(commentsLength, maxBatches * 20),
 
 				age_teens: age.teens,
 				age_20s: age.twenties,
@@ -317,7 +390,7 @@ JSON만 출력:
 				arousal_mean: emotions.vad.arousal_mean,
 
 				framework_version: 'v1.0',
-				analysis_model: 'gemini-2.0-flash',
+				analysis_model: modelName,
 				analyzed_at: now,
 				updated_at: now
 			},
@@ -328,9 +401,39 @@ JSON만 출력:
 
 		return {
 			video_id: videoId,
-			comments_analyzed: Math.min(comments.length, maxBatches * 20),
+			comments_analyzed: Math.min(commentsLength, maxBatches * 20),
 			age,
 			emotions: { ...emotions, dominant_emotion: dominant }
 		};
+	}
+
+	private createModel(
+		provider: AIProvider,
+		customFetch: typeof fetch,
+		keys: { geminiApiKey?: string; openaiApiKey?: string },
+		models: { geminiModel?: string; openaiModel?: string }
+	): LanguageModel {
+		switch (provider) {
+			case 'gemini': {
+				if (!keys.geminiApiKey) {
+					throw new Error('GEMINI_API_KEY is not available');
+				}
+				const google = createGoogleGenerativeAI({
+					apiKey: keys.geminiApiKey,
+					fetch: customFetch
+				});
+				return google(models.geminiModel!);
+			}
+			case 'openai': {
+				if (!keys.openaiApiKey) {
+					throw new Error('OPENAI_API_KEY is not available');
+				}
+				const openai = createOpenAI({
+					apiKey: keys.openaiApiKey,
+					fetch: customFetch
+				});
+				return openai(models.openaiModel!);
+			}
+		}
 	}
 }

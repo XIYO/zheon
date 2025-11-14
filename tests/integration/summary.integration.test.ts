@@ -39,11 +39,12 @@ describe.sequential('SummaryService Integration Test', () => {
 	it('전체 분석 파이프라인이 정상 작동해야 함', async () => {
 		const videoId = process.env.TEST_VIDEO_ID!;
 
-		await summaryService.analyzeSummary(videoId, {
-			maxBatches: 5,
-			force: true,
-			geminiApiKey: process.env.GEMINI_API_KEY!
-		});
+		await summaryService.analyzeSummary(
+			{ videoId },
+			{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+			{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+			{ maxBatches: 5, force: true }
+		);
 
 		const summary = await summaryService.getSummaryFromDB(videoId);
 
@@ -62,11 +63,12 @@ describe.sequential('SummaryService Integration Test', () => {
 	it('DB에서 요약을 조회할 수 있어야 함', async () => {
 		const videoId = process.env.TEST_VIDEO_ID!;
 
-		await summaryService.analyzeSummary(videoId, {
-			maxBatches: 5,
-			force: true,
-			geminiApiKey: process.env.GEMINI_API_KEY!
-		});
+		await summaryService.analyzeSummary(
+			{ videoId },
+			{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+			{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+			{ maxBatches: 5, force: true }
+		);
 
 		const summary = await summaryService.getSummaryFromDB(videoId);
 
@@ -82,11 +84,12 @@ describe.sequential('SummaryService Integration Test', () => {
 
 	it('자막이 없으면 에러를 발생해야 함', async () => {
 		await expect(
-			summaryService.analyzeSummary('invalid_video_id_12345', {
-				maxBatches: 5,
-				force: true,
-				geminiApiKey: process.env.GEMINI_API_KEY!
-			})
+			summaryService.analyzeSummary(
+				{ videoId: 'invalid_video_id_12345' },
+				{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+				{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+				{ maxBatches: 5, force: true }
+			)
 		).rejects.toThrow();
 
 		logger.info('✅ 자막 없음 에러 처리 확인');
@@ -95,11 +98,12 @@ describe.sequential('SummaryService Integration Test', () => {
 	it('댓글 제한이 적용되어야 함', async () => {
 		const videoId = process.env.TEST_VIDEO_ID!;
 
-		await summaryService.analyzeSummary(videoId, {
-			maxBatches: 3,
-			force: true,
-			geminiApiKey: process.env.GEMINI_API_KEY!
-		});
+		await summaryService.analyzeSummary(
+			{ videoId },
+			{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+			{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+			{ maxBatches: 3, force: true }
+		);
 
 		const summary = await summaryService.getSummaryFromDB(videoId);
 
@@ -112,20 +116,22 @@ describe.sequential('SummaryService Integration Test', () => {
 	it('중복 분석 방지: force=false이면 기존 분석 유지', async () => {
 		const videoId = process.env.TEST_VIDEO_ID!;
 
-		await summaryService.analyzeSummary(videoId, {
-			maxBatches: 5,
-			force: true,
-			geminiApiKey: process.env.GEMINI_API_KEY!
-		});
+		await summaryService.analyzeSummary(
+			{ videoId },
+			{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+			{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+			{ maxBatches: 5, force: true }
+		);
 
 		const firstSummary = await summaryService.getSummaryFromDB(videoId);
 		const firstId = firstSummary?.id;
 
-		await summaryService.analyzeSummary(videoId, {
-			maxBatches: 5,
-			force: false,
-			geminiApiKey: process.env.GEMINI_API_KEY!
-		});
+		await summaryService.analyzeSummary(
+			{ videoId },
+			{ geminiApiKey: process.env.GEMINI_API_KEY, openaiApiKey: process.env.OPENAI_API_KEY },
+			{ geminiModel: process.env.GEMINI_MODEL, openaiModel: process.env.OPENAI_MODEL },
+			{ maxBatches: 5, force: false }
+		);
 
 		const secondSummary = await summaryService.getSummaryFromDB(videoId);
 		expect(secondSummary?.id).toBe(firstId);

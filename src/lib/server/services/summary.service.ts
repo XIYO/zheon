@@ -21,10 +21,23 @@ interface CommentData {
 	text?: string;
 }
 
+export interface SummaryKeys {
+	videoId: string;
+}
+
+export interface SummaryAPIKeys {
+	geminiApiKey?: string;
+	openaiApiKey?: string;
+}
+
+export interface SummaryModels {
+	geminiModel?: string;
+	openaiModel?: string;
+}
+
 export interface AnalyzeSummaryOptions {
 	maxBatches?: number;
 	force?: boolean;
-	geminiApiKey: string;
 }
 
 export class SummaryService {
@@ -39,11 +52,19 @@ export class SummaryService {
 		this.commentService = new CommentService(supabase, youtube);
 	}
 
-	async analyzeSummary(videoId: string, options: AnalyzeSummaryOptions): Promise<void> {
-		const { maxBatches = 5, force = false, geminiApiKey } = options;
+	async analyzeSummary(
+		keys: SummaryKeys,
+		apiKeys: SummaryAPIKeys,
+		models: SummaryModels,
+		options: AnalyzeSummaryOptions
+	): Promise<void> {
+		const { videoId } = keys;
+		const { geminiApiKey, openaiApiKey } = apiKeys;
+		const { geminiModel, openaiModel } = models;
+		const { maxBatches = 5, force = false } = options;
 
-		if (!geminiApiKey) {
-			throw error(500, 'GEMINI_API_KEY가 설정되지 않았습니다');
+		if (!geminiApiKey && !openaiApiKey) {
+			throw error(500, 'AI API 키가 설정되지 않았습니다 (GEMINI_API_KEY 또는 OPENAI_API_KEY 필요)');
 		}
 
 		logger.info(`[summary] 분석 시작 videoId=${videoId}`);
@@ -193,14 +214,18 @@ export class SummaryService {
 				}
 			};
 
-			const aiService = AIService.createFromEnv();
-			const analysis = await aiService.analyzeVideo(aiInput, { maxRetries: 3 });
+			const aiService = new AIService(
+				{ geminiApiKey, openaiApiKey },
+				{ geminiModel, openaiModel },
+				{ maxRetries: 2 }
+			);
+			const analysisResult = await aiService.analyzeVideo(aiInput);
 
 			logger.info(`[summary] 4단계: DB 저장`);
-			await this.saveSummary(videoId, transcript, comments.length, analysis);
+			await this.saveSummary(videoId, transcript, comments.length, analysisResult);
 
 			logger.info(`[summary] 4단계: 콘텐츠 분석 (카테고리/태그)`);
-			await this.analyzeContent(videoId, analysis);
+			await this.analyzeContent(videoId, analysisResult);
 
 			logger.info(`[summary] 분석 완료 videoId=${videoId}`);
 		} catch (err) {
@@ -227,8 +252,9 @@ export class SummaryService {
 		videoId: string,
 		transcript: string,
 		totalComments: number,
-		analysis: AIAnalysisOutput
+		analysisResult: import('./ai.service').AIAnalysisResult
 	): Promise<void> {
+		const analysis = analysisResult.output;
 		const { error: upsertError } = await this.supabase.from('summaries').upsert(
 			{
 				video_id: videoId,
@@ -237,7 +263,7 @@ export class SummaryService {
 				processing_status: 'completed',
 				analysis_status: 'completed',
 				analyzed_at: new Date().toISOString(),
-				analysis_model: 'gemini-2.0-flash'
+				analysis_model: analysisResult.usedModel
 			},
 			{ onConflict: 'video_id' }
 		);
@@ -279,7 +305,7 @@ export class SummaryService {
 						representative_comments: analysis.representative_comments,
 
 						framework_version: 'v1.0',
-						analysis_model: 'gemini-2.0-flash',
+						analysis_model: analysisResult.usedModel,
 						analyzed_at: now,
 						updated_at: now
 					},
@@ -329,7 +355,8 @@ export class SummaryService {
 		return data;
 	}
 
-	private async analyzeContent(videoId: string, analysis: AIAnalysisOutput) {
+	private async analyzeContent(videoId: string, analysisResult: import('./ai.service').AIAnalysisResult) {
+		const analysis = analysisResult.output;
 		try {
 			// Depth 검증
 			const maxDepth = Math.max(
