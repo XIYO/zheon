@@ -4,7 +4,9 @@ FROM oven/bun:1-slim
 WORKDIR /app
 
 COPY build ./build
-COPY package.json ./
+
+# socks-proxy-agent만 설치 (external로 지정되어 번들 제외됨)
+RUN bun add socks-proxy-agent
 
 USER bun
 
