@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/XIYO/zheon/compare/v1.1.1...v1.2.0) (2025-11-14)
+
+
+### Features
+
+* llm 에러 처리 강화 ([db179a7](https://github.com/XIYO/zheon/commit/db179a70ae9408ab7d960b741201bd2a1469879f))
+
 ## [1.1.1](https://github.com/XIYO/zheon/compare/v1.1.0...v1.1.1) (2025-11-14)
 
 
