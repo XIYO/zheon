@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/XIYO/zheon/compare/v1.2.0...v1.2.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* 요약 실패 시 에러 메시지가 summary 컬럼에 저장되는 문제 수정 ([f9c2f24](https://github.com/XIYO/zheon/commit/f9c2f2495a3064460c9b2cf89330b0371b6099c7))
+
 # [1.2.0](https://github.com/XIYO/zheon/compare/v1.1.1...v1.2.0) (2025-11-14)
 
 
