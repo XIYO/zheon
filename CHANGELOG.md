@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/XIYO/zheon/compare/v1.0.3...v1.1.0) (2025-11-14)
+
+
+### Features
+
+* Bits UI Tooltip으로 CHANGELOG 표시 기능 추가 ([aafdc9f](https://github.com/XIYO/zheon/commit/aafdc9f92b20bf3bee1be4fdac253435645466cf))
+
 ## [1.0.3](https://github.com/XIYO/zheon/compare/v1.0.2...v1.0.3) (2025-11-14)
 
 
