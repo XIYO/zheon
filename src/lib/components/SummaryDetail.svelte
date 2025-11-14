@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SummaryTitle from './SummaryTitle.svelte';
+	import SummaryError from './SummaryError.svelte';
 	import YouTubePlayer from './YouTubePlayer.svelte';
 	import SummaryCategories from './SummaryCategories.svelte';
 	import SummaryTags from './SummaryTags.svelte';
@@ -11,6 +12,8 @@
 </script>
 
 <main class="container mx-auto px-4 pb-12 max-w-7xl">
+	<SummaryError {videoId} />
+
 	<SummaryTitle {videoId} />
 
 	<section class="mb-8 space-y-8">

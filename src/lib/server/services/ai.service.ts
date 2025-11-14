@@ -353,11 +353,7 @@ ${input.commentMetadata.avgLikes !== undefined ? `평균 좋아요: ${input.comm
   - name_ko: 일반 표기 (한국어, 예: 미국 정부 셧다운)
   - weight: 0.1~1.0 (카테고리/태그만 해당)
 
-⚠️ R5. 에러 처리:
-  - 자막과 댓글 모두 없을 경우 → summary: "분석 불가: 데이터 부족"
-  - 나머지 필드는 null 또는 0
-
-✓ R6. 일관성 검증:
+✓ R5. 일관성 검증:
   - sentiment.positive_ratio > 70 → plutchik의 joy/trust 높아야 함
   - content_quality.educational_value 높음 → metrics의 information-density 높아야 함
 

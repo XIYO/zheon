@@ -40,6 +40,34 @@ export interface AnalyzeSummaryOptions {
 	force?: boolean;
 }
 
+export function getFailureReason(err: unknown): string {
+	const message = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
+	const lowerMessage = message.toLowerCase();
+
+	if (message.includes('API 키') ||
+	    lowerMessage.includes('api key') ||
+	    lowerMessage.includes('authentication') ||
+	    lowerMessage.includes('unauthorized') ||
+	    lowerMessage.includes('invalid key') ||
+	    lowerMessage.includes('403') ||
+	    lowerMessage.includes('401'))
+		return 'AI API 키 설정 오류';
+	if (message.includes('데이터가 부족') || message.includes('댓글') && message.includes('필요'))
+		return '분석 가능한 데이터 부족';
+	if (message.includes('자막') || message.includes('transcription'))
+		return '자막 수집 실패';
+	if (message.includes('댓글') || message.includes('comment'))
+		return '댓글 수집 실패';
+	if (message.includes('YouTube') || message.includes('youtube'))
+		return 'YouTube 데이터 수집 실패';
+	if (message.includes('AI') || message.includes('분석'))
+		return 'AI 분석 실패';
+	if (message.includes('저장') || message.includes('DB'))
+		return 'DB 저장 실패';
+
+	return '알 수 없는 오류';
+}
+
 export class SummaryService {
 	private transcriptionService: TranscriptionService;
 	private commentService: CommentService;
@@ -231,8 +259,7 @@ export class SummaryService {
 		} catch (err) {
 			logger.error(`[summary] 분석 실패 videoId=${videoId}`, err);
 
-			const failureReason =
-				err instanceof Error ? err.message : typeof err === 'string' ? err : '알 수 없는 오류';
+			const failureReason = getFailureReason(err);
 
 			await this.supabase.from('summaries').upsert(
 				{

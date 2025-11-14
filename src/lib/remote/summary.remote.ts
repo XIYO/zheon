@@ -6,7 +6,7 @@ import {
 	GetSummariesSchema,
 	GetSummaryByIdSchema
 } from '$lib/remote/summary.schema';
-import { SummaryService } from '$lib/server/services/summary.service';
+import { SummaryService, getFailureReason } from '$lib/server/services/summary.service';
 import { logger } from '$lib/logger';
 
 export const getSummaries = query(
@@ -136,11 +136,13 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 		)
 		.catch(async (err) => {
 			logger.error('[createSummary] 백그라운드 분석 실패:', err);
+			const failureReason = getFailureReason(err);
 			await adminSupabase
 				.from('summaries')
 				.update({
 					analysis_status: 'failed',
 					processing_status: 'failed',
+					failure_reason: failureReason,
 					updated_at: new Date().toISOString()
 				})
 				.eq('video_id', video_id);
