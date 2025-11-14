@@ -39,10 +39,28 @@
 	</div>
 {:then community}
 	{#if community}
+		{@const emotionSum =
+			(community.emotion_joy ?? 0) +
+			(community.emotion_trust ?? 0) +
+			(community.emotion_fear ?? 0) +
+			(community.emotion_surprise ?? 0) +
+			(community.emotion_sadness ?? 0) +
+			(community.emotion_disgust ?? 0) +
+			(community.emotion_anger ?? 0) +
+			(community.emotion_anticipation ?? 0)}
+		{@const isValidData = emotionSum > 0}
 		{@const valence = community.valence_mean ?? 0}
 		{@const arousal = community.arousal_mean ?? 0}
 		{@const valenceLabel = valence > 30 ? '긍정' : valence < -30 ? '부정' : '중립'}
 		{@const arousalLabel = arousal > 30 ? '활발' : arousal < -30 ? '차분' : '보통'}
+		{#if !isValidData}
+			<div class="space-y-3">
+				<h3 class="font-bold text-center">감정 분포</h3>
+				<div class="card preset-tonal-warning p-8 text-center">
+					<p class="text-surface-700-300">댓글이 부족해서 커뮤니티 분석 실패</p>
+				</div>
+			</div>
+		{:else}
 		<div class="space-y-3">
 			<h3 class="font-bold text-center">감정 분포</h3>
 			<div
@@ -98,6 +116,7 @@
 				</div>
 			{/if}
 		</div>
+		{/if}
 	{:else}
 		<div class="space-y-3">
 			<h3 class="font-bold text-center">감정 분포</h3>

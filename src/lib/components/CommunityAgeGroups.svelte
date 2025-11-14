@@ -24,6 +24,20 @@
 	</div>
 {:then community}
 	{#if community}
+		{@const ageSum =
+			(community.age_teens ?? 0) +
+			(community.age_20s ?? 0) +
+			(community.age_30s ?? 0) +
+			(community.age_40plus ?? 0)}
+		{@const isValidData = ageSum > 0 && (community.age_median ?? 0) > 0}
+		{#if !isValidData}
+			<div class="space-y-3">
+				<h3 class="font-bold text-center">연령 분포</h3>
+				<div class="card preset-tonal-warning p-8 text-center">
+					<p class="text-surface-700-300">댓글이 부족해서 커뮤니티 분석 실패</p>
+				</div>
+			</div>
+		{:else}
 		<div class="space-y-3">
 			<h3 class="font-bold text-center">연령 분포</h3>
 			<div
@@ -91,6 +105,7 @@
 				</div>
 			{/if}
 		</div>
+		{/if}
 	{:else}
 		<div class="space-y-3">
 			<h3 class="font-bold text-center">연령 분포</h3>
