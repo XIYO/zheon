@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/XIYO/zheon/compare/v1.0.1...v1.0.2) (2025-11-14)
+
+
+### Bug Fixes
+
+* PAT 사용으로 release 이벤트 시 deploy 워크플로우 자동 트리거 ([53d423f](https://github.com/XIYO/zheon/commit/53d423fdd54d5b90a48ac183b13617968bc0305a))
+
 ## [1.0.1](https://github.com/XIYO/zheon/compare/v1.0.0...v1.0.1) (2025-11-14)
 
 
