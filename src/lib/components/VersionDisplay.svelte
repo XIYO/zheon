@@ -19,7 +19,7 @@
 		const versionStarts: number[] = [];
 
 		lines.forEach((line, idx) => {
-			if (line.match(/^## \[?\d+\.\d+\.\d+\]?/)) {
+			if (line.match(/^#+ \[?\d+\.\d+\.\d+\]?/)) {
 				versionStarts.push(idx);
 			}
 		});
