@@ -11,6 +11,10 @@ export const collectComments = command(CollectCommentsInputSchema, async (input)
 		const { locals } = getRequestEvent();
 		const { adminSupabase, youtube } = locals;
 
+		if (!youtube) {
+			throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+		}
+
 		const service = new CommentService(adminSupabase, youtube);
 		return await service.collectComments(videoId, { maxBatches, force });
 	} catch (err) {
@@ -28,6 +32,10 @@ export const getCommentsFromDB = command(
 			const { videoId } = v.parse(v.object({ videoId: v.string() }), input);
 			const { locals } = getRequestEvent();
 			const { adminSupabase, youtube } = locals;
+
+			if (!youtube) {
+				throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+			}
 
 			const service = new CommentService(adminSupabase, youtube);
 			return await service.getCommentsFromDB(videoId);

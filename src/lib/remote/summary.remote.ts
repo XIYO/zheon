@@ -122,6 +122,10 @@ export const createSummary = form(SummarySchema, async ({ video_id }) => {
 		if (insertError) return;
 	}
 
+	if (!locals.youtube) {
+		throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+	}
+
 	const summaryService = new SummaryService(adminSupabase, locals.youtube);
 	summaryService
 		.analyzeSummary(video_id, {

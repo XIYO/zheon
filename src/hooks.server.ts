@@ -6,9 +6,10 @@ import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { createClient } from '@supabase/supabase-js';
 import type { Handle } from '@sveltejs/kit';
-import { getYouTube } from '$lib/server/youtube-proxy';
+import { createYouTubeClient } from '$lib/server/youtube';
 import { logger } from '$lib/logger';
 import type { Database } from '$lib/types/database.types';
+import type { Innertube } from 'youtubei.js';
 
 const supabase: Handle = async ({ event, resolve }) => {
 	const timerLabel = `[hooks.supabase] ${event.url.pathname}`;
@@ -80,73 +81,21 @@ const supabase: Handle = async ({ event, resolve }) => {
 	return result;
 };
 
+const adminSupabaseClient = createClient<Database>(
+	publicEnv.PUBLIC_SUPABASE_URL,
+	env.SUPABASE_SECRET_KEY
+);
+
 const adminSupabase: Handle = async ({ event, resolve }) => {
-	const timerLabel = `[hooks.adminSupabase] ${event.url.pathname}`;
-	console.time(timerLabel);
-
-	try {
-		event.locals.adminSupabase = createClient<Database>(
-			publicEnv.PUBLIC_SUPABASE_URL,
-			env.SUPABASE_SECRET_KEY,
-			{
-				auth: {
-					persistSession: false,
-					autoRefreshToken: false
-				}
-			}
-		);
-	} catch (error) {
-		logger.error('[adminSupabase] Error creating admin client:', error);
-	}
-
-	const result = await resolve(event);
-	console.timeEnd(timerLabel);
-	return result;
+	event.locals.adminSupabase = adminSupabaseClient;
+	return resolve(event);
 };
 
-const authGuard: Handle = async ({ event, resolve }) => {
-	const timerLabel = `[hooks.authGuard] ${event.url.pathname}`;
-	console.time(timerLabel);
-
-	try {
-		console.time(`[hooks.authGuard.safeGetSession] ${event.url.pathname}`);
-		const { session, user } = await event.locals.safeGetSession();
-		console.timeEnd(`[hooks.authGuard.safeGetSession] ${event.url.pathname}`);
-
-		event.locals.session = session;
-		event.locals.user = user;
-
-		if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-			redirect(303, '/auth');
-		}
-
-		if (event.locals.session && event.url.pathname === '/auth') {
-			redirect(303, '/private');
-		}
-	} catch (error) {
-		logger.error('[authGuard] Error:', error);
-	}
-
-	const result = await resolve(event);
-	console.timeEnd(timerLabel);
-	return result;
-};
+const youtubeClient: Innertube = await createYouTubeClient({ socksProxy: env.TOR_SOCKS5_PROXY });
 
 const youtube: Handle = async ({ event, resolve }) => {
-	const timerLabel = `[hooks.youtube] ${event.url.pathname}`;
-	console.time(timerLabel);
-
-	try {
-		console.time(`[hooks.youtube.getYouTube] ${event.url.pathname}`);
-		event.locals.youtube = await getYouTube(env.TOR_SOCKS5_PROXY);
-		console.timeEnd(`[hooks.youtube.getYouTube] ${event.url.pathname}`);
-	} catch (error) {
-		logger.error('[youtube] Error getting YouTube client:', error);
-	}
-
-	const result = await resolve(event);
-	console.timeEnd(timerLabel);
-	return result;
+	event.locals.youtube = youtubeClient;
+	return resolve(event);
 };
 
-export const handle = sequence(supabase, adminSupabase, authGuard, youtube);
+export const handle = sequence(supabase, adminSupabase, youtube);

@@ -11,6 +11,10 @@ export const collectTranscript = command(CollectTranscriptInputSchema, async (in
 		const { locals } = getRequestEvent();
 		const { adminSupabase, youtube } = locals;
 
+		if (!youtube) {
+			throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+		}
+
 		const service = new TranscriptionService(adminSupabase, youtube);
 		return await service.collectTranscript(videoId, { force });
 	} catch (err) {
@@ -28,6 +32,10 @@ export const getTranscriptFromDB = command(
 			const { videoId } = v.parse(v.object({ videoId: v.string() }), input);
 			const { locals } = getRequestEvent();
 			const { adminSupabase, youtube } = locals;
+
+			if (!youtube) {
+				throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+			}
 
 			const service = new TranscriptionService(adminSupabase, youtube);
 			return await service.getTranscriptFromDB(videoId);

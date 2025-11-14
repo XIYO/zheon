@@ -328,6 +328,9 @@ export const getVideoInfo = command(
 		}
 
 		const { youtube } = locals;
+		if (!youtube) {
+			throw error(500, 'YouTube 클라이언트를 사용할 수 없습니다');
+		}
 		const videoInfo = await youtube.getBasicInfo(videoId);
 
 		const title = videoInfo.basic_info.title || '제목 없음';

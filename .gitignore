@@ -61,3 +61,4 @@ get-*.js
 coverage
 .nyc_output
 .env.local
+.cache

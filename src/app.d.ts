@@ -17,7 +17,7 @@ declare global {
 			safeGetSession: () => Promise<{ session: Session | null; user: User | null }>;
 			session: Session | null;
 			user: User | null;
-			youtube: Innertube;
+			youtube: Innertube | null;
 		}
 		interface PageData {
 			session: Session | null;
