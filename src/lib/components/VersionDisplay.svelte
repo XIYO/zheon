@@ -1,7 +1,7 @@
 <script lang="ts">
 	import changelogRaw from '../../../CHANGELOG.md?raw';
 	import { marked } from 'marked';
-	import { Tooltip } from 'bits-ui';
+	import { Popover } from 'bits-ui';
 
 	const formatBuildTime = (isoString: string) => {
 		const date = new Date(isoString);
@@ -45,11 +45,11 @@
 </script>
 
 <div class="fixed bottom-4 right-4 z-50" role="contentinfo">
-	<Tooltip.Root delayDuration={0} disableCloseOnTriggerClick={true}>
-		<Tooltip.Trigger class="badge preset-filled-surface-100-900 shadow-lg cursor-help">
+	<Popover.Root>
+		<Popover.Trigger class="badge preset-filled-surface-100-900 shadow-lg cursor-help">
 			<span class="font-mono">v{__APP_VERSION__}</span>
-		</Tooltip.Trigger>
-		<Tooltip.Content
+		</Popover.Trigger>
+		<Popover.Content
 			side="top"
 			align="end"
 			sideOffset={8}
@@ -72,6 +72,6 @@
 					{@html recentChangelog}
 				</div>
 			</div>
-		</Tooltip.Content>
-	</Tooltip.Root>
+		</Popover.Content>
+	</Popover.Root>
 </div>
