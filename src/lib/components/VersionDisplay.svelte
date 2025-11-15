@@ -45,8 +45,8 @@
 </script>
 
 <div class="fixed bottom-4 right-4 z-50" role="contentinfo">
-	<Tooltip.Root delayDuration={200}>
-		<Tooltip.Trigger class="badge preset-filled-surface-100-900 shadow-lg">
+	<Tooltip.Root delayDuration={0} disableCloseOnTriggerClick={true}>
+		<Tooltip.Trigger class="badge preset-filled-surface-100-900 shadow-lg cursor-help">
 			<span class="font-mono">v{__APP_VERSION__}</span>
 		</Tooltip.Trigger>
 		<Tooltip.Content

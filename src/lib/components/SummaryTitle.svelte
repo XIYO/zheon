@@ -12,6 +12,12 @@
 			&nbsp;
 		</span>
 	{:then summary}
-		{summary.title}
+		<span
+		class={{
+			'placeholder animate-pulse rounded w-3/4 inline-block': !summary.title
+		}}
+		>
+			{summary.title ?? '&nbsp;'} 
+		</span>
 	{/await}
 </h1>
