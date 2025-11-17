@@ -32,17 +32,12 @@ services:
     container_name: zheon-app
     ports:
       - '3000:3000'
+    env_file:
+      - .env
     environment:
       ORIGIN: http://localhost:3000
       PORT: 3000
       TOR_SOCKS5_PROXY: socks5://zheon-tor-proxy:9050
-      GEMINI_API_KEY: AIzaSyAcc6g0WZKzNRJvG2E2igIhjusgndaFLJ0
-      GOOGLE_CLIENT_ID: 123106426850-sg3muliha3419e4rc4e5ibh98l0rq6sb.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
-      YOUTUBE_API_KEY: AIzaSyDYpYOX-Xewqw_8nFu-d88jR0s2_RWkhyM
-      PUBLIC_SUPABASE_URL: https://iefgdhwmgljjacafqomd.supabase.co
-      PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_2DSwr9dKHxpA4WOEEOYkww_AMIhsiUb
-      SUPABASE_SECRET_KEY: sb_secret_ZWX2bdGgUVk1xJNWYtHDAA_w7F3KXMz
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     depends_on:
