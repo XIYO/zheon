@@ -1,45 +1,62 @@
-# Development Guide
+# 개발 가이드
 
-## Prerequisites
+## 사전 요구사항
 
-- Node.js 18+ or Bun runtime
-- Docker & Docker Compose (optional)
+- Bun 런타임
+- Docker & Docker Compose
+- Supabase CLI (선택)
 
-## Setup
+## 환경 설정
+
+### 1. API 키 발급
+
+**Gemini API Key**: [Google AI Studio](https://aistudio.google.com/apikey)에서 발급
+
+### 2. Supabase 설정
+
+**로컬 개발 (권장)**
 
 ```bash
-# Install dependencies
+# Supabase 로컬 실행
+supabase start
+```
+
+출력되는 다음 값을 `.env`에 입력:
+- `API URL` → `PUBLIC_SUPABASE_URL`
+- `Publishable key` → `PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `Secret key` → `SUPABASE_SECRET_KEY`
+
+**원격 Supabase**
+
+[Supabase](https://supabase.com)에서 프로젝트 생성 후 Settings → API에서 키 확인
+
+### 3. 실행
+
+```bash
+# 의존성 설치
 bun install
 
-# Configure environment variables
+# 환경변수 설정
 cp .env.sample .env
-# Edit .env and add your API keys
+# .env 파일을 열어 API 키 입력
 
-# Start development server
+# Tor 프록시 실행
+docker-compose up -d tor-proxy
+
+# 개발 서버 실행
 bun run dev
 ```
 
-Development server runs on http://localhost:7777
+개발 서버: http://localhost:7777
 
-## Scripts
+## 스크립트
 
 ```bash
-bun run dev          # Start dev server
-bun run build        # Build for production
-bun run preview      # Preview production build
-bun run check        # Type check
-bun run lint         # Lint code
-bun run format       # Format code
-bun run test         # Run all tests
-bun run test:unit    # Run unit tests
-bun run test:e2e     # Run E2E tests
+bun run dev          # 개발 서버
+bun run build        # 빌드
+bun run preview      # 미리보기
+bun run check        # 타입 체크
+bun run lint         # 린트
+bun run format       # 포맷
+bun run test         # 테스트
 ```
-
-## Tech Stack
-
-- **Frontend**: SvelteKit 2, Svelte 5, Tailwind CSS 4, Skeleton UI
-- **Backend**: Supabase (PostgreSQL, Realtime)
-- **AI**: Gemini API
-- **Language**: TypeScript
-- **Package Manager**: Bun
-- **Testing**: Vitest, Playwright
