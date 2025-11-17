@@ -37,7 +37,7 @@ cp .env.sample .env
 # .env 파일을 열어 발급받은 API 키 입력
 
 # Docker Compose 실행
-docker-compose -f docker/docker-compose.yml up -d
+docker-compose up -d
 ```
 
 브라우저에서 http://localhost:3000 접속
