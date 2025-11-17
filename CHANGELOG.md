@@ -1,3 +1,11 @@
+## [1.2.2](https://github.com/XIYO/zheon/compare/v1.2.1...v1.2.2) (2025-11-17)
+
+
+### Bug Fixes
+
+* docker-compose.yml 경로 수정 ([ba2bff3](https://github.com/XIYO/zheon/commit/ba2bff33b5e6bbf94d617d83459b8991c08d6c2f))
+* docker-compose.yml을 루트로 이동 ([8c3d1b8](https://github.com/XIYO/zheon/commit/8c3d1b890dcf6721eec6225b8f54f61a53fe21cc))
+
 ## [1.2.1](https://github.com/XIYO/zheon/compare/v1.2.0...v1.2.1) (2025-11-14)
 
 
