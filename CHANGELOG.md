@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/XIYO/zheon/compare/v1.2.2...v1.2.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* Add force flag to git fetch tags in release workflow ([3fc8a5e](https://github.com/XIYO/zheon/commit/3fc8a5e02f7be8d155a8ca2a920e3842b4d982d3))
+
 ## [1.2.2](https://github.com/XIYO/zheon/compare/v1.2.1...v1.2.2) (2025-11-17)
 
 
