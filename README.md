@@ -1,5 +1,8 @@
 # Zheon - 유튜브 영상 인사이트
 
+[![Run in Smithery](https://smithery.ai/badge/skills/xiyo)](https://smithery.ai/skills?ns=xiyo&utm_source=github&utm_medium=badge)
+
+
 [라이브 데모](https://zheon.xiyo.dev)
 
 ![Zheon](./detail.png)
